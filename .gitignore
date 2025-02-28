@@ -1,0 +1,14 @@
+﻿Assets/Behavior Designer
+*.meta
+Library
+*.csproj
+*.sln
+Assets/Gizmos
+Assets/MeshBaker
+Assets/Plugins
+Assets/Resources
+Assets/Settings
+Assets/TriLib
+.vscode
+Logs
+Packages
