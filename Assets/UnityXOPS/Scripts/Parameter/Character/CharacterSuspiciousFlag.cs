@@ -251,5 +251,65 @@ public enum CharacterSuspiciousFlag : ulong
     /// <summary>
     /// 시체를 보안 장소에서 발견했습니다.
     /// </summary>
-    FoundDeadBodyInSecuredArea = 1UL << 47
+    FoundDeadBodyInSecuredArea = 1UL << 47,
+
+    /// <summary>
+    /// 중요한 아이템을 공공 장소에서 발견했습니다.
+    /// </summary>
+    FoundImportantItemInPublicArea = 1UL << 48,
+    
+    /// <summary>
+    /// 중요한 아이템을 개인 장소에서 발견했습니다.
+    /// </summary>
+    FoundImportantItemInPrivateArea = 1UL << 49,
+
+    /// <summary>
+    /// 중요한 아이템을 보안 장소에서 발견했습니다.
+    /// </summary>
+    FoundImportantItemInSecuredArea = 1UL << 50,
+
+    /// <summary>
+    /// 총알이 튀거나 날아가는 효과를 공공 장소에서 발견했습니다.
+    /// </summary>
+    FoundBulletImpactFoundInPublicArea = 1UL << 51,
+
+    /// <summary>
+    /// 총알이 튀거나 날아가는 효과를 개인 장소에서 발견했습니다.
+    /// </summary>
+    FoundBulletImpactInPrivateArea = 1UL << 52,
+    
+    /// <summary>
+    /// 총알이 튀거나 날아가는 효과를 보안 장소에서 발견했습니다.
+    /// </summary>
+    FoundBulletImpactInSecuredArea = 1UL << 53,
+
+    /// <summary>
+    /// 중립 캐릭터에게 공공 장소에서 공격받았습니다. 공격받은 대상의 위치를 기준으로 합니다.
+    /// </summary>
+    AttackedByNeutralCharacterInPublicArea = 1UL << 54,
+
+    /// <summary>
+    /// 중립 캐릭터에게 개인 장소에서 공격받았습니다. 공격받은 대상의 위치를 기준으로 합니다.
+    /// </summary>
+    AttackedByNeutralCharacterInPrivateArea = 1UL << 55,
+
+    /// <summary>
+    /// 중립 캐릭터에게 보안 장소에서 공격받았습니다. 공격받은 대상의 위치를 기준으로 합니다.
+    /// </summary>
+    AttackedByNeutralCharacterInSecuredArea = 1UL << 56,
+
+    /// <summary>
+    /// 적대 캐릭터에게 공공 장소에서 공격받았습니다. 공격받은 대상의 위치를 기준으로 합니다.
+    /// </summary>
+    AttackedByHostileCharacterInPublicArea = 1UL << 57,
+
+    /// <summary>
+    /// 적대 캐릭터에게 개인 장소에서 공격받았습니다. 공격받은 대상의 위치를 기준으로 합니다.
+    /// </summary>
+    AttackedByHostileCharacterInPrivateArea = 1UL << 58,
+
+    /// <summary>
+    /// 적대 캐릭터에게 보안 장소에서 공격받았습니다. 공격받은 대상의 위치를 기준으로 합니다.
+    /// </summary>
+    AttackedByHostileCharacterInSecuredArea = 1UL << 59,
 }
