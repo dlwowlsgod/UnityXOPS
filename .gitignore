@@ -1,0 +1,10 @@
+﻿.idea
+Assets/StreamingAssets
+*.meta
+Library
+ProjectSettings
+.vscode
+obj
+Packages
+UserSettings
+Logs

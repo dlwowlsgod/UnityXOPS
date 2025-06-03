@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <LangVersion>9.0</LangVersion>
+    <_TargetFrameworkDirectories>non_empty_path_generated_by_unity.rider.package</_TargetFrameworkDirectories>
+    <_FullFrameworkReferenceAssemblyPaths>non_empty_path_generated_by_unity.rider.package</_FullFrameworkReferenceAssemblyPaths>
+    <DisableHandlePackageFileConflicts>true</DisableHandlePackageFileConflicts>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.20506</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <RootNamespace></RootNamespace>
+    <ProjectGuid>{289c8438-7cd2-d977-0945-b81ae2daf2d1}</ProjectGuid>
+    <ProjectTypeGuids>{E097FAD1-6243-4DAD-9C02-E9B9EFC3FFC1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <AssemblyName>Assembly-CSharp</AssemblyName>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <BaseDirectory>.</BaseDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>Temp\Bin\Debug\Unity.Rider.Editor\</OutputPath>
+    <DefineConstants>UNITY_EDITOR</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>0169,0649</NoWarn>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup>
+    <NoConfig>true</NoConfig>
+    <NoStdLib>true</NoStdLib>
+    <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
+    <ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
+    <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="Assets\StreamingAssets\data\map5\def.txt" />
+    <None Include="Assets\StreamingAssets\data\map8\kt3.txt" />
+    <None Include="Assets\StreamingAssets\data\map10\ext2.txt" />
+    <None Include="Assets\StreamingAssets\data\map7\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map13\cap.txt" />
+    <None Include="Assets\StreamingAssets\data\map2\re.txt" />
+    <None Include="Assets\StreamingAssets\data\map9\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map3\kt.txt" />
+    <None Include="Assets\StreamingAssets\data\map7\kt.txt" />
+    <None Include="Assets\StreamingAssets\data\map13\esc.txt" />
+    <None Include="Assets\StreamingAssets\data\map15\kt.txt" />
+    <None Include="Assets\StreamingAssets\data\map0\tr.txt" />
+    <None Include="Assets\StreamingAssets\data\map16\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map12\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map7\def.txt" />
+    <None Include="Assets\StreamingAssets\data\map7\def2.txt" />
+    <None Include="Assets\StreamingAssets\data\map2\def.txt" />
+    <None Include="Assets\StreamingAssets\data\map14\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map2\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map12\kt.txt" />
+    <None Include="Assets\StreamingAssets\data\map14\re.txt" />
+    <None Include="Assets\StreamingAssets\data\map5\ext3.txt" />
+    <None Include="Assets\StreamingAssets\data\map14\de.txt" />
+    <None Include="Assets\StreamingAssets\data\map15\kt2.txt" />
+    <None Include="Assets\StreamingAssets\data\map12\ext2.txt" />
+    <None Include="Assets\StreamingAssets\data\map8\def.txt" />
+    <None Include="Assets\StreamingAssets\data\map10\kt.txt" />
+    <None Include="Assets\StreamingAssets\data\map4\esc.txt" />
+    <None Include="Assets\StreamingAssets\data\map8\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map13\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map14\cap.txt" />
+    <None Include="Assets\StreamingAssets\data\map5\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map3\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map8\kt.txt" />
+    <None Include="Assets\StreamingAssets\data\map1\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map8\kt4.txt" />
+    <None Include="Assets\StreamingAssets\data\map15\re.txt" />
+    <None Include="Assets\StreamingAssets\data\map3\def.txt" />
+    <None Include="Assets\StreamingAssets\data\map4\cap.txt" />
+    <None Include="Assets\StreamingAssets\data\map16\def.txt" />
+    <None Include="Assets\StreamingAssets\data\map1\def.txt" />
+    <None Include="Assets\StreamingAssets\data\map11\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map6\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map8\def2.txt" />
+    <None Include="Assets\StreamingAssets\data\map5\ext2.txt" />
+    <None Include="Assets\StreamingAssets\data\map12\esc.txt" />
+    <None Include="Assets\StreamingAssets\data\map10\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map8\kt2.txt" />
+    <None Include="Assets\StreamingAssets\data\map9\ext2.txt" />
+    <None Include="Assets\StreamingAssets\data\map4\ext.txt" />
+    <None Include="Assets\StreamingAssets\data\map15\def.txt" />
+    <None Include="Assets\StreamingAssets\data\map16\cap.txt" />
+    <None Include="Assets\StreamingAssets\data\map11\ext2.txt" />
+    <None Include="Assets\StreamingAssets\data\map8\cap.txt" />
+    <None Include="Assets\StreamingAssets\data\map4\de.txt" />
+    <None Include="Assets\StreamingAssets\data\map1\kt.txt" />
+    <None Include="Assets\StreamingAssets\data\map6\kt.txt" />
+    <None Include="Assets\StreamingAssets\data\map11\de.txt" />
+    <Reference Include="UnityEngine">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.1.4f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.1.4f1\Editor\Data\Managed\UnityEngine\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.1.4f1\Editor\Data\Managed\UnityEngine\UnityEditor.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
