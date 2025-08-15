@@ -73,6 +73,7 @@ namespace UnityXOPS
             
             if (PrivateProfileReader.FixXFileError)
             {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
                 try
                 {
                     var bytes = File.ReadAllBytes(path);
@@ -105,6 +106,7 @@ namespace UnityXOPS
 #endif
                     return null;
                 }
+#endif
 
             }
 

@@ -92,14 +92,14 @@ namespace UnityXOPS
                 switch (c)
                 {
                     case >= ' ' and <= '~':
-                        continue;
+                        break;
                     case '\n' or '\r':
                         sb.Append("<br>");
                         continue;
                 }
 
                 var textIndex = (int)c;
-                var toRichText = $"<sprite index={textIndex} color=#" + colorHex + ">";
+                var toRichText = $"<sprite index={textIndex} color=#{colorHex}>";
                 sb.Append(toRichText);
             }
             

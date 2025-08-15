@@ -13,107 +13,162 @@ namespace UnityXOPS
     /// </remarks>
     public class StateMachine : Singleton<StateMachine>
     {
-        private GameState CurrentState { get; set; } = GameState.None;
-#if UNITY_EDITOR
-        private float _updateInterval = 10.0f;
-        private float _timer;
-        private int _iteration;
-#endif
-        
-        private void Update()
-        {
-            OnStateUpdate(CurrentState);
-        }
-        
+        public GameState CurrentState { get; private set; } = GameState.None;
+        private bool _esc;
+        private bool _f12;
+
         /// <summary>
-        /// Changes the current game state to the specified new state, ensuring proper exit and entry logic is executed.
+        /// Advances the state machine to the next state based on the current state and specific conditions.
         /// </summary>
-        /// <param name="newState">The new <see cref="GameState"/> to transition to.</param>
-        public void SetState(GameState newState)
+        /// <remarks>
+        /// This method transitions the `CurrentState` variable to its later state in the state sequence
+        /// or cycles back to the initial state if no valid transition is determined. The state transition logic
+        /// is determined based on the enumeration values of `GameState` and certain flags (_f12 and _esc).
+        /// Additionally, it performs specific operations when transitioning between certain states, such as
+        /// starting coroutines for scene loading.
+        /// In Unity's editor mode, this method logs the state transition for debugging purposes.
+        /// </remarks>
+        public void NextState()
         {
-            if (CurrentState == newState) return;
-
-            // Exit the current state
-            OnStateExit(CurrentState);
-
-            CurrentState = newState;
-
-            // Enter the new state
-            OnStateEnter(CurrentState);
-        }
-
-        private void OnStateEnter(GameState state)
-        {
-            switch (state)
+            var prevState = CurrentState;
+            switch (CurrentState)
             {
-                case GameState.OpeningStart:
+                case GameState.None:
                     StartCoroutine(LoadSceneAsync("Opening"));
+                    CurrentState = GameState.OpeningStart;
+                    break;
+                case GameState.OpeningStart:
+                    CurrentState = GameState.OpeningUpdate;
+                    break;
+                case GameState.OpeningUpdate:
+                    CurrentState = GameState.OpeningEnd;
+                    break;
+                case GameState.OpeningEnd:
+                    StartCoroutine(LoadSceneAsync("MainMenu"));
+                    CurrentState = GameState.MainMenuStart;
                     break;
                 case GameState.MainMenuStart:
-                    StartCoroutine(LoadSceneAsync("MainMenu"));
-                    break;
-                case GameState.BriefingStart:
-                    StartCoroutine(LoadSceneAsync("Briefing"));
-                    break;
-                case GameState.GameStart:
-                    StartCoroutine(LoadSceneAsync("Game"));
-                    break;
-                case GameState.ResultStart:
-                    StartCoroutine(LoadSceneAsync("Result"));
-                    break;
-            }
-#if UNITY_EDITOR
-            _timer = 0.0f;
-            _iteration = 0;
-            Debug.Log($"[StateMachine] State {state} entered.");
-#endif
-        }
-
-        private void OnStateUpdate(GameState state)
-        { 
-            switch (state)
-            {
-                case GameState.OpeningUpdate:
+                    CurrentState = GameState.MainMenuUpdate;
                     break;
                 case GameState.MainMenuUpdate:
-                    break;
-                case GameState.BriefingUpdate:
-                    break;
-                case GameState.GameUpdate:
-                    break;
-                case GameState.ResultUpdate:
-                    break;
-            }
-#if UNITY_EDITOR
-            _timer += Time.deltaTime;
-            if (_timer >= _updateInterval)
-            {
-                Debug.Log($"[StateMachine] State {state} updated. Iteration {_iteration++}.");
-                _timer = 0.0f;
-            }
-#endif
-        }
-
-        private void OnStateExit(GameState state)
-        {
-            switch (state)
-            {
-                case GameState.OpeningEnd:
+                    CurrentState = GameState.MainMenuEnd;
                     break;
                 case GameState.MainMenuEnd:
+                    if (!_esc)
+                    {
+                        StartCoroutine(LoadSceneAsync("Briefing"));
+                        CurrentState = GameState.BriefingStart;
+                    }
+                    else
+                    {
+                        CurrentState = GameState.Exit;
+                    }
+                    break;
+                case GameState.BriefingStart:
+                    CurrentState = GameState.BriefingUpdate;
+                    break;
+                case GameState.BriefingUpdate:
+                    CurrentState = GameState.BriefingEnd;
                     break;
                 case GameState.BriefingEnd:
+                    if (!_esc)
+                    {
+                        StartCoroutine(LoadSceneAsync("Game"));
+                        CurrentState = GameState.GameStart;
+                    }
+                    else
+                    {
+                        StartCoroutine(LoadSceneAsync("MainMenu"));
+                        CurrentState = GameState.MainMenuStart;
+                    }
+                    break;
+                case GameState.GameStart:
+                    CurrentState = GameState.GameUpdate;
+                    break;
+                case GameState.GameUpdate:
+                    CurrentState = GameState.GameEnd;
                     break;
                 case GameState.GameEnd:
+                    if (_f12)
+                    {
+                        StartCoroutine(LoadSceneAsync("Game"));
+                        CurrentState = GameState.GameStart;
+                    }
+                    else if (!_esc)
+                    {
+                        StartCoroutine(LoadSceneAsync("Result"));
+                        CurrentState = GameState.ResultStart;
+                    }
+                    else
+                    {
+                        StartCoroutine(LoadSceneAsync("MainMenu"));
+                        CurrentState = GameState.MainMenuStart;
+                    }
+                    break;
+                case GameState.ResultStart:
+                    CurrentState = GameState.ResultUpdate;
+                    break;
+                case GameState.ResultUpdate:
+                    CurrentState = GameState.ResultEnd;
                     break;
                 case GameState.ResultEnd:
+                    StartCoroutine(LoadSceneAsync("MainMenu"));
+                    CurrentState = GameState.MainMenuStart;
+                    break;
+                default:
+                    CurrentState = GameState.None;
                     break;
             }
 #if UNITY_EDITOR
-            Debug.Log($"[StateMachine] State {state} exited.");
+            Debug.Log($"[StateMachine] State changed: {prevState} -> {CurrentState}");
 #endif
         }
 
+        /// <summary>
+        /// Resets specific internal button state flags and triggers a state transition in the state machine.
+        /// </summary>
+        /// <remarks>
+        /// This method sets both `_esc` and `_f12` flags to `false`, effectively clearing any previous button
+        /// press states. Following the reset, it invokes the `NextState` method to progress to the next game state
+        /// based on the current state and conditions.
+        /// </remarks>
+        public void MouseButtonFlag()
+        {
+            _esc = false;
+            _f12 = false;
+            NextState();
+        }
+
+        /// <summary>
+        /// Updates the state machine to handle the Escape button input and triggers the corresponding state transition.
+        /// </summary>
+        /// <remarks>
+        /// This method sets the internal escape flag to true and resets the F12 flag to ensure only one action takes precedence.
+        /// After updating the flags, it invokes the `NextState` method to perform the state transition logic according to the updated conditions.
+        /// This ensures the game reacts appropriately to the Escape button being activated.
+        /// </remarks>
+        public void EscapeButtonFlag()
+        {
+            _esc = true;
+            _f12 = false;
+            NextState();
+        }
+
+        /// <summary>
+        /// Sets the F12 button activation flag and triggers a transition to the next state.
+        /// </summary>
+        /// <remarks>
+        /// This method updates the internal state by setting the `_f12` flag to true and resetting the `_esc` flag.
+        /// It then invokes the `NextState` method to transition the state machine to the later state.
+        /// This is typically called when the F12 key is pressed to signal specific game state changes or behaviors.
+        /// </remarks>
+        public void F12ButtonFlag()
+        {
+            _esc = false;
+            _f12 = true;
+            NextState();
+        }
+        
         private IEnumerator LoadSceneAsync(string sceneName)
         {
             var asyncLoad = SceneManager.LoadSceneAsync(sceneName);
@@ -121,26 +176,6 @@ namespace UnityXOPS
             while (asyncLoad is { isDone: false })
             {
                 yield return null;
-            }
-
-            // After loading the scene, transition to the update state
-            switch (sceneName)
-            {
-                case "Opening":
-                    SetState(GameState.OpeningUpdate);
-                    break;
-                case "MainMenu":
-                    SetState(GameState.MainMenuUpdate);
-                    break;
-                case "Briefing":
-                    SetState(GameState.BriefingUpdate);
-                    break;
-                case "Game":
-                    SetState(GameState.GameUpdate);
-                    break;
-                case "Result":
-                    SetState(GameState.ResultUpdate);
-                    break;
             }
         }
     }
@@ -155,7 +190,7 @@ namespace UnityXOPS
     /// </remarks>
     public enum GameState
     {
-        None,   
+        None,
         OpeningStart,
         OpeningUpdate,
         OpeningEnd,
@@ -171,5 +206,13 @@ namespace UnityXOPS
         ResultStart,
         ResultUpdate,
         ResultEnd,
+        Exit
+    }
+
+    public enum StateMode
+    {
+        Normal,
+        BriefingResult,
+        Game
     }
 }

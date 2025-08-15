@@ -21,13 +21,12 @@ namespace UnityXOPS
             0x1A, 0x00, 0xFF, 0x01 //(rest 4 bytes are unwritable with keyboard)
         };
         
-        [SerializeField]
-        private List<PointData> pointData = new();
+        public List<PointData> pointData = new();
         
-        public bool Loaded { get; private set; }
+        public bool Read { get; private set; }
         
         //Resharper disable once InconsistentNaming
-        public void LoadPD1(string path)
+        public void ReadPD1(string path)
         {
             if (!File.Exists(path))
             {
@@ -53,7 +52,7 @@ namespace UnityXOPS
             
             if (header.SequenceEqual(PointDataHeader))
             {
-                LoadPD1Expansion(fs);
+                ReadPD1Expansion(fs);
 #if UNITY_EDITOR
                 Debug.Log($"[PointDataReader] .pd1 expansion file loaded: {fileName}");
 #endif
@@ -61,12 +60,13 @@ namespace UnityXOPS
             else
             {
                 fs.Seek(0, SeekOrigin.Begin);
-                LoadPD1Legacy(fs);
+                ReadPD1Legacy(fs);
 #if UNITY_EDITOR
                 Debug.Log($"[PointDataReader] .pd1 legacy file loaded: {fileName}");
 #endif
             }
 
+            Read = true;
             fs.Close();
         }
         
@@ -81,13 +81,15 @@ namespace UnityXOPS
             {
                 Destroy(child.gameObject);
             }
+
+            Read = false;
 #if UNITY_EDITOR
             Debug.Log("[PointDataReader] Block data cleared.");
 #endif
         }
         
         //Resharper disable once InconsistentNaming
-        private void LoadPD1Legacy(FileStream fs)
+        private void ReadPD1Legacy(FileStream fs)
         {
             using BinaryReader br = new(fs);
 
@@ -102,7 +104,7 @@ namespace UnityXOPS
                         y = BitConverter.ToSingle(br.ReadBytes(4), 0) * 0.1f,
                         z = BitConverter.ToSingle(br.ReadBytes(4), 0) * 0.1f
                     },
-                    rotation = Quaternion.Euler(0, BitConverter.ToSingle(br.ReadBytes(4), 0) * Mathf.Deg2Rad, 0),
+                    rotation = Quaternion.Euler(0, BitConverter.ToSingle(br.ReadBytes(4), 0) * Mathf.Rad2Deg, 0),
                     key = br.ReadByte(),
                     value0 = br.ReadByte(),
                     value1 = br.ReadByte(),
@@ -114,7 +116,7 @@ namespace UnityXOPS
         }
         
         //Resharper disable once InconsistentNaming
-        private void LoadPD1Expansion(FileStream fs)
+        private void ReadPD1Expansion(FileStream fs)
         {
             
         }

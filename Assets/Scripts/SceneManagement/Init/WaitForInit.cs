@@ -7,6 +7,7 @@ namespace UnityXOPS
     /// <summary>
     /// Represents a MonoBehaviour-based utility class designed to manage or wait for initialization processes in a Unity application.
     /// </summary>
+    [DefaultExecutionOrder(-100)]
     public class WaitForInit : MonoBehaviour
     {
         private void Start()
@@ -22,10 +23,11 @@ namespace UnityXOPS
         private IEnumerator Initialize()
         {
             PrivateProfileReader.LoadProfile();
+            OpeningData.LoadOpeningData();
             
             yield return null;
             
-            StateMachine.Instance.SetState(GameState.OpeningStart);
+            StateMachine.Instance.NextState();
         }
     }
 }

@@ -66,10 +66,9 @@ namespace UnityXOPS
             var success = 0;
             var failed = 0;
             
-
             var sb = new StringBuilder(256);
             GetPrivateProfileString("General", "import_language", "", sb, sb.Capacity, ProfilePath);
-            var importLanguage = sb.ToString().ToLower();
+            var importLanguage = sb.ToString().ToLower().Trim();
             switch (importLanguage)
             {
                 case "jp":
@@ -88,7 +87,7 @@ namespace UnityXOPS
 
             sb.Clear();
             GetPrivateProfileString("General", "fix_x_file_error", "", sb, sb.Capacity, ProfilePath);
-            var fixXFileError = sb.ToString();
+            var fixXFileError = sb.ToString().Trim();
             switch (fixXFileError)
             {
                 case "0":

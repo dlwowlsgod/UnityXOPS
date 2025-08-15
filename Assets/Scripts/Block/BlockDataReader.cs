@@ -33,37 +33,19 @@ namespace UnityXOPS
             0x42, 0x44, 0x31, 0x21, //BD1!
             0x1A, 0x00, 0xFF, 0x01  //(rest 4 bytes are unwritable with keyboard)
         };
-
-        private static readonly int[][] VertexPosition =
-        {
-            new[] { 0, 3, 2, 1 },
-            new[] { 7, 4, 5, 6 },
-            new[] { 4, 0, 1, 5 },
-            new[] { 5, 1, 2, 6 },
-            new[] { 6, 2, 3, 7 },
-            new[] { 7, 3, 0, 4 }
-        };
-
-        private static readonly int Mode = Shader.PropertyToID("_Mode");
-        private static readonly int Glossiness = Shader.PropertyToID("_Glossiness");
-        private static readonly int SrcBlend = Shader.PropertyToID("_SrcBlend");
-        private static readonly int DstBlend = Shader.PropertyToID("_DstBlend");
-        private static readonly int ZWrite = Shader.PropertyToID("_ZWrite");
-
-        [SerializeField]
-        private List<TextureData> texturePaths = new();
         
-        [SerializeField]
-        private List<BlockData> blockData = new();
+        public List<TextureData> texturePaths = new();
         
-        public bool Loaded { get; private set; }
+        public List<BlockData> blockData = new();
+        
+        public bool Read { get; private set; }
 
         //Resharper disable once InconsistentNaming
         /// <summary>
         /// Loads a BD1 file and processes it, determining its type (legacy or expansion).
         /// </summary>
-        /// <param name="path">The file path of the BD1 file to be loaded.</param>
-        public void LoadBD1(string path)
+        /// <param name="path">The file path of the BD1 file to be read.</param>
+        public void ReadBD1(string path)
         {
             if (!File.Exists(path))
             {
@@ -82,149 +64,31 @@ namespace UnityXOPS
             }
                 
             var fileName = Path.GetFileNameWithoutExtension(path);
-            var directory = Path.GetDirectoryName(path);
                 
             var header = new byte[8];
             _ = fs.Read(header, 0, 8);
             if (header.SequenceEqual(BlockDataHeader))
             {
-                LoadBD1Expansion(fs);
+                ReadBD1Expansion(fs);
 #if UNITY_EDITOR
-                Debug.Log($"[BlockDataReader] .bd1 expansion file loaded: {fileName}");
+                Debug.Log($"[BlockDataReader] .bd1 expansion file Read: {fileName}");
 #endif
             }
             else
             {
                 fs.Seek(0, SeekOrigin.Begin);
-                LoadBD1Legacy(fs);
+                ReadBD1Legacy(fs);
 #if UNITY_EDITOR
-                Debug.Log($"[BlockDataReader] .bd1 legacy file loaded: {fileName}");
+                Debug.Log($"[BlockDataReader] .bd1 legacy file Read: {fileName}");
 #endif
             }
 
+            Read = true;
             fs.Close();
-            
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            //아래 시퀀스 독립 스크립트로 복붙해서 분리 필요 (단일 책임 위반)
-            //아래 코드는 테스트를 위해 임시로 작성해둠
-            //(지우고 다른 스크립트 파일에 다시 작성하기에는 너무 고된 작업이라서)
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            
-            //Build texture into material
-            for (var i = 0; i < texturePaths.Count; i++)
-            {
-                var material = new Material(Shader.Find("Standard"));
-                material.SetFloat(Mode, 1f);
-                material.SetFloat(Glossiness, 0.0f); 
-                material.SetOverrideTag("RenderType", "TransparentCutout");
-                material.SetInt(SrcBlend, (int)UnityEngine.Rendering.BlendMode.One);
-                material.SetInt(DstBlend, (int)UnityEngine.Rendering.BlendMode.Zero);
-                material.SetInt(ZWrite, 1);
-                material.EnableKeyword("_ALPHATEST_ON");
-                material.DisableKeyword("_ALPHABLEND_ON");
-                material.DisableKeyword("_ALPHAPREMULTIPLY_ON");                
-                material.renderQueue = 2450;
-                
-                if (!string.IsNullOrEmpty(texturePaths[i].path))
-                {
-                    if (directory != null)
-                    {
-                        var texturePath = Path.Combine(directory, texturePaths[i].path);
-                        if (File.Exists(texturePath))
-                        {
-                            var texture = ImageReader.LoadTexture(texturePath);
-                            if (texture)
-                            {
-                                material.mainTexture = texture;
-                                
-                            }
-                        }
-                    }
-                }
-                texturePaths[i].material = material;
-                
-#if UNITY_EDITOR
-                Debug.Log($"[BlockDataReader][{fileName}] Texture {i} built");
-#endif
-            }
-
-            //Build block into meshes
-            for (var i = 0; i < blockData.Count; i++)
-            {
-                blockData[i].meshes = new List<Mesh>();
-                var parent = new GameObject($"block {i}");
-                parent.transform.SetParent(transform);
-                parent.transform.localPosition = Vector3.zero;
-                parent.transform.localRotation = Quaternion.identity;
-                parent.transform.localScale = Vector3.one;
-                
-                for (var j = 0; j < 6; j++)
-                {
-                    var mesh = new Mesh
-                    {
-                        name = $"Block {i} Face {j}",
-                        vertices = new[]
-                        {
-                            blockData[i].vertices[VertexPosition[j][0]],
-                            blockData[i].vertices[VertexPosition[j][1]],
-                            blockData[i].vertices[VertexPosition[j][2]],
-                            blockData[i].vertices[VertexPosition[j][3]]
-                        },
-                        triangles = new[]
-                        {
-                            0, 1, 2, 2, 3, 0
-                        },
-                        uv = new[]
-                        {
-                            blockData[i].faces[j].uv[0],
-                            blockData[i].faces[j].uv[1],
-                            blockData[i].faces[j].uv[2],
-                            blockData[i].faces[j].uv[3]
-                        }
-                    };
-                    
-                    mesh.RecalculateNormals();
-                    mesh.RecalculateTangents();
-                    mesh.RecalculateBounds();
-                    mesh.Optimize();
-                    
-                    blockData[i].meshes.Add(mesh);
-                    
-                    var child = new GameObject($"block {i}_{j}");
-                    child.transform.SetParent(parent.transform);
-                    child.transform.localPosition = Vector3.zero;
-                    child.transform.localRotation = Quaternion.identity;
-                    child.transform.localScale = Vector3.one;
-                    
-                    child.AddComponent<MeshFilter>().mesh = mesh;
-                    child.AddComponent<MeshRenderer>().material = texturePaths[blockData[i].textureIndices[j]].material;
-                }
-                
-#if UNITY_EDITOR
-                Debug.Log($"[BlockDataReader][{fileName}] Block {i} built");
-#endif
-            }
-        }
-
-        //Resharper disable once InconsistentNaming
-        /// <summary>
-        /// Clears all loaded BD1 block data, including textures and child objects in the scene.
-        /// </summary>
-        public void ClearBD1()
-        {
-            texturePaths.Clear();
-            blockData.Clear();
-            foreach (Transform child in transform)
-            {
-                Destroy(child.gameObject);
-            }
-#if UNITY_EDITOR
-            Debug.Log("[BlockDataReader] Block data cleared.");
-#endif
         }
         
         //Resharper disable once InconsistentNaming
-        private void LoadBD1Legacy(FileStream fs)
+        private void ReadBD1Legacy(FileStream fs)
         {
             //Do not close the file stream here, as it is used in the expansion file loading method
             using BinaryReader br = new(fs);
@@ -310,9 +174,21 @@ namespace UnityXOPS
         }
         
         //Resharper disable once InconsistentNaming
-        private void LoadBD1Expansion(FileStream fs)
+        private void ReadBD1Expansion(FileStream fs)
         {
             //Do not close the file stream here, as it is used in the legacy file loading method
+        }
+
+        //Resharper disable once InconsistentNaming
+        public void ClearBD1()
+        {
+            texturePaths.Clear();
+            blockData.Clear();
+            Read = false;
+            
+#if UNITY_EDITOR
+            Debug.Log($"[BlockDataReader] Block data cleared.");
+#endif
         }
     }
 
