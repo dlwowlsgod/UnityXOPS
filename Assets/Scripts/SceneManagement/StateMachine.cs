@@ -132,7 +132,7 @@ namespace UnityXOPS
         /// press states. Following the reset, it invokes the `NextState` method to progress to the next game state
         /// based on the current state and conditions.
         /// </remarks>
-        public void MouseButtonFlag()
+        public void AnyKeyFlag()
         {
             _esc = false;
             _f12 = false;
@@ -207,12 +207,5 @@ namespace UnityXOPS
         ResultUpdate,
         ResultEnd,
         Exit
-    }
-
-    public enum StateMode
-    {
-        Normal,
-        BriefingResult,
-        Game
     }
 }

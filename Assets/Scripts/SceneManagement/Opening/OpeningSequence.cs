@@ -143,7 +143,10 @@ namespace UnityXOPS
             for (var i = 0; i < option.positionData.Count; i++)
             {
                 var currentPosData = option.positionData[i];
-                if (!(_timer >= currentPosData.time.x && _timer <= currentPosData.time.y)) continue;
+                if (!(_timer >= currentPosData.time.x && _timer <= currentPosData.time.y))
+                {
+                    continue;
+                }
                 
                 var startPos = i == 0 ? option.startPosition : option.positionData[i - 1].position;
                 var endPos = currentPosData.position;
@@ -155,7 +158,10 @@ namespace UnityXOPS
             for (var i = 0; i < option.rotationData.Count; i++)
             {
                 var currentRotData = option.rotationData[i];
-                if (!(_timer >= currentRotData.time.x && _timer <= currentRotData.time.y)) continue;
+                if (!(_timer >= currentRotData.time.x && _timer <= currentRotData.time.y))
+                {
+                    continue;
+                }
                 
                 var startRot = i == 0 ? option.startRotation : option.rotationData[i - 1].position;
                 var endRot = currentRotData.position;
@@ -168,7 +174,7 @@ namespace UnityXOPS
             //state
             if (Input.anyKeyDown || OpeningData.OpeningEnd <= _timer)
             {
-                StateMachine.Instance.NextState();
+                StateMachine.Instance.AnyKeyFlag();
             }
 
             if (StateMachine.Instance.CurrentState == GameState.OpeningEnd)
