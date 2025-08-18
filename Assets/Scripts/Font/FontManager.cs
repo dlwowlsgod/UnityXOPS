@@ -93,6 +93,8 @@ namespace UnityXOPS
             Vector2 anchoredPosition, Vector2 sizeDelta, TextAlignmentOptions alignment,
             string text, string colorHex, bool gameText, Transform parent)
         {
+            var scale = Screen.height / 540f;
+            
             var obj = new GameObject("tmpObject");
             obj.transform.SetParent(parent);
 
@@ -107,8 +109,8 @@ namespace UnityXOPS
             tmp.font = OSFont;
             tmp.spriteAsset = GameFont;
             tmp.enableAutoSizing = true;
-            tmp.fontSizeMin = rt.sizeDelta.y * 0.748f;
-            tmp.fontSizeMax = rt.sizeDelta.y * 0.752f;
+            tmp.fontSizeMin = rt.sizeDelta.y * 0.748f * scale;
+            tmp.fontSizeMax = rt.sizeDelta.y * 0.752f * scale;
             tmp.textWrappingMode = TextWrappingModes.Normal;
             tmp.alignment = alignment;
             if (gameText)

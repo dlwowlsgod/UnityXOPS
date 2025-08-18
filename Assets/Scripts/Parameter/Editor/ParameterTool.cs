@@ -115,7 +115,7 @@ namespace UnityXOPS.Editor
             }).ToList();
             var officialMissionWrapper = new OfficialMissionParameterList { items = officialMissionDataList };
             var officialMissionJson = JsonUtility.ToJson(officialMissionWrapper, true);
-            var officialMissionPath = Path.Combine(Application.streamingAssetsPath, "common", "parameter", "officialMission.json");
+            var officialMissionPath = Path.Combine(Application.streamingAssetsPath, "common", "parameter", "official_mission.json");
             File.WriteAllText(officialMissionPath, officialMissionJson);
             Debug.Log($"[ParameterTool] Official mission parameter saved to {officialMissionPath}");
             

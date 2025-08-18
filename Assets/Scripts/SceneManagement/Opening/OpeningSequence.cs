@@ -76,18 +76,18 @@ namespace UnityXOPS
                     new Vector2(0f, 1f),
                     new Vector2(0f, 0.5f),
                     new Vector2(0f, 0.5f),
-                    new Vector2(50f, 155f),
+                    new Vector2(50f, 145f),
                     new Vector2(1000f, 30f),
                     TextAlignmentOptions.MidlineLeft,
-                    "TEAM-MITEI", "FFFFFF", true, _textRootTransform);
+                    "nine-two", "FFFFFF", true, _textRootTransform);
                 var text3 = FontManager.Instance.CreateText(
                     new Vector2(0f, 1f),
                     new Vector2(0f, 0.5f),
                     new Vector2(0f, 0.5f),
-                    new Vector2(50f, 155f),
+                    new Vector2(50f, 110f),
                     new Vector2(1000f, 30f),
                     TextAlignmentOptions.MidlineLeft,
-                    "TEAM-MITEI", "FFFFFF", true, _textRootTransform);
+                    "TENNKUU", "FFFFFF", true, _textRootTransform);
                 var text4 = FontManager.Instance.CreateText(
                     new Vector2(0f, 1f),
                     new Vector2(0f, 0.5f),
@@ -100,7 +100,7 @@ namespace UnityXOPS
                     new Vector2(0f, 1f),
                     new Vector2(0f, 0.5f),
                     new Vector2(0f, 0.5f),
-                    new Vector2(50f, -70f),
+                    new Vector2(50f, -90f),
                     new Vector2(1000f, 30f),
                     TextAlignmentOptions.MidlineLeft,
                     "[-_-;](mikan)", "FFFFFF", true, _textRootTransform);
@@ -116,7 +116,7 @@ namespace UnityXOPS
                     new Vector2(1f, 1f),
                     new Vector2(1f, 0.5f),
                     new Vector2(1f, 0.5f),
-                    new Vector2(-50f, 45f),
+                    new Vector2(-50f, 20f),
                     new Vector2(1000f, 30f),
                     TextAlignmentOptions.MidlineRight,
                     "dlwowlsgod", "FFFFFF", true, _textRootTransform);

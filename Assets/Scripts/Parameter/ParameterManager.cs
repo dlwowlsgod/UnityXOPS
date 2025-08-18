@@ -17,9 +17,9 @@ namespace UnityXOPS
 
         public void LoadParameters()
         {
-            LoadParameter<DemoParameter, DemoParameterList, DemoParameterWrapper>(demoParameters, "common/parameter/demo.json");
-            LoadParameter<SkyParameter, SkyParameterList, SkyParameterWrapper>(skyParameters, "common/parameter/sky.json");
-
+            LoadParameter<DemoParameter, DemoParameterList, DemoParameterWrapper>(demoParameters, @"common\parameter\demo.json");
+            LoadParameter<SkyParameter, SkyParameterList, SkyParameterWrapper>(skyParameters, @"common\parameter\sky.json");
+            LoadParameter<OfficialMissionParameter, OfficialMissionParameterList, OfficialMissionParameterWrapper>(officialMissionParameters, @"common\parameter\official_mission.json");
         }
 
         private void LoadParameter<TSo, TList, TData>(List<TSo> target, string path) 
@@ -28,7 +28,7 @@ namespace UnityXOPS
             where TData : IParameterData
         {
             var finalPath = Path.Combine(Application.streamingAssetsPath, path);
-            if (!File.Exists(path))
+            if (!File.Exists(finalPath))
             {
 #if UNITY_EDITOR
                 Debug.Log("[ParameterManager] No Json file detected. Use default parameters.");
