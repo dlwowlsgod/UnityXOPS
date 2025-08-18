@@ -108,7 +108,7 @@ namespace B83.Image.BMP
         public uint aMask = 0x00000000;
         public List<Color32> palette;
         public Color32[] imageData;
-        public Texture2D ToTexture2D()
+        public Texture2D ToTexture2D(string name = "")
         {
             var tex = new Texture2D(info.absWidth, info.absHeight);
             
@@ -116,6 +116,7 @@ namespace B83.Image.BMP
                 FlipImage();
             
             tex.SetPixels32(imageData);
+            tex.name = name;
             tex.Apply();
             return tex;
         }

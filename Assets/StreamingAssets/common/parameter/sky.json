@@ -1,0 +1,76 @@
+{
+    "items": [
+        {
+            "finalName": "dark",
+            "skyTexturePath": "",
+            "billboardTexturePath": "",
+            "cloudTexturePath": "",
+            "lightTexturePath": "",
+            "light": false,
+            "lightDirection": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        },
+        {
+            "finalName": "sunny",
+            "skyTexturePath": "data\\sky\\sky1.bmp",
+            "billboardTexturePath": "",
+            "cloudTexturePath": "",
+            "lightTexturePath": "",
+            "light": false,
+            "lightDirection": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        },
+        {
+            "finalName": "cloudy",
+            "skyTexturePath": "data\\sky\\sky2.bmp",
+            "billboardTexturePath": "",
+            "cloudTexturePath": "",
+            "lightTexturePath": "",
+            "light": false,
+            "lightDirection": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        },
+        {
+            "finalName": "night",
+            "skyTexturePath": "data\\sky\\sky3.bmp",
+            "billboardTexturePath": "",
+            "cloudTexturePath": "",
+            "lightTexturePath": "",
+            "light": false,
+            "lightDirection": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        },
+        {
+            "finalName": "sunset",
+            "skyTexturePath": "data\\sky\\sky4.bmp",
+            "billboardTexturePath": "",
+            "cloudTexturePath": "",
+            "lightTexturePath": "",
+            "light": false,
+            "lightDirection": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        },
+        {
+            "finalName": "wild",
+            "skyTexturePath": "data\\sky\\sky5.bmp",
+            "billboardTexturePath": "",
+            "cloudTexturePath": "",
+            "lightTexturePath": "",
+            "light": false,
+            "lightDirection": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        }
+    ]
+}

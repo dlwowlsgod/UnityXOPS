@@ -73,16 +73,21 @@ namespace UnityXOPS
                     if (directory != null)
                     {
                         var texturePath = Path.Combine(directory, texturePaths[i].path);
+                        var textureName = Path.GetFileName(texturePath);
                         if (File.Exists(texturePath))
                         {
                             var texture = ImageReader.LoadTexture(texturePath);
                             if (texture)
                             {
+                                material.name = textureName;
                                 material.mainTexture = texture;
-
                             }
                         }
                     }
+                }
+                else
+                {
+                    material.name = $"null_id{i}";
                 }
 
                 texturePaths[i].material = material;
@@ -91,22 +96,20 @@ namespace UnityXOPS
                 Debug.Log($"[BlockDataLoader][{fileName}] Texture {i} built");
 #endif
             }
+
+            var combineInstancesByMaterial = new Dictionary<Material, List<CombineInstance>>();
             
             //Build block into meshes
             for (var i = 0; i < blockData.Count; i++)
             {
-                blockData[i].meshes = new List<Mesh>();
-                var parent = new GameObject($"block {i}");
-                parent.transform.SetParent(transform);
-                parent.transform.localPosition = Vector3.zero;
-                parent.transform.localRotation = Quaternion.identity;
-                parent.transform.localScale = Vector3.one;
-
                 for (var j = 0; j < 6; j++)
                 {
+                    var material = texturePaths[blockData[i].textureIndices[j]].material;
+                    if (material == null) continue;
+
                     var mesh = new Mesh
                     {
-                        name = $"Block {i} Face {j}",
+                        name = $"Block_{i}_Face_{j}",
                         vertices = new[]
                         {
                             blockData[i].vertices[VertexPosition[j][0]],
@@ -126,29 +129,58 @@ namespace UnityXOPS
                             blockData[i].faces[j].uv[3]
                         }
                     };
-
-                    mesh.RecalculateNormals();
-                    mesh.RecalculateTangents();
+                    
                     mesh.RecalculateBounds();
-                    mesh.Optimize();
+                    mesh.RecalculateNormals();
 
-                    blockData[i].meshes.Add(mesh);
+                    var combineInstance = new CombineInstance
+                    {
+                        mesh = mesh,
+                        transform = Matrix4x4.identity
+                    };
 
-                    var child = new GameObject($"block {i}_{j}");
-                    child.transform.SetParent(parent.transform);
-                    child.transform.localPosition = Vector3.zero;
-                    child.transform.localRotation = Quaternion.identity;
-                    child.transform.localScale = Vector3.one;
-
-                    child.AddComponent<MeshFilter>().mesh = mesh;
-                    child.AddComponent<MeshRenderer>().material = texturePaths[blockData[i].textureIndices[j]].material;
+                    if (!combineInstancesByMaterial.ContainsKey(material))
+                    {
+                        combineInstancesByMaterial[material] = new List<CombineInstance>();
+                    }
+                    combineInstancesByMaterial[material].Add(combineInstance);
                 }
-
 #if UNITY_EDITOR
                 Debug.Log($"[BlockDataLoader][{fileName}] Block {i} built");
 #endif
-                Load = true;
             }
+
+            // Create a single GameObject for each material
+            foreach (var kvp in combineInstancesByMaterial)
+            {
+                var material = kvp.Key;
+                var combineInstances = kvp.Value;
+                
+                var combinedGo = new GameObject($"CombinedMesh_{material.name}");
+                combinedGo.transform.SetParent(transform);
+                combinedGo.transform.localPosition = Vector3.zero;
+                combinedGo.transform.localRotation = Quaternion.identity;
+                combinedGo.transform.localScale = Vector3.one;
+
+                var meshFilter = combinedGo.AddComponent<MeshFilter>();
+                var meshRenderer = combinedGo.AddComponent<MeshRenderer>();
+                
+                var combinedMesh = new Mesh();
+                combinedMesh.name = $"combined_mesh_{material.name}";
+                combinedMesh.CombineMeshes(combineInstances.ToArray(), true, true);
+                
+                meshFilter.mesh = combinedMesh;
+                meshRenderer.material = material;
+#if UNITY_EDITOR
+                Debug.Log($"[BlockDataLoader][{fileName}] Combined mesh created for material: {material.name}");
+#endif
+            }
+            
+#if UNITY_EDITOR
+            Debug.Log($"[BlockDataLoader][{fileName}] Block data completely loaded");
+#endif
+
+            Load = true;
         }
         //Resharper disable once InconsistentNaming
         public void DestroyBD1()
