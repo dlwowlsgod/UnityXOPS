@@ -1,5 +1,6 @@
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using System.Linq;
 using System.Text;
@@ -75,16 +76,54 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// Converts a regular text string into a rich text-compatible representation for in-game usage.
-        /// Unsupported characters are replaced by corresponding rich text sprite tags, which are linked to the game font sprite asset.
+        /// Creates a text object with the specified properties and adds it as a child to the specified parent transform.
         /// </summary>
-        /// <param name="text">The input text string to be converted.</param>
-        /// <param name="colorHex">An optional hexadecimal color string used to apply a color to the rendered text. Defaults to "FFFFFF" (white).</param>
-        /// <returns>
-        /// A string that incorporates rich text formatting compatible with TextMeshPro components, where unsupported characters
-        /// are replaced by their respective sprite representations.
-        /// </returns>
-        public static string NormalTextToGameText(string text, string colorHex = "FFFFFF")
+        /// <param name="pivot">The pivot point of the RectTransform.</param>
+        /// <param name="anchorMin">The minimum anchor point of the RectTransform.</param>
+        /// <param name="anchorMax">The maximum anchor point of the RectTransform.</param>
+        /// <param name="anchoredPosition">The anchored position of the RectTransform.</param>
+        /// <param name="sizeDelta">The size delta of the RectTransform.</param>
+        /// <param name="alignment">The text alignment options for the TextMeshProUGUI component.</param>
+        /// <param name="text">The text content to be displayed.</param>
+        /// <param name="color">The color of the text.</param>
+        /// <param name="gameText">A boolean indicating whether the text is game-related or not.</param>
+        /// <param name="parent">The parent transform under which the text object will be added.</param>
+        /// <returns>Returns the created GameObject representing the text.</returns>
+        public GameObject CreateText(Vector2 pivot, Vector2 anchorMin, Vector2 anchorMax,
+            Vector2 anchoredPosition, Vector2 sizeDelta, TextAlignmentOptions alignment,
+            string text, string colorHex, bool gameText, Transform parent)
+        {
+            var obj = new GameObject("tmpObject");
+            obj.transform.SetParent(parent);
+
+            var rt = obj.AddComponent<RectTransform>();
+            rt.pivot = pivot;
+            rt.anchorMin = anchorMin;
+            rt.anchorMax = anchorMax;
+            rt.anchoredPosition = anchoredPosition;
+            rt.sizeDelta = sizeDelta;
+            
+            var tmp = obj.AddComponent<TextMeshProUGUI>();
+            tmp.font = OSFont;
+            tmp.spriteAsset = GameFont;
+            tmp.enableAutoSizing = true;
+            tmp.fontSizeMin = rt.sizeDelta.y * 0.748f;
+            tmp.fontSizeMax = rt.sizeDelta.y * 0.752f;
+            tmp.textWrappingMode = TextWrappingModes.Normal;
+            tmp.alignment = alignment;
+            if (gameText)
+            {
+                tmp.text = NormalTextToGameText(text, colorHex);
+            }
+            else
+            {
+                tmp.text = text;
+            }
+            
+            return obj;
+        }
+        
+        private static string NormalTextToGameText(string text, string colorHex)
         {
             var sb = new StringBuilder();
             foreach (var c in text)

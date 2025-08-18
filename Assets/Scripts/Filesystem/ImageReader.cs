@@ -78,6 +78,8 @@ namespace UnityXOPS
                     var bytes = File.ReadAllBytes(path);
                     var texture2D = new Texture2D(2, 2);
                     texture2D.LoadImage(bytes);
+                    texture2D.name = name;
+                    texture2D.Apply();
                     TextureCache.Add(path, texture2D);
 #if UNITY_EDITOR
                     Debug.Log($"[ImageLoader] texture {name} returned");
@@ -87,7 +89,7 @@ namespace UnityXOPS
                 case ".bmp":
                 {
                     var bmpImage = BmpLoader.LoadBMP(path);
-                    var texture2D = bmpImage.ToTexture2D();
+                    var texture2D = bmpImage.ToTexture2D(name);
                     TextureCache.Add(path, texture2D);
 #if UNITY_EDITOR
                     Debug.Log($"[ImageLoader] texture {name} returned");
@@ -96,7 +98,7 @@ namespace UnityXOPS
                 }
                 case ".dds":
                 {
-                    var texture2D = DdsTextureLoader.LoadTexture(path);
+                    var texture2D = DdsTextureLoader.LoadTexture(path, false, name);
                     TextureCache.Add(path, texture2D);
 #if UNITY_EDITOR
                     Debug.Log($"[ImageLoader] texture {name} returned");

@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using UnityEngine.SceneManagement;
 
 namespace UnityXOPS
 {
@@ -23,7 +22,7 @@ namespace UnityXOPS
         private IEnumerator Initialize()
         {
             PrivateProfileReader.LoadProfile();
-            OpeningData.LoadOpeningData();
+            ParameterManager.Instance.LoadParameters();
             
             yield return null;
             
