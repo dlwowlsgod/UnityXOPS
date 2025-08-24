@@ -7,6 +7,12 @@ using System.Linq;
 
 namespace UnityXOPS.Editor
 {
+    /// <summary>
+    /// 에디터에서 ScriptableObject화한 Parameter를 json으로 저장하기 위한 클래스입니다.
+    /// </summary>
+    /// <remarks>
+    /// Menubar의 UnityXOPS/Parameter에 있습니다.
+    /// </remarks>
     public class ParameterTool
     {
         [MenuItem("UnityXOPS/Parameter/Save Demo Parameter to JSON")]

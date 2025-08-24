@@ -5,11 +5,10 @@ using System.Collections;
 namespace UnityXOPS
 {
     /// <summary>
-    /// Represents a state machine responsible for managing transitions between various game states.
+    /// UnityXOPS의 씬 전환을 담당하는 StateMachine입니다.
     /// </summary>
     /// <remarks>
-    /// This class implements a state machine pattern to handle game states and transitions in a structured manner.
-    /// It ensures proper entry and exit logic for each state while avoiding redundant transitions to the same state.
+    /// FSM (유한 상태 기계, Finite State Machine) 모델을 따릅니다.
     /// </remarks>
     public class StateMachine : Singleton<StateMachine>
     {
@@ -18,17 +17,9 @@ namespace UnityXOPS
         private bool _f12;
 
         /// <summary>
-        /// Advances the state machine to the next state based on the current state and specific conditions.
+        /// 다음 씬으로 이동합니다.
         /// </summary>
-        /// <remarks>
-        /// This method transitions the `CurrentState` variable to its later state in the state sequence
-        /// or cycles back to the initial state if no valid transition is determined. The state transition logic
-        /// is determined based on the enumeration values of `GameState` and certain flags (_f12 and _esc).
-        /// Additionally, it performs specific operations when transitioning between certain states, such as
-        /// starting coroutines for scene loading.
-        /// In Unity's editor mode, this method logs the state transition for debugging purposes.
-        /// </remarks>
-        public void NextState()
+        private void NextState()
         {
             var prevState = CurrentState;
             switch (CurrentState)
@@ -125,50 +116,22 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// Resets specific internal button state flags and triggers a state transition in the state machine.
+        /// 다음 State로 이동합니다.
         /// </summary>
-        /// <remarks>
-        /// This method sets both `_esc` and `_f12` flags to `false`, effectively clearing any previous button
-        /// press states. Following the reset, it invokes the `NextState` method to progress to the next game state
-        /// based on the current state and conditions.
-        /// </remarks>
-        public void AnyKeyFlag()
+        /// <param name="esc">ESC를 누른 상태</param>
+        /// <param name="f12">F12를 누른 상태</param>
+        public void NextState(bool esc, bool f12)
         {
-            _esc = false;
-            _f12 = false;
-            NextState();
-        }
-
-        /// <summary>
-        /// Updates the state machine to handle the Escape button input and triggers the corresponding state transition.
-        /// </summary>
-        /// <remarks>
-        /// This method sets the internal escape flag to true and resets the F12 flag to ensure only one action takes precedence.
-        /// After updating the flags, it invokes the `NextState` method to perform the state transition logic according to the updated conditions.
-        /// This ensures the game reacts appropriately to the Escape button being activated.
-        /// </remarks>
-        public void EscapeButtonFlag()
-        {
-            _esc = true;
-            _f12 = false;
-            NextState();
-        }
-
-        /// <summary>
-        /// Sets the F12 button activation flag and triggers a transition to the next state.
-        /// </summary>
-        /// <remarks>
-        /// This method updates the internal state by setting the `_f12` flag to true and resetting the `_esc` flag.
-        /// It then invokes the `NextState` method to transition the state machine to the later state.
-        /// This is typically called when the F12 key is pressed to signal specific game state changes or behaviors.
-        /// </remarks>
-        public void F12ButtonFlag()
-        {
-            _esc = false;
-            _f12 = true;
+            _esc = esc;
+            _f12 = f12;
             NextState();
         }
         
+        /// <summary>
+        /// 씬을 비동기 로드합니다.
+        /// </summary>
+        /// <param name="sceneName">Scene 이름</param>
+        /// <returns>코루틴 <see cref="IEnumerator">IEnumerator</see></returns>
         private IEnumerator LoadSceneAsync(string sceneName)
         {
             var asyncLoad = SceneManager.LoadSceneAsync(sceneName);
@@ -181,12 +144,12 @@ namespace UnityXOPS
     }
 
     /// <summary>
-    /// Represents the various states of the game in the state machine.
+    /// <see cref="StateMachine">StateMachine</see>의 씬 상태를 나타내는 열거형입니다.
     /// </summary>
     /// <remarks>
-    /// Each value corresponds to a specific phase or behavior of the game lifecycle.
-    /// The states are organized into groups such as Opening, MainMenu, Briefing, Game, and Result,
-    /// each consisting of Start, Update, and End phases.
+    /// 각 값은 게임 생명주기의 특정 단계나 동작에 해당합니다.
+    /// Opening, MainMenu, Briefing, Game, Result와 같은 그룹으로 상태가 구성되어 있으며,
+    /// 각 그룹은 Start, Update, End 단계로 이루어져 있습니다.
     /// </remarks>
     public enum GameState
     {

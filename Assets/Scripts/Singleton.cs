@@ -3,20 +3,15 @@ using UnityEngine;
 namespace UnityXOPS
 {
     /// <summary>
-    /// A generic Singleton class to enforce the single instance pattern for MonoBehaviour-derived classes.
+    /// <see cref="MonoBehaviour">MonoBehaviour</see>를 상속받아 구현한 Singleton 클래스입니다.
     /// </summary>
-    /// <typeparam name="T">The type of the class inheriting from this Singleton.</typeparam>
+    /// <typeparam name="T">싱글톤 클래스화 할 <see cref="MonoBehaviour">MonoBehaviour</see>를 상속받는 클래스</typeparam>
     /// <remarks>
-    /// This class ensures that there is only one instance of the specified type T at runtime.
-    /// If no instance exists, it creates a new GameObject with the component automatically.
+    /// Singleton <see cref="GameObject">GameObject</see>가 Scene Hierarchy에 존재하지 않을 경우 생성합니다. 
+    /// Singleton이 지정하지 않은 <see cref="GameObject">GameObject</see>가 존재할 경우 파괴합니다.
     /// </remarks>
     public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
-        /*
-        전형적인 싱글톤 클래스입니다. 당연히 남발 할거고요
-        구현 방식도 전형적인 템플릿 그 자체고요
-        단지 유니티 6 버전에 맞게 수정했습니다.
-         */
         private static T _instance;
 
         public static T Instance
@@ -40,7 +35,7 @@ namespace UnityXOPS
             }
         }
 
-        private void Awake()
+        protected virtual void Awake()
         {
             if (!_instance)
             {

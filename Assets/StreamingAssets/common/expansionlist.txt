@@ -1,0 +1,21 @@
+; expansion은 유동적이지 못한 기존 XOPS의 추가 사람, 무기, 사물을 사용하게 하는 기능입니다.
+; 게임 상에서 1번 페이지는 오리지널 임무로 고정, 마지막 페이지는 expansion이 아닌 임무들이
+; 사용됩니다. (기존 addon mif)
+; expansion은 그 사이의 페이지로 사용되며, 그 순서는 expansionlist.txt를 따릅니다.
+;
+; 첫 줄은 expansion의 개수로 고정
+;
+; 줄 n: expansion의 위치 (mif2 파일을 읽는데 필수)
+; mif2 파일은 expansion의 위치를 기준으로 검색하지만, mif2 파일의 bd1, pd1 등의 데이터는
+; exe가 있는 위치 (즉, UnityXOPS의 경우 StreamingAssets)
+;
+; 줄 n+1: expansion의 add-on human (없을 시 !) 
+;
+; 줄 n+1: expansion의 add-on weapon (없을 시 !)
+;
+; 줄 n+2: expansion의 add-on object (없을 시 !)
+1
+addon\JJLsChoiceVol1
+!
+!
+!

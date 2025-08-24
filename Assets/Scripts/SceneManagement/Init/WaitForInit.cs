@@ -4,7 +4,7 @@ using System.Collections;
 namespace UnityXOPS
 {
     /// <summary>
-    /// Represents a MonoBehaviour-based utility class designed to manage or wait for initialization processes in a Unity application.
+    /// 게임이 실행될 때 스크립트 실행 순서의 충돌을 막기 위해 먼저 실행되어야 할 스크립트를 나열하는 클래스입니다.
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public class WaitForInit : MonoBehaviour
@@ -15,18 +15,17 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// Handles the initialization process of the application, including loading necessary data,
-        /// preparing the initial state, and transitioning to the opening scene.
+        /// 게임이 실행될 때 초기화해야 할 부분을 전부 초기화합니다. 이후 1프레임 기다린 후 게임이 정상 실행됩니다.
         /// </summary>
-        /// <returns>An IEnumerator for coroutine control, allowing Unity to wait for a frame during initialization processes.</returns>
+        /// <returns>코루틴 <see cref="IEnumerator">IEnumerator</see></returns>
         private IEnumerator Initialize()
         {
-            PrivateProfileReader.LoadProfile();
+            ProfileManager.Instance.LoadProfile();
             ParameterManager.Instance.LoadParameters();
             
             yield return null;
             
-            StateMachine.Instance.NextState();
+            StateMachine.Instance.NextState(false, false);
         }
     }
 }
