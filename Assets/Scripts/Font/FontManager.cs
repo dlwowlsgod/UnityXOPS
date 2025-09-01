@@ -35,7 +35,7 @@ namespace UnityXOPS
             var osFontPaths = Font.GetPathsToOSFonts();
             
             //언어 설정에 따라 OS 폰트를 찾아 지정합니다.
-            _osFont = ProfileManager.Instance.GetProfileValue("General", "ANSIEncoding") switch
+            _osFont = ProfileManager.Instance.GetProfileValue("General", "ANSIEncoding", "kr") switch
             {
                 "jp" => new Font(osFontPaths.FirstOrDefault(p => p.Contains("YuGothR.ttc"))),
                 "kr" => new Font(osFontPaths.FirstOrDefault(p => p.Contains("malgun.ttf"))),

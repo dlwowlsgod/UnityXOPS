@@ -1,0 +1,49 @@
+{
+    "items": [
+        {
+            "finalName": "Human",
+            "startZombie": false,
+            "infected": false,
+            "resurrectionChance": 0.0,
+            "resurrectionTime": 0.0,
+            "pickupWeapon": true,
+            "headDamageMult": 2.0,
+            "bodyDamageMult": 1.0,
+            "legDamageMult": 0.699999988079071,
+            "speedMult": 1.0,
+            "smokeOnDeath": false,
+            "clampNoBloodHp": 32767.0,
+            "clampFallDamage": 120.0
+        },
+        {
+            "finalName": "Robot",
+            "startZombie": false,
+            "infected": false,
+            "resurrectionChance": 0.0,
+            "resurrectionTime": 0.0,
+            "pickupWeapon": true,
+            "headDamageMult": 2.0,
+            "bodyDamageMult": 1.0,
+            "legDamageMult": 0.699999988079071,
+            "speedMult": 1.0,
+            "smokeOnDeath": true,
+            "clampNoBloodHp": 32767.0,
+            "clampFallDamage": 120.0
+        },
+        {
+            "finalName": "Zombie",
+            "startZombie": true,
+            "infected": false,
+            "resurrectionChance": 0.0,
+            "resurrectionTime": 0.0,
+            "pickupWeapon": false,
+            "headDamageMult": 2.0,
+            "bodyDamageMult": 1.0,
+            "legDamageMult": 0.699999988079071,
+            "speedMult": 1.0,
+            "smokeOnDeath": false,
+            "clampNoBloodHp": 32767.0,
+            "clampFallDamage": 120.0
+        }
+    ]
+}

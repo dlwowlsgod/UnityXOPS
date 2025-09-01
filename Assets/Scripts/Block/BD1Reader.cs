@@ -175,7 +175,6 @@ namespace UnityXOPS
         public List<FaceData> faces;
         public List<int> textureIndices;
         public int bitMaskingData;
-        public List<Mesh> meshes;
     }
 
     /// <summary>

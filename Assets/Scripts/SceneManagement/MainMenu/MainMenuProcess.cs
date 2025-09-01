@@ -31,7 +31,7 @@ namespace UnityXOPS
         private ScrollBar scrollBar;
         
         private int _currentMenuPageMax;
-        private int _currentMenuPageValue = 0;
+        private int _currentMenuPageValue;
         
         private class MissionPage
         {
@@ -52,6 +52,7 @@ namespace UnityXOPS
                 
                 if (mission is OfficialMissionParameter officialSo)
                     return officialSo.finalName;
+                //구현예정
                 if (mission is LegacyAddonMissionParameter legacy)
                     return legacy.finalName;
                 
@@ -62,6 +63,9 @@ namespace UnityXOPS
         private readonly List<MissionPage> _missionPages = new();
         private int _topVisibleIndex;
         private const int VisibleItemsCount = 8;
+
+        private int _lastSelectedPage;
+        private int _lastSelectedMissionIndex;
 
         private void Start()
         {
@@ -108,6 +112,31 @@ namespace UnityXOPS
         private void Update()
         {
             HandleInput();
+
+            if (StateMachine.Instance.CurrentState == GameState.MainMenuUpdate)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape))
+                {
+                    StateMachine.Instance.NextState(true, false);
+                }
+            }
+
+            if (StateMachine.Instance.CurrentState == GameState.MainMenuEnd)
+            {
+                BD1Loader.Instance.DestroyBD1();
+                BD1Reader.Instance.ClearBD1();
+                
+                PD1Reader.Instance.ClearPD1();
+                
+                SkyManager.Instance.DestroySky();
+
+                StateMachine.Instance.NextState();
+            }
+
+            if (StateMachine.Instance.CurrentState == GameState.Exit)
+            {
+                StateMachine.Instance.NextState();
+            }
         }
 
         private void InitializeMissionMenu()
@@ -274,7 +303,14 @@ namespace UnityXOPS
             int missionIndex = _topVisibleIndex + visibleIndex;
             if (missionIndex < _missionPages[_currentMenuPageValue].MissionCount)
             {
-                Debug.Log($"Selected mission: {_missionPages[_currentMenuPageValue].GetMissionName(missionIndex)}");
+                _lastSelectedPage = _currentMenuPageValue;
+                _lastSelectedMissionIndex = missionIndex;
+                
+                MissionLoader.Instance.LoadMission(_lastSelectedPage, _lastSelectedMissionIndex);
+                
+                Clock.Instance.ResetClock();
+                
+                StateMachine.Instance.NextState(false, false);
             }
         }
     }

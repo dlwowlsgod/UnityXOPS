@@ -25,7 +25,7 @@ namespace UnityXOPS
             
             yield return null;
             
-            StateMachine.Instance.NextState(false, false);
+            StateMachine.Instance.NextState();
         }
     }
 }

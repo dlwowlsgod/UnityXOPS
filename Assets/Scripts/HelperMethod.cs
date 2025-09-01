@@ -34,7 +34,7 @@ namespace UnityXOPS
             if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xFE && bom[3] == 0xFF)
                 return Encoding.UTF32;
             
-            var encoding = ProfileManager.Instance.GetProfileValue("General", "ANSIEncoding");
+            var encoding = ProfileManager.Instance.GetProfileValue("General", "ANSIEncoding", "kr");
             switch (encoding)
             {
                 case "jp":

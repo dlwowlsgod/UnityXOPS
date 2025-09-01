@@ -108,14 +108,14 @@ namespace UnityXOPS
 
         }
 
-        public string GetProfileValue(string section, string key)
+        public string GetProfileValue(string section, string key, string defaultValue)
         {
             if (!_profileData.TryGetValue(section, out var sectionData))
             {
 #if UNITY_EDITOR
                 Debug.LogWarning($"[ProfileManager] Section {section} not found.");   
 #endif
-                return null;
+                return defaultValue;
             }
             
             if (sectionData.TryGetValue(key, out var value))
@@ -129,7 +129,7 @@ namespace UnityXOPS
 #if UNITY_EDITOR
             Debug.LogWarning($"[ProfileManager] Key {key} not found.");   
 #endif
-            return null;
+            return defaultValue;
         }
     }
     

@@ -1,0 +1,232 @@
+{
+    "items": [
+        {
+            "finalName": "D_rank",
+            "fireFrequency": {
+                "x": 1,
+                "y": 1
+            },
+            "searchFrequency": {
+                "x": 1,
+                "y": 2
+            },
+            "normalSearchView": {
+                "horizontal": {
+                    "x": 170.0,
+                    "y": 170.0
+                },
+                "vertical": {
+                    "x": 60.0,
+                    "y": 60.0
+                },
+                "distance": 75.0
+            },
+            "cautionSearchView": {
+                "horizontal": {
+                    "x": 175.0,
+                    "y": 175.0
+                },
+                "vertical": {
+                    "x": 70.0,
+                    "y": 70.0
+                },
+                "distance": 85.0
+            },
+            "aimFire": {
+                "aimTime": 1.0,
+                "aimError": 8.0,
+                "accuracyError": 5.0
+            }
+        },
+        {
+            "finalName": "C_rank",
+            "fireFrequency": {
+                "x": 1,
+                "y": 2
+            },
+            "searchFrequency": {
+                "x": 2,
+                "y": 3
+            },
+            "normalSearchView": {
+                "horizontal": {
+                    "x": 171.0,
+                    "y": 171.0
+                },
+                "vertical": {
+                    "x": 62.0,
+                    "y": 62.0
+                },
+                "distance": 80.0
+            },
+            "cautionSearchView": {
+                "horizontal": {
+                    "x": 176.0,
+                    "y": 176.0
+                },
+                "vertical": {
+                    "x": 72.0,
+                    "y": 72.0
+                },
+                "distance": 90.0
+            },
+            "aimFire": {
+                "aimTime": 0.8999999761581421,
+                "aimError": 4.0,
+                "accuracyError": 4.0
+            }
+        },
+        {
+            "finalName": "B_rank",
+            "fireFrequency": {
+                "x": 2,
+                "y": 4
+            },
+            "searchFrequency": {
+                "x": 3,
+                "y": 4
+            },
+            "normalSearchView": {
+                "horizontal": {
+                    "x": 172.0,
+                    "y": 172.0
+                },
+                "vertical": {
+                    "x": 64.0,
+                    "y": 64.0
+                },
+                "distance": 85.0
+            },
+            "cautionSearchView": {
+                "horizontal": {
+                    "x": 176.0,
+                    "y": 176.0
+                },
+                "vertical": {
+                    "x": 74.0,
+                    "y": 74.0
+                },
+                "distance": 95.0
+            },
+            "aimFire": {
+                "aimTime": 0.800000011920929,
+                "aimError": 3.0,
+                "accuracyError": 3.0
+            }
+        },
+        {
+            "finalName": "A_rank",
+            "fireFrequency": {
+                "x": 3,
+                "y": 5
+            },
+            "searchFrequency": {
+                "x": 4,
+                "y": 5
+            },
+            "normalSearchView": {
+                "horizontal": {
+                    "x": 173.0,
+                    "y": 173.0
+                },
+                "vertical": {
+                    "x": 66.0,
+                    "y": 66.0
+                },
+                "distance": 90.0
+            },
+            "cautionSearchView": {
+                "horizontal": {
+                    "x": 177.0,
+                    "y": 177.0
+                },
+                "vertical": {
+                    "x": 76.0,
+                    "y": 76.0
+                },
+                "distance": 100.0
+            },
+            "aimFire": {
+                "aimTime": 0.699999988079071,
+                "aimError": 2.0,
+                "accuracyError": 2.0
+            }
+        },
+        {
+            "finalName": "S_rank",
+            "fireFrequency": {
+                "x": 5,
+                "y": 8
+            },
+            "searchFrequency": {
+                "x": 5,
+                "y": 6
+            },
+            "normalSearchView": {
+                "horizontal": {
+                    "x": 174.0,
+                    "y": 174.0
+                },
+                "vertical": {
+                    "x": 68.0,
+                    "y": 68.0
+                },
+                "distance": 95.0
+            },
+            "cautionSearchView": {
+                "horizontal": {
+                    "x": 178.0,
+                    "y": 178.0
+                },
+                "vertical": {
+                    "x": 78.0,
+                    "y": 8.0
+                },
+                "distance": 105.0
+            },
+            "aimFire": {
+                "aimTime": 0.6000000238418579,
+                "aimError": 1.0,
+                "accuracyError": 1.0
+            }
+        },
+        {
+            "finalName": "SS_rank",
+            "fireFrequency": {
+                "x": 8,
+                "y": 10
+            },
+            "searchFrequency": {
+                "x": 6,
+                "y": 7
+            },
+            "normalSearchView": {
+                "horizontal": {
+                    "x": 175.0,
+                    "y": 175.0
+                },
+                "vertical": {
+                    "x": 70.0,
+                    "y": 70.0
+                },
+                "distance": 100.0
+            },
+            "cautionSearchView": {
+                "horizontal": {
+                    "x": 180.0,
+                    "y": 180.0
+                },
+                "vertical": {
+                    "x": 80.0,
+                    "y": 80.0
+                },
+                "distance": 110.0
+            },
+            "aimFire": {
+                "aimTime": 0.5,
+                "aimError": 0.0,
+                "accuracyError": 0.0
+            }
+        }
+    ]
+}

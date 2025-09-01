@@ -1,0 +1,12 @@
+{
+    "items": [
+        {
+            "finalName": "XOPSDefaultArm",
+            "armMeshPaths": [
+                "data\\model\\arm00.x",
+                "data\\model\\arm01.x",
+                "data\\model\\arm02.x"
+            ]
+        }
+    ]
+}

@@ -1,37 +1,37 @@
 {
     "items": [
         {
-            "finalName": "demo00",
+            "finalName": "snowbase_demo",
             "bd1Path": "data\\map2\\temp.bd1",
             "pd1Path": "data\\map2\\demo.pd1",
             "skyIndex": 0
         },
         {
-            "finalName": "demo01",
+            "finalName": "mbase_demo",
             "bd1Path": "data\\map4\\temp.bd1",
             "pd1Path": "data\\map4\\demo.pd1",
             "skyIndex": 0
         },
         {
-            "finalName": "demo02",
+            "finalName": "underground_demo",
             "bd1Path": "data\\map5\\temp.bd1",
             "pd1Path": "data\\map5\\demo.pd1",
             "skyIndex": 0
         },
         {
-            "finalName": "demo03",
+            "finalName": "warehouse_demo",
             "bd1Path": "data\\map7\\temp.bd1",
             "pd1Path": "data\\map7\\demo.pd1",
             "skyIndex": 0
         },
         {
-            "finalName": "demo04",
+            "finalName": "urban_demo",
             "bd1Path": "data\\map8\\temp.bd1",
             "pd1Path": "data\\map8\\demo.pd1",
             "skyIndex": 0
         },
         {
-            "finalName": "demo05",
+            "finalName": "relic_demo",
             "bd1Path": "data\\map16\\temp.bd1",
             "pd1Path": "data\\map16\\demo.pd1",
             "skyIndex": 0

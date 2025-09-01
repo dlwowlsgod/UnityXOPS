@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using UnityEditor;
 
 namespace UnityXOPS
 {
@@ -19,7 +20,7 @@ namespace UnityXOPS
         /// <summary>
         /// 다음 씬으로 이동합니다.
         /// </summary>
-        private void NextState()
+        public void NextState()
         {
             var prevState = CurrentState;
             switch (CurrentState)
@@ -106,8 +107,12 @@ namespace UnityXOPS
                     StartCoroutine(LoadSceneAsync("MainMenu"));
                     CurrentState = GameState.MainMenuStart;
                     break;
-                default:
-                    CurrentState = GameState.None;
+                case GameState.Exit:
+#if UNITY_EDITOR
+                    EditorApplication.ExitPlaymode();
+#else
+                    Application.Quit();
+#endif
                     break;
             }
 #if UNITY_EDITOR

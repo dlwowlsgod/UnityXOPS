@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c388bdebfa22f14899a90e0db7bc57b, type: 3}
+  m_Name: MP5
+  m_EditorClassIdentifier: 
+  finalName: MP5
+  damage: 44
+  penetration: 0
+  fireRate: 0.12
+  velocity: 33
+  capacity: 30
+  reloadTime: 1.51
+  recoil: 6
+  errorRange: {x: 2, y: 21}
+  staticModels:
+  - meshPath: data\model\weapon\mp5.x
+    texturePath: data\model\weapon\mp5.bmp
+    scale: 1
+    position: {x: 0.8, y: 0.9, z: 3.5}
+    rotation: {x: 0, y: -10, z: 0}
+  muzzleFlash: 1
+  muzzleFlashScale: 1
+  muzzleFlashTexturePath: data\mflash.dds
+  muzzleFlashPosition: {x: 0.8, y: 1.5, z: 6.8}
+  shellEjection: 1
+  shellEjectionDelayTime: 0
+  shellTexturePath: data\yakkyou.dds
+  shellScale: 1
+  shellEjectionPosition: {x: 0.8, y: 1.2, z: 3.5}
+  shellEjectionDirection: {x: 0.5, y: 0.7, z: 0}
+  burst: 0
+  bulletIndex: 0
+  scopeIndex: 0
+  silent: 0
+  weaponSoundPath: data\sound\bang1.wav
+  soundVolume: 0.92
+  soundRadius: 12
+  handIndex: 0
+  nextWeaponIndex: -1
+  nextWeaponSwitchTime: 0
+  swapTime: 0.3

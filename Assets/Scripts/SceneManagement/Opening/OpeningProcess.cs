@@ -58,7 +58,7 @@ namespace UnityXOPS
                 
                 SkyManager.Instance.DestroySky();
                 
-                StateMachine.Instance.NextState(false, false);
+                StateMachine.Instance.NextState();
             }
         }
     }

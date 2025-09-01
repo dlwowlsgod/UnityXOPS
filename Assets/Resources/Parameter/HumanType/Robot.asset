@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6e2c05e5fe6100459777b40a5fa7355, type: 3}
+  m_Name: Robot
+  m_EditorClassIdentifier: 
+  finalName: Robot
+  startZombie: 0
+  infected: 0
+  resurrectionChance: 0
+  resurrectionTime: 0
+  pickupWeapon: 1
+  headDamageMult: 2
+  bodyDamageMult: 1
+  legDamageMult: 0.7
+  speedMult: 1
+  smokeOnDeath: 1
+  clampNoBloodHp: 32767
+  clampFallDamage: 120
