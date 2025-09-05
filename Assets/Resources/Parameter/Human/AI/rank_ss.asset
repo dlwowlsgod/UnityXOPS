@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b215954e90755945993ce619d0372fa, type: 3}
+  m_Name: rank_ss
+  m_EditorClassIdentifier: 
+  realName: S+
+  lookDistance:
+    min: 39.8
+    max: 48
+  closedViewAngle:
+    horizontal:
+      min: 110
+      max: 130
+    vertical:
+      min: 60
+      max: 80
+  rangedViewAngle:
+    horizontal:
+      min: 60
+      max: 80
+    vertical:
+      min: 40
+      max: 50
+  aimingPointHeight: 1.6
+  aimingSphereRadius: 0.05
+  aimingTime: 0.5
+  properAimingTime: 0.5
+  accuracyAdjust:
+    min: -1
+    max: -2
+  fireChance: 0.2

@@ -87,3 +87,5 @@ crashlytics-build.properties
 *.meta
 Assets/StreamingAssets/data
 Assets/TextMesh Pro
+Assets/Plugins
+Assets/XLua
