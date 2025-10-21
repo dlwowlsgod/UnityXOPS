@@ -1,0 +1,12 @@
+﻿.idea
+Assembly-CSharp.csproj
+*.sln
+UnityXOPS.sln.DotSettings.user
+ProjectSettings
+obj
+UserSettings
+Logs
+Assets/Plugins
+Assets/StreamingAssets/data
+*.meta
+Library
