@@ -3,10 +3,11 @@ using UnityEngine;
 namespace UnityXOPS
 {
     /// <summary>
-    /// A generic singleton base class for MonoBehaviour.
-    /// Ensures that only one instance of the specified type exists in the scene.
+    /// A generic singleton base class for MonoBehaviour types.
+    /// Ensures that only one instance of the MonoBehaviour exists in the scene,
+    /// and provides global access to the instance.
     /// </summary>
-    /// <typeparam name="T">The type of the singleton class inheriting from MonoBehaviour.</typeparam>
+    /// <typeparam name="T">The type of the singleton MonoBehaviour.</typeparam>
     public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         private static T _instance;
@@ -21,20 +22,11 @@ namespace UnityXOPS
                     if (instances.Length > 0)
                     {
                         _instance = instances[0];
-                        if (instances.Length > 1)
-                        {
-#if UNITY_EDITOR
-                            Debug.LogWarning($"{instances.Length} {typeof(T).Name} singleton instances found. {instances.Length - 1} destroyed.");
-#endif
-                            for (int i = 1; i < instances.Length; i++)
-                            {
-                                Destroy(instances[i].gameObject);
-                            }
-                        }
                     }
                     else
                     {
-                        _instance = new GameObject(typeof(T).Name).AddComponent<T>();
+                        var obj = new GameObject(typeof(T).Name);
+                        _instance = obj.AddComponent<T>();
                     }
                 }
                 return _instance;
@@ -43,7 +35,23 @@ namespace UnityXOPS
 
         protected virtual void Awake()
         {
-            DontDestroyOnLoad(transform.root.gameObject);
+            if (_instance == null)
+            {
+                _instance = this as T;
+                
+                if (transform.parent != null)
+                {
+                    DontDestroyOnLoad(transform.root.gameObject);
+                }
+                else
+                {
+                    DontDestroyOnLoad(gameObject);
+                }
+            }
+            else if (_instance != this)
+            {
+                Destroy(gameObject);
+            }
         }
     }
 }

@@ -10,4 +10,16 @@
 // 여기에 미리 컴파일하려는 헤더 추가
 #include "framework.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/version.h>
+
+#include <FreeImage.h>
+
+#include <fstream>
+#include <vector>
+#include <sstream>
+#include <memory>
+
 #endif //PCH_H

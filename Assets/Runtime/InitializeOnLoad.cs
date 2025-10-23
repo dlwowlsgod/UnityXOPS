@@ -10,13 +10,18 @@ namespace UnityXOPS
     /// to execute initialization logic before the Unity splash screen is shown. It ensures that specific
     /// systems are prepared and ready for use as soon as the application starts.
     /// </remarks>
-    public class InitializeOnLoad
+    public static class InitializeOnLoad
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
-        public static void Initialize()
+        public static void InitializeBeforeSplashScreen()
         {
             ProfileLoader.Initialize();
             ModelLoader.Initialize();
+            ImageLoader.Initialize();
+            SoundLoader.Initialize();
+            FontLoader.Initialize();
+            
+            BD1Loader.Initialize();
         }
     }
 }

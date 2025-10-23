@@ -10,3 +10,7 @@ Assets/Plugins
 Assets/StreamingAssets/data
 *.meta
 Library
+Assets/Resources/char.dds
+Assets/TextMesh Pro
+Assets/XLua
+Temp

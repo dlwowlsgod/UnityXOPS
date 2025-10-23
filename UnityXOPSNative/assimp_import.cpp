@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "assimp_import.h"
 
-MeshData* ImportModel(const char* filePath, ImportProfile profile) {
+MeshData* ImportModel(const char* filePath, ModelImportProfile profile) {
     unsigned int assimpFlags = aiProcess_Triangulate | aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder;
     const aiScene* scene = nullptr;
     Assimp::Importer importer;
@@ -125,7 +125,7 @@ MeshData* ImportModel(const char* filePath, ImportProfile profile) {
     return meshData;
 }
 
-void FreeModel(MeshData* data) {
+void DeAllocModel(MeshData* data) {
     if (data) {
         delete[] reinterpret_cast<char*>(data);
     }

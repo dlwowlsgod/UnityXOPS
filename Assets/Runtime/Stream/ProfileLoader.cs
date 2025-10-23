@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
-
 namespace UnityXOPS
 {
     /// <summary>
@@ -11,12 +10,34 @@ namespace UnityXOPS
     {
         private const string ProfilePath = "UnityXOPSProfile.ini";
 
-        private static Dictionary<string, Dictionary<string, string>> _profile;
+        private static readonly List<string> ProfileData = new()
+        {
+            "[Common]",
+            "; Select game font determined by os language.",
+            "; Values : en, kr, jp, cn_s, cn_t",
+            "; If not contained value, game use \"en\" font.",
+            "Language = kr",
+            "",
+            "[Stream]",
+            "; Use 2byte header for texture counts in block data.",
+            "UseBlockDataTextureCountHeader = false",
+            "",
+            "; Assimp can't load properly if some of x file tokens are broken.",
+            "; if true, add some spaces between tokens then can assimp read correctly.",
+            "; choose false if you predict your x models can read perfectly.",
+            "FixXFileToken = true",
+            "",
+            "; Developer implemented failed (sorry ^^) perfect dds loader using FreeImage library",
+            "; So char.dds can't load properly",
+            "; If true, will load char.dds integrated in UnityXOPS.exe",
+            "; use false if you use another char.dds or converted modern dds format",
+            "UseInternalCharDDS = true"
+        };
+
+        private static readonly Dictionary<string, Dictionary<string, string>> Profile = new();
         
         public static void Initialize()
         {
-            _profile = new Dictionary<string, Dictionary<string, string>>();
-            
             var profilePath = Path.Combine(Application.streamingAssetsPath, ProfilePath);
 
             if (!File.Exists(profilePath))
@@ -24,6 +45,7 @@ namespace UnityXOPS
 #if UNITY_EDITOR
                 Debug.LogWarning($"Profile file {profilePath} not found.");
 #endif
+                File.WriteAllLines(profilePath, ProfileData);
                 return;
             }
             
@@ -44,9 +66,9 @@ namespace UnityXOPS
                 if (line.StartsWith("[") && line.EndsWith("]"))
                 {
                     currentSection = line.Substring(1, line.Length - 2).Trim();
-                    if (!_profile.ContainsKey(currentSection))
+                    if (!Profile.ContainsKey(currentSection))
                     {
-                        _profile[currentSection] = new Dictionary<string, string>();
+                        Profile[currentSection] = new Dictionary<string, string>();
                     }
                 }
                 // Parse key-value pairs
@@ -57,7 +79,7 @@ namespace UnityXOPS
                     {
                         var key = parts[0].Trim();
                         var value = parts[1].Trim();
-                        _profile[currentSection][key] = value;
+                        Profile[currentSection][key] = value;
                     }
                 }
             }
@@ -73,7 +95,7 @@ namespace UnityXOPS
         /// <returns>The value associated with the specified key in the specified section, or the default value if the key is not found.</returns>
         public static string GetProfileValue(string section, string key, string defaultValue)
         {
-            if (_profile.TryGetValue(section, out var sectionValues))
+            if (Profile.TryGetValue(section, out var sectionValues))
             {
                 return sectionValues.GetValueOrDefault(key, defaultValue);
             }
