@@ -17,6 +17,7 @@ namespace UnityXOPS
         {
             ProfileLoader.Initialize();
             ModelLoader.Initialize();
+            ImageLoader.Initialize();
         }
     }
 }

@@ -6,7 +6,11 @@ using System.Runtime.InteropServices;
 
 namespace UnityXOPS
 {
-    public static class ModelLoader 
+    /// <summary>
+    /// Utility class for loading 3D models into Unity's runtime environment.
+    /// Provides functionality to import models from specified file paths and cache their instances for reuse.
+    /// </summary>
+    public static class ModelLoader
     {
         [StructLayout(LayoutKind.Sequential)]
         public struct MeshData
@@ -19,34 +23,42 @@ namespace UnityXOPS
             public int indexCount;
         }
 
-        private enum ImportProfile : uint
+        private enum ModelImportProfile : uint
         {
             IMPORT_ABORT = 0,
             IMPORT_XFILE = 1,
             IMPORT_XFILE_FIXTOKEN = 2
         }
-
-        [DllImport("UnityXOPSNative")]
-        private static extern IntPtr ImportModel(string filePath, ImportProfile profile);
         
         [DllImport("UnityXOPSNative")]
-        private static extern void FreeModel(IntPtr data);
+        private static extern IntPtr ImportModel(string filePath, ModelImportProfile profile);
         
-        #if UNITY_EDITOR
+        [DllImport("UnityXOPSNative")]
+        private static extern void DeAllocModel(IntPtr data);
+        
+#if UNITY_EDITOR
         [DllImport("UnityXOPSNative")] 
         private static extern void GetAssimpVersion(out uint major, out uint minor, out uint patch, out uint revision);
-        #endif
+#endif
 
         private static readonly Dictionary<string, Mesh> MeshCache = new();
         
         public static void Initialize()
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             GetAssimpVersion(out var major, out var minor, out var patch, out var revision);
             Debug.Log($"Assimp version: {major}.{minor}.{patch}.{revision}");
-            #endif
+#endif
         }
 
+        /// <summary>
+        /// Loads a 3D model from the specified file path and returns it as a Mesh object.
+        /// If the model has been previously loaded, it retrieves the cached instance.
+        /// </summary>
+        /// <param name="filePath">The file path of the 3D model to be loaded.
+        /// The file must exist and have a supported extension.</param>
+        /// <returns>Returns the loaded Mesh object or null if the model file is not found, invalid,
+        /// or an error occurs during the import process.</returns>
         public static Mesh LoadModel(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
@@ -73,12 +85,12 @@ namespace UnityXOPS
             var filename = Path.GetFileNameWithoutExtension(filePath);
             var extension = Path.GetExtension(filePath).ToLower();
 
-            var profile = ImportProfile.IMPORT_ABORT;
+            var profile = ModelImportProfile.IMPORT_ABORT;
             switch (extension)
             {
                 case ".x":
-                    var fixXFileToken = ProfileLoader.GetProfileValue("ModelLoader", "FixXFileToken", "true") == "true";
-                    profile = fixXFileToken ? ImportProfile.IMPORT_XFILE_FIXTOKEN : ImportProfile.IMPORT_XFILE;
+                    var fixXFileToken = ProfileLoader.GetProfileValue("Model", "FixXFileToken", "true") == "true";
+                    profile = fixXFileToken ? ModelImportProfile.IMPORT_XFILE_FIXTOKEN : ModelImportProfile.IMPORT_XFILE;
                     break;
             }
 
@@ -124,14 +136,25 @@ namespace UnityXOPS
                 mesh.RecalculateNormals();
                 mesh.RecalculateBounds();
                 mesh.RecalculateTangents();
+                
+#if !UNITY_EDITOR
+                mesh.UploadMeshData(true);
+#endif
 
                 // Add the newly created mesh to the cache before returning.
                 MeshCache[filePath] = mesh;
                 return mesh;
             }
+            catch (Exception e)
+            {
+#if UNITY_EDITOR
+                Debug.LogError($"Failed to import model {filePath}: {e.Message}");
+#endif
+                return null;
+            }
             finally
             {
-                FreeModel(meshDataPtr);
+                DeAllocModel(meshDataPtr);
             }
         }
     }

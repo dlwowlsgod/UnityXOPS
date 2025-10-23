@@ -10,3 +10,4 @@ Assets/Plugins
 Assets/StreamingAssets/data
 *.meta
 Library
+Assets/Resources/char.dds
