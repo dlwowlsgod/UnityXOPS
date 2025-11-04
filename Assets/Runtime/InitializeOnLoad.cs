@@ -20,8 +20,10 @@ namespace UnityXOPS
             ImageLoader.Initialize();
             SoundLoader.Initialize();
             FontLoader.Initialize();
+            ParameterLoader.Initialize();
             
             BD1Loader.Initialize();
+            SkyLoader.Initialize();
         }
     }
 }

@@ -48,6 +48,14 @@ namespace UnityXOPS
 #if UNITY_EDITOR
             GetAssimpVersion(out var major, out var minor, out var patch, out var revision);
             Debug.Log($"Assimp version: {major}.{minor}.{patch}.{revision}");
+
+            Application.quitting += OnApplicationQuit;
+            void OnApplicationQuit()
+            {
+                MeshCache.Clear();
+                
+                Application.quitting -= OnApplicationQuit;
+            }
 #endif
         }
 

@@ -13,7 +13,15 @@ namespace UnityXOPS
         
         public static void Initialize()
         {
-            
+#if UNITY_EDITOR
+            Application.quitting += OnApplicationQuit;
+            void OnApplicationQuit()
+            {
+                SoundCache.Clear();
+                
+                Application.quitting -= OnApplicationQuit;
+            }           
+#endif
         }
 
         public static AudioClip LoadSound(string filePath)
@@ -50,11 +58,12 @@ namespace UnityXOPS
                 return null;
             }
             
-#pragma warning disable CS0618
+
             var url = "file://" + filePath;
             // www is obsolete because only support sync loading (like original xops)
             // if you want to change async loading, use UnityWebRequest
             // with async/await method or coroutine
+#pragma warning disable CS0618
             using (var www = new WWW(url))
 #pragma warning restore CS0618
             {

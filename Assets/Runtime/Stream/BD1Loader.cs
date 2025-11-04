@@ -7,6 +7,9 @@ using Object = UnityEngine.Object;
 
 namespace UnityXOPS
 {
+    /// <summary>
+    /// Provides functionality for loading and processing block data files in Unity.
+    /// </summary>
     public static class BD1Loader
     {
         private static bool _textureCountHeader;
@@ -29,38 +32,15 @@ namespace UnityXOPS
             _textureCountHeader = 
                 ProfileLoader.GetProfileValue("Stream", "UseBlockDataTextureCountHeader", "false") == "true";
             
-            // _defaultMaterial
-            _defaultMaterial = new Material(Shader.Find("Standard"));
-            _defaultMaterial.name = "defaultBlockMaterial";
-            _defaultMaterial.SetFloat("_Mode", 1f);
-            _defaultMaterial.SetFloat("_Glossiness", 0.0f);
-            _defaultMaterial.SetOverrideTag("RenderType", "TransparentCutout");
-            _defaultMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-            _defaultMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-            _defaultMaterial.SetInt("_ZWrite", 1);
-            _defaultMaterial.EnableKeyword("_ALPHATEST_ON");
-            _defaultMaterial.DisableKeyword("_ALPHABLEND_ON");
-            _defaultMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            _defaultMaterial.renderQueue = 2450;
-            _defaultMaterial.color = Color.white;
-            
-            // _transparentMaterial
-            // maybe cause the unity engine debug log, but 3rd line caused that I think
-            _transparentMaterial = Object.Instantiate(_defaultMaterial);
-            _transparentMaterial.name = "transparentBlockMaterial";
-            _transparentMaterial.SetFloat("_Mode", 3f); // this
-            _transparentMaterial.SetOverrideTag("RenderType", "Transparent");
-            _transparentMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            _transparentMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            _transparentMaterial.SetInt("_ZWrite", 0);
-            _transparentMaterial.DisableKeyword("_ALPHATEST_ON");
-            _transparentMaterial.EnableKeyword("_ALPHABLEND_ON");
-            _transparentMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            _transparentMaterial.renderQueue = 3000;
-            _transparentMaterial.color = new Color(1f, 1f, 1f, 0f);
+            _defaultMaterial = Resources.Load<Material>("DefaultBlock");
+            _transparentMaterial = Resources.Load<Material>("TransparentBlock");
         }
 
-
+        /// <summary>
+        /// Loads a BD1 file from the specified path and returns the corresponding BlockData object.
+        /// </summary>
+        /// <param name="path">The file path of the BD1 file to load.</param>
+        /// <returns>A BlockData object containing the loaded block and texture data, or null if the file load fails.</returns>
         public static BlockData LoadBD1(string path)
         {
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
@@ -158,9 +138,17 @@ namespace UnityXOPS
                 for (int j = 0; j < rawBlockData.subMeshTextureIndices.Length; j++)
                 {
                     var textureIndex = rawBlockData.subMeshTextureIndices[j];
-                    materials[j] = blockData.textures[textureIndex];
+                    if (textureIndex >= 0 && textureIndex < blockData.textures.Length)
+                    {
+                        materials[j] = blockData.textures[textureIndex];
+                    }
+                    else
+                    {
+                        materials[j] = _transparentMaterial;
+                    }
                 }
                 rawBlockData.subMeshMaterials = materials;
+
 
                 var subMeshData = subMeshGroups.Select(group =>
                     group.SelectMany(faceIndex => new[]

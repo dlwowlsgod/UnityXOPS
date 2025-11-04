@@ -48,6 +48,14 @@ namespace UnityXOPS
             IntPtr versionPtr = GetFreeImageVersion();
             string versionString = Marshal.PtrToStringAnsi(versionPtr);
             Debug.Log($"FreeImage Version: {versionString}");
+
+            Application.quitting += OnApplicationQuit;
+            void OnApplicationQuit()
+            {
+                ImageCache.Clear();
+                
+                Application.quitting -= OnApplicationQuit;
+            }
 #endif
         }
 

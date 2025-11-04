@@ -49,15 +49,17 @@
     <Compile Include="Assets\Runtime\Stream\SoundLoader.cs" />
     <Compile Include="Assets\Runtime\Stream\ModelLoader.cs" />
     <Compile Include="Assets\Runtime\Data\BlockData.cs" />
+    <Compile Include="Assets\Runtime\Stream\ParameterLoader.cs" />
     <Compile Include="Assets\Runtime\Stream\ImageLoader.cs" />
     <Compile Include="Assets\Runtime\Utilities\Singleton.cs" />
     <Compile Include="Assets\Runtime\Stream\ProfileLoader.cs" />
     <Compile Include="Assets\Runtime\Data\RawBlockData.cs" />
     <Compile Include="Assets\Runtime\Stream\FontLoader.cs" />
-    <Compile Include="Assets\Runtime\Parameter\ParameterManager.cs" />
     <Compile Include="Assets\Runtime\InitializeOnLoad.cs" />
+    <Compile Include="Assets\Runtime\Stream\SkyLoader.cs" />
     <Compile Include="Assets\Runtime\Stream\BD1Loader.cs" />
     <None Include="Assets\Runtime\UnityXOPS.asmdef" />
+    <None Include="Assets\Runtime\Shader\Skybox.shader" />
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.0.60f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
     </Reference>
