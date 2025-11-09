@@ -13,7 +13,7 @@ namespace UnityXOPS
         private static readonly List<string> ProfileData = new()
         {
             "[Common]",
-            "; Select game font determined by os language.",
+            "; Select game language.",
             "; Values : en, kr, jp, cn_s, cn_t",
             "; If not contained value, game use \"en\" font.",
             "Language = kr",

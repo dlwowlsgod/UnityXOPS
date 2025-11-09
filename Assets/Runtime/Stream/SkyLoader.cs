@@ -1,23 +1,52 @@
 using UnityEngine;
-using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 
 namespace UnityXOPS
 {
     public static class SkyLoader
     {
         private static Material _defaultSky;
-        private static readonly int FrontTex = Shader.PropertyToID("_FrontTex");
-        private static readonly int BackTex = Shader.PropertyToID("_BackTex");
-        private static readonly int LeftTex = Shader.PropertyToID("_LeftTex");
-        private static readonly int RightTex = Shader.PropertyToID("_RightTex");
-        private static readonly int UpTex = Shader.PropertyToID("_UpTex");
-        private static readonly int DownTex = Shader.PropertyToID("_DownTex");
+        private static readonly int[] SkyboxPropertyID = {
+            Shader.PropertyToID("_FrontTex"),
+            Shader.PropertyToID("_BackTex"), 
+            Shader.PropertyToID("_LeftTex"),
+            Shader.PropertyToID("_RightTex"),
+            Shader.PropertyToID("_UpTex"),
+            Shader.PropertyToID("_DownTex")
+        };
         private static readonly int Tint = Shader.PropertyToID("_Tint");
         
         public static void Initialize()
         {
             _defaultSky = Resources.Load<Material>("DefaultSky");
+            
+            _defaultSky = Object.Instantiate(_defaultSky);
+            var skyParam = ParameterManager.Instance.SkyParameter;
+            var scale = new[] {
+                skyParam.frontTextureScaleAndOffset.scale,
+                skyParam.backTextureScaleAndOffset.scale,
+                skyParam.leftTextureScaleAndOffset.scale,
+                skyParam.rightTextureScaleAndOffset.scale,
+                skyParam.upTextureScaleAndOffset.scale,
+                skyParam.downTextureScaleAndOffset.scale
+            }.Select(scale => new Vector2(scale.x, scale.y)).ToArray();
+            var offset = new[]
+            {
+                skyParam.frontTextureScaleAndOffset.offset,
+                skyParam.backTextureScaleAndOffset.offset,
+                skyParam.leftTextureScaleAndOffset.offset,
+                skyParam.rightTextureScaleAndOffset.offset,
+                skyParam.upTextureScaleAndOffset.offset,
+                skyParam.downTextureScaleAndOffset.offset
+            }.Select(offset => new Vector2(offset.x, offset.y)).ToArray();
+
+            for (int i = 0; i < 6; i++)
+            {
+                _defaultSky.SetTextureScale(SkyboxPropertyID[i], scale[i]);
+                _defaultSky.SetTextureOffset(SkyboxPropertyID[i], offset[i]);
+            }
+            
+            RenderSettings.skybox = _defaultSky;
         }
 
         public static Material LoadSky(string filePath)
@@ -31,21 +60,12 @@ namespace UnityXOPS
             var name = image.name;
             var skybox = Object.Instantiate(_defaultSky);
             
-            skybox.SetColor(Tint, new Color(0.5010f, 0.5010f, 0.5010f, 0.5010f));
-            
-            //top
-            skybox.SetTexture(UpTex, image);
-            //bottom
-            skybox.SetTexture(DownTex, image);
-            //front
-            skybox.SetTexture(FrontTex, image);
-            //back
-            skybox.SetTexture(BackTex, image);
-            //left
-            skybox.SetTexture(LeftTex, image);
-            //right
-            skybox.SetTexture(RightTex, image);
+            skybox.SetColor(Tint, new Color(0.5f, 0.5f, 0.5f, 0.5f));
 
+            for (int i = 0; i < 6; i++)
+            {
+                skybox.SetTexture(SkyboxPropertyID[i], image);
+            }
             
             return skybox;
         }

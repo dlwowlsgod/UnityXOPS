@@ -13,6 +13,6 @@ namespace UnityXOPS
         
         public int[] subMeshTextureIndices;
         public Material[] subMeshMaterials;
-        public Vector3 center;
+        public Vector3 position;
     }
 }

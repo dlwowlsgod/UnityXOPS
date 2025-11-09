@@ -16,14 +16,25 @@ namespace UnityXOPS
         public static void InitializeBeforeSplashScreen()
         {
             ProfileLoader.Initialize();
+        }
+        
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        public static void InitializeBeforeSceneLoad()
+        {
             ModelLoader.Initialize();
             ImageLoader.Initialize();
             SoundLoader.Initialize();
             FontLoader.Initialize();
-            ParameterLoader.Initialize();
+        }
+        
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        public static void InitializeAfterSceneLoad()
+        {
+            ParameterManager.Initialize();
             
-            BD1Loader.Initialize();
             SkyLoader.Initialize();
+            BD1Loader.Initialize();
+            PD1Loader.Initialize();
         }
     }
 }

@@ -1,6 +1,5 @@
 using UnityEngine;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using Object = UnityEngine.Object;
@@ -102,7 +101,7 @@ namespace UnityXOPS
                 }
                 
                 var uniqueVertices = Enumerable.Range(0, 8)
-                    .Select(j => new Vector3(floatData[j], floatData[j + 8], floatData[j + 16]))
+                    .Select(j => new Vector3(-floatData[j] * 0.1f, floatData[j + 8] * 0.1f, -floatData[j + 16] * 0.1f)) // -180 rot
                     .ToArray();
 
                 var rawBlockData = new RawBlockData
@@ -123,7 +122,7 @@ namespace UnityXOPS
 
                 Mesh mesh = new();
                 mesh.name = $"block_{i}";
-                mesh.vertices = rawBlockData.vertices.Select(v => new Vector3(v.x, v.y, v.z) * 0.1f).ToArray();
+                mesh.vertices = rawBlockData.vertices.Select(v => new Vector3(v.x, v.y, v.z)).ToArray();
                 mesh.uv = rawBlockData.uvs;
 
                 var subMeshGroups = Enumerable.Range(0, 6)
@@ -166,7 +165,7 @@ namespace UnityXOPS
                 mesh.RecalculateBounds();
                 
                 var center = mesh.bounds.center;
-                rawBlockData.center = center;
+                rawBlockData.position = center;
                 mesh.vertices = mesh.vertices.Select(v => v - center).ToArray();
 
                 mesh.RecalculateBounds();

@@ -46,16 +46,26 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.60f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Runtime\Data\PointData.cs" />
     <Compile Include="Assets\Runtime\Stream\SoundLoader.cs" />
     <Compile Include="Assets\Runtime\Stream\ModelLoader.cs" />
     <Compile Include="Assets\Runtime\Data\BlockData.cs" />
-    <Compile Include="Assets\Runtime\Stream\ParameterLoader.cs" />
     <Compile Include="Assets\Runtime\Stream\ImageLoader.cs" />
+    <Compile Include="Assets\Runtime\Utilities\InitializeOnLoad.cs" />
+    <Compile Include="Assets\Runtime\Parameter\JSON\IParameter.cs" />
+    <Compile Include="Assets\Runtime\Parameter\JSON\SkyParameterJSON.cs" />
+    <Compile Include="Assets\Runtime\Data\PointType.cs" />
     <Compile Include="Assets\Runtime\Utilities\Singleton.cs" />
     <Compile Include="Assets\Runtime\Stream\ProfileLoader.cs" />
+    <Compile Include="Assets\Runtime\Parameter\ScriptableObject\Editor\SkyParameterEditor.cs" />
     <Compile Include="Assets\Runtime\Data\RawBlockData.cs" />
+    <Compile Include="Assets\Runtime\Utilities\EncodingHelper.cs" />
     <Compile Include="Assets\Runtime\Stream\FontLoader.cs" />
-    <Compile Include="Assets\Runtime\InitializeOnLoad.cs" />
+    <Compile Include="Assets\Runtime\Parameter\ScriptableObject\SkyParameter.cs" />
+    <Compile Include="Assets\Runtime\Data\ScaleAndOffset.cs" />
+    <Compile Include="Assets\Runtime\Parameter\ParameterManager.cs" />
+    <Compile Include="Assets\Runtime\Data\RawPointData.cs" />
+    <Compile Include="Assets\Runtime\Stream\PD1Loader.cs" />
     <Compile Include="Assets\Runtime\Stream\SkyLoader.cs" />
     <Compile Include="Assets\Runtime\Stream\BD1Loader.cs" />
     <None Include="Assets\Runtime\UnityXOPS.asmdef" />

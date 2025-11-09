@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9b319e477980be448a43b364274fa32, type: 3}
+  m_Name: SkyParameter
+  m_EditorClassIdentifier: 
+  frontTextureScaleAndOffset:
+    scale: {x: -0.495, y: 0.495}
+    offset: {x: 0.5015, y: 0.5}
+  backTextureScaleAndOffset:
+    scale: {x: 0.495, y: 0.495}
+    offset: {x: 0.498, y: 0.502}
+  leftTextureScaleAndOffset:
+    scale: {x: 0.495, y: 0.495}
+    offset: {x: 0.0015, y: 0.5}
+  rightTextureScaleAndOffset:
+    scale: {x: -0.495, y: 0.495}
+    offset: {x: -0.002, y: 0.502}
+  upTextureScaleAndOffset:
+    scale: {x: -0.495, y: -0.495}
+    offset: {x: -0.001, y: 0.4975}
+  downTextureScaleAndOffset:
+    scale: {x: 0.495, y: 0.495}
+    offset: {x: 0.002, y: 0.002}
+  skyboxTexturePath:
+  - 
+  - data/sky/sky1.bmp
+  - data/sky/sky2.bmp
+  - data/sky/sky3.bmp
+  - data/sky/sky4.bmp
+  - data/sky/sky5.bmp
