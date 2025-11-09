@@ -83,7 +83,9 @@ ImageData* ImportImage(const char* filePath, ImageImportProfile profile) {
 }
 
 void DeAllocImage(ImageData* data) {
-
+	if (data) {
+		delete[] reinterpret_cast<char*>(data);
+	}
 }
 
 const char* GetFreeImageVersion() {
