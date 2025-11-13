@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c93224c1f513504b8bb32e20876e22e, type: 3}
+  m_Name: leg
+  m_EditorClassIdentifier: 
+  legModels:
+  - data/model/leg.x
+  - data/model/walk00.x
+  - data/model/walk01.x
+  - data/model/walk02.x
+  - data/model/walk03.x
+  - data/model/run00.x
+  - data/model/run01.x
+  - data/model/run02.x
+  - data/model/run03.x
+  - data/model/run04.x
+  - data/model/run05.x

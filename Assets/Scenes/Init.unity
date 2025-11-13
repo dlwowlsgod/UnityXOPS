@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &193997695
+--- !u!1 &522613204
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 193997697}
-  - component: {fileID: 193997696}
+  - component: {fileID: 522613206}
+  - component: {fileID: 522613205}
   m_Layer: 0
   m_Name: ParameterManager
   m_TagString: Untagged
@@ -136,26 +136,27 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &193997696
+--- !u!114 &522613205
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 193997695}
+  m_GameObject: {fileID: 522613204}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 06642ecde512f9149be0d417ba75c00b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skyParameter: {fileID: 11400000, guid: 543ce9f0e4f69c042ac4b3f93c7c0561, type: 2}
---- !u!4 &193997697
+  humanParameterSO: {fileID: 11400000, guid: f5f34167c6fc9ce448e0643222b71a64, type: 2}
+  skyParameterSO: {fileID: 11400000, guid: 543ce9f0e4f69c042ac4b3f93c7c0561, type: 2}
+--- !u!4 &522613206
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 193997695}
+  m_GameObject: {fileID: 522613204}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -261,4 +262,4 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 963194228}
-  - {fileID: 193997697}
+  - {fileID: 522613206}

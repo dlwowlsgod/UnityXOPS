@@ -1,0 +1,81 @@
+using UnityEngine;
+using System.Linq;
+
+namespace UnityXOPS
+{
+    [CreateAssetMenu(fileName = "HumanParameter", menuName = "XOPS Parameter/Human Parameter", order = 1)]
+    public class HumanParameterSO : ParameterSO
+    {
+        [Header("Human Model Settings")] 
+        public string[] armName;
+        public string[] legName;
+        public int[] walkAnimationIndices;
+        public int[] runAnimationIndices;
+        [Header("Human Motion Settings")] 
+        public float walkAnimationSpeed;
+        public float runAnimationSpeed;
+        [Header("Human Parameter List")]
+        public HumanDataParameterSO[] humanDataParameterSOs;
+        public HumanVisualParameterSO[] humanVisualParameterSOs;
+        public HumanTypeParameterSO[] humanTypeParameterSOs;   
+        public HumanAIParameterSO[] humanAIParameterSOs;
+        public HumanArmParameterSO[] humanArmParameterSOs;
+        public HumanLegParameterSO[] humanLegParameterSOs;
+        
+        public override ParameterJSON Serialize()
+        {
+            return new HumanParameterJSON
+            {
+                name = name,
+                armName = armName,
+                legName = legName, 
+                walkAnimationIndices = walkAnimationIndices, 
+                runAnimationIndices = runAnimationIndices, 
+                walkAnimationSpeed = walkAnimationSpeed, 
+                runAnimationSpeed = runAnimationSpeed,
+                humanDataParameterJSONs = humanDataParameterSOs?.Select(so => (HumanDataParameterJSON)so.Serialize()).ToArray(),
+                humanVisualParameterJSONs = humanVisualParameterSOs?.Select(so => (HumanVisualParameterJSON)so.Serialize()).ToArray(),
+                humanTypeParameterJSONs = humanTypeParameterSOs?.Select(so => (HumanTypeParameterJSON)so.Serialize()).ToArray(),
+                humanAIParameterJSONs = humanAIParameterSOs?.Select(so => (HumanAIParameterJSON)so.Serialize()).ToArray(),
+                humanArmParameterJSONs = humanArmParameterSOs?.Select(so => (HumanArmParameterJSON)so.Serialize()).ToArray(),
+                humanLegParameterJSONs = humanLegParameterSOs?.Select(so => (HumanLegParameterJSON)so.Serialize()).ToArray()
+            };
+        }
+        
+        public override ParameterSO Deserialize(ParameterJSON json)
+        {
+            if (!(json is HumanParameterJSON humanJson))
+            {
+                return null;
+            }
+            
+            name = humanJson.name;
+            armName = humanJson.armName;
+            legName = humanJson.legName; 
+            walkAnimationIndices = humanJson.walkAnimationIndices; 
+            runAnimationIndices = humanJson.runAnimationIndices; 
+            walkAnimationSpeed = humanJson.walkAnimationSpeed; 
+            runAnimationSpeed = humanJson.runAnimationSpeed;
+            humanDataParameterSOs = humanJson.humanDataParameterJSONs
+                .Select(j => (HumanDataParameterSO)CreateInstance<HumanDataParameterSO>().Deserialize(j))
+                .ToArray();
+            humanVisualParameterSOs = humanJson.humanVisualParameterJSONs
+                .Select(j => (HumanVisualParameterSO)CreateInstance<HumanVisualParameterSO>().Deserialize(j))
+                .ToArray();
+            humanTypeParameterSOs = humanJson.humanTypeParameterJSONs
+                .Select(j => (HumanTypeParameterSO)CreateInstance<HumanTypeParameterSO>().Deserialize(j))
+                .ToArray();
+            humanAIParameterSOs = humanJson.humanAIParameterJSONs
+                .Select(j => (HumanAIParameterSO)CreateInstance<HumanAIParameterSO>().Deserialize(j))
+                .ToArray();
+            humanArmParameterSOs = humanJson.humanArmParameterJSONs
+                .Select(j => (HumanArmParameterSO)CreateInstance<HumanArmParameterSO>().Deserialize(j))
+                .ToArray();
+            humanLegParameterSOs = humanJson.humanLegParameterJSONs
+                .Select(j => (HumanLegParameterSO)CreateInstance<HumanLegParameterSO>().Deserialize(j))
+                .ToArray();
+
+            return this;
+        }
+    }
+}

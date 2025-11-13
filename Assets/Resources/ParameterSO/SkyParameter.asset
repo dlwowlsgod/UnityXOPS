@@ -9,28 +9,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9b319e477980be448a43b364274fa32, type: 3}
+  m_Script: {fileID: 11500000, guid: 056c585732b74dfb909b3c6d6891580b, type: 3}
   m_Name: SkyParameter
   m_EditorClassIdentifier: 
-  frontTextureScaleAndOffset:
+  frontScaleAndOffset:
     scale: {x: -0.495, y: 0.495}
     offset: {x: 0.5015, y: 0.5}
-  backTextureScaleAndOffset:
+  backScaleAndOffset:
     scale: {x: 0.495, y: 0.495}
     offset: {x: 0.498, y: 0.502}
-  leftTextureScaleAndOffset:
+  leftScaleAndOffset:
     scale: {x: 0.495, y: 0.495}
     offset: {x: 0.0015, y: 0.5}
-  rightTextureScaleAndOffset:
+  rightScaleAndOffset:
     scale: {x: -0.495, y: 0.495}
     offset: {x: -0.002, y: 0.502}
-  upTextureScaleAndOffset:
+  upScaleAndOffset:
     scale: {x: -0.495, y: -0.495}
     offset: {x: -0.001, y: 0.4975}
-  downTextureScaleAndOffset:
+  downScaleAndOffset:
     scale: {x: 0.495, y: 0.495}
     offset: {x: 0.002, y: 0.002}
-  skyboxTexturePath:
+  skyTextures:
   - 
   - data/sky/sky1.bmp
   - data/sky/sky2.bmp

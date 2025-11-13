@@ -1,0 +1,1056 @@
+{
+    "name": "HumanParameter",
+    "armName": [
+        "idle",
+        "pistol",
+        "rifle"
+    ],
+    "legName": [
+        "idle",
+        "walk00",
+        "walk01",
+        "walk02",
+        "walk03",
+        "run00",
+        "run01",
+        "run02",
+        "run03",
+        "run04",
+        "run05"
+    ],
+    "walkAnimationIndices": [
+        1,
+        2,
+        3,
+        4
+    ],
+    "runAnimationIndices": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+    ],
+    "walkAnimationSpeed": 0.0,
+    "runAnimationSpeed": 0.0,
+    "humanDataParameterJSONs": [
+        {
+            "name": "soldier_black_a",
+            "hp": 120,
+            "weapon0Index": 21,
+            "weapon1Index": 8,
+            "visualIndex": 21,
+            "typeIndex": 0,
+            "aiIndex": 3
+        },
+        {
+            "name": "soldier_black_b",
+            "hp": 120,
+            "weapon0Index": 21,
+            "weapon1Index": 2,
+            "visualIndex": 21,
+            "typeIndex": 0,
+            "aiIndex": 3
+        },
+        {
+            "name": "soldier_green_a",
+            "hp": 110,
+            "weapon0Index": 3,
+            "weapon1Index": 6,
+            "visualIndex": 23,
+            "typeIndex": 0,
+            "aiIndex": 2
+        },
+        {
+            "name": "soldier_green_b",
+            "hp": 110,
+            "weapon0Index": 3,
+            "weapon1Index": 10,
+            "visualIndex": 23,
+            "typeIndex": 0,
+            "aiIndex": 2
+        },
+        {
+            "name": "soldier_green_c",
+            "hp": 110,
+            "weapon0Index": 3,
+            "weapon1Index": 2,
+            "visualIndex": 23,
+            "typeIndex": 0,
+            "aiIndex": 2
+        },
+        {
+            "name": "soldier_white_a",
+            "hp": 110,
+            "weapon0Index": 4,
+            "weapon1Index": 7,
+            "visualIndex": 25,
+            "typeIndex": 0,
+            "aiIndex": 2
+        },
+        {
+            "name": "soldier_white_b",
+            "hp": 110,
+            "weapon0Index": 4,
+            "weapon1Index": 2,
+            "visualIndex": 25,
+            "typeIndex": 0,
+            "aiIndex": 2
+        },
+        {
+            "name": "hage",
+            "hp": 100,
+            "weapon0Index": 4,
+            "weapon1Index": 0,
+            "visualIndex": 10,
+            "typeIndex": 0,
+            "aiIndex": 3
+        },
+        {
+            "name": "soldier_violet",
+            "hp": 110,
+            "weapon0Index": 22,
+            "weapon1Index": 14,
+            "visualIndex": 24,
+            "typeIndex": 0,
+            "aiIndex": 3
+        },
+        {
+            "name": "soldier_blue",
+            "hp": 120,
+            "weapon0Index": 3,
+            "weapon1Index": 1,
+            "visualIndex": 22,
+            "typeIndex": 0,
+            "aiIndex": 2
+        },
+        {
+            "name": "robot",
+            "hp": 2500,
+            "weapon0Index": 6,
+            "weapon1Index": 12,
+            "visualIndex": 20,
+            "typeIndex": 1,
+            "aiIndex": 4
+        },
+        {
+            "name": "gs_sg",
+            "hp": 100,
+            "weapon0Index": 18,
+            "weapon1Index": 0,
+            "visualIndex": 9,
+            "typeIndex": 0,
+            "aiIndex": 1
+        },
+        {
+            "name": "gs",
+            "hp": 100,
+            "weapon0Index": 5,
+            "weapon1Index": 0,
+            "visualIndex": 8,
+            "typeIndex": 0,
+            "aiIndex": 1
+        },
+        {
+            "name": "gs",
+            "hp": 100,
+            "weapon0Index": 5,
+            "weapon1Index": 0,
+            "visualIndex": 8,
+            "typeIndex": 0,
+            "aiIndex": 1
+        },
+        {
+            "name": "riiman_g",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 16,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "police",
+            "hp": 100,
+            "weapon0Index": 3,
+            "weapon1Index": 0,
+            "visualIndex": 13,
+            "typeIndex": 0,
+            "aiIndex": 1
+        },
+        {
+            "name": "riiman",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 14,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "syatu",
+            "hp": 100,
+            "weapon0Index": 17,
+            "weapon1Index": 0,
+            "visualIndex": 31,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "islam",
+            "hp": 100,
+            "weapon0Index": 17,
+            "weapon1Index": 10,
+            "visualIndex": 11,
+            "typeIndex": 0,
+            "aiIndex": 1
+        },
+        {
+            "name": "woman",
+            "hp": 90,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 34,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "civ1",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 0,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "civ2",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 1,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "civ3",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 2,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "syatu_sg",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 32,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "civ1_sg",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 3,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "civ2_sg",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 4,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "civ3_sg",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 5,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "soldier_0",
+            "hp": 115,
+            "weapon0Index": 5,
+            "weapon1Index": 9,
+            "visualIndex": 26,
+            "typeIndex": 0,
+            "aiIndex": 2
+        },
+        {
+            "name": "soldier_1",
+            "hp": 115,
+            "weapon0Index": 5,
+            "weapon1Index": 12,
+            "visualIndex": 27,
+            "typeIndex": 0,
+            "aiIndex": 2
+        },
+        {
+            "name": "soldier_2",
+            "hp": 115,
+            "weapon0Index": 13,
+            "weapon1Index": 10,
+            "visualIndex": 28,
+            "typeIndex": 0,
+            "aiIndex": 2
+        },
+        {
+            "name": "zombie1",
+            "hp": 1000,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 35,
+            "typeIndex": 2,
+            "aiIndex": 0
+        },
+        {
+            "name": "zombie2",
+            "hp": 1000,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 36,
+            "typeIndex": 2,
+            "aiIndex": 0
+        },
+        {
+            "name": "zombie3",
+            "hp": 1000,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 37,
+            "typeIndex": 2,
+            "aiIndex": 0
+        },
+        {
+            "name": "zombie4",
+            "hp": 950,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 38,
+            "typeIndex": 2,
+            "aiIndex": 0
+        },
+        {
+            "name": "riiman_k",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 17,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "riiman_k_sg",
+            "hp": 100,
+            "weapon0Index": 17,
+            "weapon1Index": 0,
+            "visualIndex": 19,
+            "typeIndex": 0,
+            "aiIndex": 1
+        },
+        {
+            "name": "islam2",
+            "hp": 100,
+            "weapon0Index": 17,
+            "weapon1Index": 0,
+            "visualIndex": 12,
+            "typeIndex": 0,
+            "aiIndex": 1
+        },
+        {
+            "name": "riiman_b",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 15,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "riiman_b_sg",
+            "hp": 100,
+            "weapon0Index": 18,
+            "weapon1Index": 0,
+            "visualIndex": 18,
+            "typeIndex": 0,
+            "aiIndex": 1
+        },
+        {
+            "name": "syatu2_sg",
+            "hp": 100,
+            "weapon0Index": 6,
+            "weapon1Index": 0,
+            "visualIndex": 33,
+            "typeIndex": 0,
+            "aiIndex": 1
+        },
+        {
+            "name": "soldier_3",
+            "hp": 105,
+            "weapon0Index": 5,
+            "weapon1Index": 20,
+            "visualIndex": 29,
+            "typeIndex": 0,
+            "aiIndex": 3
+        },
+        {
+            "name": "soldier_3_sg",
+            "hp": 105,
+            "weapon0Index": 21,
+            "weapon1Index": 0,
+            "visualIndex": 30,
+            "typeIndex": 0,
+            "aiIndex": 3
+        },
+        {
+            "name": "gates",
+            "hp": 100,
+            "weapon0Index": 0,
+            "weapon1Index": 0,
+            "visualIndex": 6,
+            "typeIndex": 0,
+            "aiIndex": 0
+        },
+        {
+            "name": "gates_sg",
+            "hp": 100,
+            "weapon0Index": 22,
+            "weapon1Index": 0,
+            "visualIndex": 7,
+            "typeIndex": 0,
+            "aiIndex": 4
+        }
+    ],
+    "humanVisualParameterJSONs": [
+        {
+            "name": "visual_civ1",
+            "textures": [
+                "data/model/civ0.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_civ2",
+            "textures": [
+                "data/model/civ1.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_civ3",
+            "textures": [
+                "data/model/civ2.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_civ1_sg",
+            "textures": [
+                "data/model/civ0.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_civ2_sg",
+            "textures": [
+                "data/model/civ1.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_civ3_sg",
+            "textures": [
+                "data/model/civ2.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_gates",
+            "textures": [
+                "data/model/gates.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_gates_sg",
+            "textures": [
+                "data/model/gates.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_gs",
+            "textures": [
+                "data/model/gs.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_gs_sg",
+            "textures": [
+                "data/model/gs.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_hage",
+            "textures": [
+                "data/model/hage.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_islam",
+            "textures": [
+                "data/model/islam.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_islam2",
+            "textures": [
+                "data/model/islam2.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_police",
+            "textures": [
+                "data/model/islam2.bmp"
+            ],
+            "models": [
+                "data/model/up2.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_riiman",
+            "textures": [
+                "data/model/riiman.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_riiman_b",
+            "textures": [
+                "data/model/riiman_b.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_riiman_g",
+            "textures": [
+                "data/model/riiman_g.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_riiman_k",
+            "textures": [
+                "data/model/riiman_k.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_riiman_b_sg",
+            "textures": [
+                "data/model/riiman_b.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_riiman_k_sg",
+            "textures": [
+                "data/model/riiman_k.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_robot",
+            "textures": [
+                "data/model/robot.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_black",
+            "textures": [
+                "data/model/soldier_black.bmp"
+            ],
+            "models": [
+                "data/model/up5.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_blue",
+            "textures": [
+                "data/model/soldier_blue.bmp"
+            ],
+            "models": [
+                "data/model/up5.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_green",
+            "textures": [
+                "data/model/soldier_green.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_violet",
+            "textures": [
+                "data/model/soldier_violet.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_white",
+            "textures": [
+                "data/model/soldier_white.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_0",
+            "textures": [
+                "data/model/soldier0.bmp"
+            ],
+            "models": [
+                "data/model/up4.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_1",
+            "textures": [
+                "data/model/soldier1.bmp"
+            ],
+            "models": [
+                "data/model/up4.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_2",
+            "textures": [
+                "data/model/soldier2.bmp"
+            ],
+            "models": [
+                "data/model/up4.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_3",
+            "textures": [
+                "data/model/soldier3.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_soldier_3_sg",
+            "textures": [
+                "data/model/soldier3.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_syatu",
+            "textures": [
+                "data/model/syatu.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_syatu_sg",
+            "textures": [
+                "data/model/syatu.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_syatu2_sg",
+            "textures": [
+                "data/model/syatu2.bmp"
+            ],
+            "models": [
+                "data/model/up1.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_woman",
+            "textures": [
+                "data/model/syatu.bmp"
+            ],
+            "models": [
+                "data/model/up3.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_zombie1",
+            "textures": [
+                "data/model/zombie1.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_zombie2",
+            "textures": [
+                "data/model/zombie2.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_zombie3",
+            "textures": [
+                "data/model/zombie3.bmp"
+            ],
+            "models": [
+                "data/model/up0.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        },
+        {
+            "name": "visual_zombie4",
+            "textures": [
+                "data/model/zombie4.bmp"
+            ],
+            "models": [
+                "data/model/up3.x"
+            ],
+            "textureIndices": [
+                0
+            ],
+            "armIndex": 0,
+            "legIndex": 0
+        }
+    ],
+    "humanTypeParameterJSONs": [
+        {
+            "name": "human",
+            "type": "human"
+        },
+        {
+            "name": "robot",
+            "type": "robot"
+        },
+        {
+            "name": "zombie",
+            "type": "robot"
+        }
+    ],
+    "humanAIParameterJSONs": [
+        {
+            "name": "D",
+            "aiName": "D"
+        },
+        {
+            "name": "C",
+            "aiName": "C"
+        },
+        {
+            "name": "B",
+            "aiName": "B"
+        },
+        {
+            "name": "A",
+            "aiName": "A"
+        },
+        {
+            "name": "S",
+            "aiName": "S"
+        },
+        {
+            "name": "S+",
+            "aiName": "S+"
+        }
+    ],
+    "humanArmParameterJSONs": [
+        {
+            "name": "arm",
+            "armModelsLeft": [
+                "data/model/arm00.x",
+                "data/model/arm01.x",
+                "data/model/arm02.x"
+            ],
+            "armModelsRight": [
+                "",
+                "",
+                ""
+            ]
+        }
+    ],
+    "humanLegParameterJSONs": [
+        {
+            "name": "leg",
+            "legModels": [
+                "data/model/leg.x",
+                "data/model/walk00.x",
+                "data/model/walk01.x",
+                "data/model/walk02.x",
+                "data/model/walk03.x",
+                "data/model/run00.x",
+                "data/model/run01.x",
+                "data/model/run02.x",
+                "data/model/run03.x",
+                "data/model/run04.x",
+                "data/model/run05.x"
+            ]
+        }
+    ]
+}
