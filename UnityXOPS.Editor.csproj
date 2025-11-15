@@ -53,7 +53,6 @@
     <Compile Include="Assets\Editor\PlayModeStartInitScene.cs" />
     <Compile Include="Assets\Editor\HumanParameterSOEditor.cs" />
     <Compile Include="Assets\Editor\HumanDataParameterSOEditor.cs" />
-    <Compile Include="Assets\Editor\StartAtInitScene.cs" />
     <Compile Include="Assets\Editor\InitSceneObserver.cs" />
     <Compile Include="Assets\Editor\HumanLegParameterSOEditor.cs" />
     <None Include="Assets\Editor\UnityXOPS.Editor.asmdef" />

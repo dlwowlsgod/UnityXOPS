@@ -46,15 +46,25 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.62f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Editor\HumanArmParameterSOEditor.cs" />
-    <Compile Include="Assets\Editor\HumanVisualParameterSOEditor.cs" />
-    <Compile Include="Assets\Editor\SkyParameterSOEditor.cs" />
-    <Compile Include="Assets\Editor\PlayModeStartInitScene.cs" />
-    <Compile Include="Assets\Editor\HumanParameterSOEditor.cs" />
-    <Compile Include="Assets\Editor\HumanDataParameterSOEditor.cs" />
-    <Compile Include="Assets\Editor\StartAtInitScene.cs" />
-    <Compile Include="Assets\Editor\InitSceneObserver.cs" />
-    <Compile Include="Assets\Editor\HumanLegParameterSOEditor.cs" />
+    <Compile Include="Assets\XLua\Editor\ExampleConfig.cs" />
+    <Compile Include="Assets\XLua\Src\Editor\Generator.cs" />
+    <Compile Include="Assets\XLua\Src\Editor\Hotfix.cs" />
+    <Compile Include="Assets\XLua\Src\Editor\TemplateRef.cs" />
+    <Compile Include="Assets\XLua\Examples\13_BuildFromCLI\Editor\BuildFromCLI.cs" />
+    <Compile Include="Assets\XLua\Src\Editor\LinkXmlGen\LinkXmlGen.cs" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaInterfaceBridge.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaWrapPusher.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaDelegateWrap.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaRegister.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaClassWrap.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaRegisterGCM.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\LinkXmlGen\LinkXmlGen.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\PackUnpack.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaEnumWrapGCM.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaClassWrapGCM.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\TemplateCommon.lua.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaDelegateBridge.tpl.txt" />
+    <None Include="Assets\XLua\Src\Editor\Template\LuaEnumWrap.tpl.txt" />
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.0.62f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
     </Reference>
@@ -882,6 +892,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="Assembly-CSharp.csproj">
+      <Project>{289c8438-7cd2-d977-0945-b81ae2daf2d1}</Project>
+      <Name>Assembly-CSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="UnityXOPS.Editor.csproj">
+      <Project>{4c817464-86c5-4f7d-ed3e-a631c28cc8b2}</Project>
+      <Name>UnityXOPS.Editor</Name>
+    </ProjectReference>
     <ProjectReference Include="UnityXOPS.csproj">
       <Project>{0d743970-383d-bee4-a207-1c6236183ffe}</Project>
       <Name>UnityXOPS</Name>

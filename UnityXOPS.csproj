@@ -53,8 +53,8 @@
     <Compile Include="Assets\Runtime\Stream\ModelLoader.cs" />
     <Compile Include="Assets\Runtime\Data\BlockData.cs" />
     <Compile Include="Assets\Runtime\Parameter\Human\HumanParameterSO.cs" />
-    <Compile Include="Assets\Runtime\Utilities\InitializeOnLoad.cs" />
     <Compile Include="Assets\Runtime\Stream\ImageLoader.cs" />
+    <Compile Include="Assets\Runtime\Utilities\InitializeOnLoad.cs" />
     <Compile Include="Assets\Runtime\Parameter\Human\HumanTypeParameterSO.cs" />
     <Compile Include="Assets\Runtime\Data\PointType.cs" />
     <Compile Include="Assets\Runtime\Utilities\Singleton.cs" />
@@ -76,8 +76,8 @@
     <Compile Include="Assets\Runtime\Parameter\Human\HumanAIParameterSO.cs" />
     <Compile Include="Assets\Runtime\Parameter\Human\HumanLegParameterSO.cs" />
     <Compile Include="Assets\Runtime\Stream\SkyLoader.cs" />
-    <Compile Include="Assets\Runtime\Parameter\Human\HumanVisualParameterSO.cs" />
     <Compile Include="Assets\Runtime\Parameter\Human\HumanVisualParameterJSON.cs" />
+    <Compile Include="Assets\Runtime\Parameter\Human\HumanVisualParameterSO.cs" />
     <Compile Include="Assets\Runtime\Parameter\ParameterJSON.cs" />
     <Compile Include="Assets\Runtime\Parameter\Human\HumanDataParameterJSON.cs" />
     <Compile Include="Assets\Runtime\Stream\BD1Loader.cs" />
