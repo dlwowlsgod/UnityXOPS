@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: gates_sg
   m_EditorClassIdentifier: 
   hp: 100
-  weapon0Index: 0
+  weapon0Index: 22
   weapon1Index: 0
-  visualIndex: 6
+  visualIndex: 7
   typeIndex: 0
-  aiIndex: 0
+  aiIndex: 4

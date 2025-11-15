@@ -6,15 +6,12 @@ namespace UnityXOPS
     [CreateAssetMenu(fileName = "HumanParameter", menuName = "XOPS Parameter/Human Parameter", order = 1)]
     public class HumanParameterSO : ParameterSO
     {
-        [Header("Human Model Settings")] 
         public string[] armName;
         public string[] legName;
         public int[] walkAnimationIndices;
         public int[] runAnimationIndices;
-        [Header("Human Motion Settings")] 
-        public float walkAnimationSpeed;
-        public float runAnimationSpeed;
-        [Header("Human Parameter List")]
+        public Vector3 armRootPosition;
+        public Vector3 legRootPosition;
         public HumanDataParameterSO[] humanDataParameterSOs;
         public HumanVisualParameterSO[] humanVisualParameterSOs;
         public HumanTypeParameterSO[] humanTypeParameterSOs;   
@@ -31,8 +28,8 @@ namespace UnityXOPS
                 legName = legName, 
                 walkAnimationIndices = walkAnimationIndices, 
                 runAnimationIndices = runAnimationIndices, 
-                walkAnimationSpeed = walkAnimationSpeed, 
-                runAnimationSpeed = runAnimationSpeed,
+                armRootPosition = armRootPosition, 
+                legRootPosition = legRootPosition,
                 humanDataParameterJSONs = humanDataParameterSOs?.Select(so => (HumanDataParameterJSON)so.Serialize()).ToArray(),
                 humanVisualParameterJSONs = humanVisualParameterSOs?.Select(so => (HumanVisualParameterJSON)so.Serialize()).ToArray(),
                 humanTypeParameterJSONs = humanTypeParameterSOs?.Select(so => (HumanTypeParameterJSON)so.Serialize()).ToArray(),
@@ -54,8 +51,8 @@ namespace UnityXOPS
             legName = humanJson.legName; 
             walkAnimationIndices = humanJson.walkAnimationIndices; 
             runAnimationIndices = humanJson.runAnimationIndices; 
-            walkAnimationSpeed = humanJson.walkAnimationSpeed; 
-            runAnimationSpeed = humanJson.runAnimationSpeed;
+            armRootPosition = humanJson.armRootPosition; 
+            legRootPosition = humanJson.legRootPosition;
             humanDataParameterSOs = humanJson.humanDataParameterJSONs
                 .Select(j => (HumanDataParameterSO)CreateInstance<HumanDataParameterSO>().Deserialize(j))
                 .ToArray();

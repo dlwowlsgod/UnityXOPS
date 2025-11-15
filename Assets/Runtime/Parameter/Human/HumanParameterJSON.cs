@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace UnityXOPS
 {
@@ -9,8 +10,8 @@ namespace UnityXOPS
         public string[] legName;
         public int[] walkAnimationIndices;
         public int[] runAnimationIndices;
-        public float walkAnimationSpeed;
-        public float runAnimationSpeed;
+        public Vector3 armRootPosition;
+        public Vector3 legRootPosition;
         public HumanDataParameterJSON[] humanDataParameterJSONs;
         public HumanVisualParameterJSON[] humanVisualParameterJSONs;
         public HumanTypeParameterJSON[] humanTypeParameterJSONs;   

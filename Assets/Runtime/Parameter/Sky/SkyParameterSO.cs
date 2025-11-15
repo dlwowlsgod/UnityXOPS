@@ -5,14 +5,12 @@ namespace UnityXOPS
     [CreateAssetMenu(fileName = "SkyParameter", menuName = "XOPS Parameter/Sky Parameter", order = 1000)]
     public class SkyParameterSO : ParameterSO
     {
-        [Header("Sky UV")]
         public ScaleAndOffset frontScaleAndOffset;
         public ScaleAndOffset backScaleAndOffset;
         public ScaleAndOffset leftScaleAndOffset;
         public ScaleAndOffset rightScaleAndOffset;
         public ScaleAndOffset upScaleAndOffset;
         public ScaleAndOffset downScaleAndOffset;
-        [Header("Sky Texture List")]
         public string[] skyTextures;
         
         public override ParameterJSON Serialize()

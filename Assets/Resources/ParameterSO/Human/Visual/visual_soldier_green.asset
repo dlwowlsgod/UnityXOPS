@@ -16,6 +16,12 @@ MonoBehaviour:
   - data/model/soldier_green.bmp
   models:
   - data/model/up0.x
+  positions:
+  - {x: 0, y: 0, z: 0}
+  rotations:
+  - {x: 0, y: 0, z: 0}
+  scales:
+  - {x: 1, y: 1, z: 1}
   textureIndices: 00000000
   armIndex: 0
   legIndex: 0

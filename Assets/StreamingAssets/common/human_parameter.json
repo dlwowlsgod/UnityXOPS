@@ -1,22 +1,22 @@
 {
     "name": "HumanParameter",
     "armName": [
-        "idle",
-        "pistol",
-        "rifle"
+        "arm@rifle",
+        "arm@pistol",
+        "arm@idle"
     ],
     "legName": [
-        "idle",
-        "walk00",
-        "walk01",
-        "walk02",
-        "walk03",
-        "run00",
-        "run01",
-        "run02",
-        "run03",
-        "run04",
-        "run05"
+        "leg@idle",
+        "leg@walk00",
+        "leg@walk01",
+        "leg@walk02",
+        "leg@walk03",
+        "leg@run00",
+        "leg@run01",
+        "leg@run02",
+        "leg@run03",
+        "leg@run04",
+        "leg@run05"
     ],
     "walkAnimationIndices": [
         1,
@@ -32,8 +32,16 @@
         9,
         10
     ],
-    "walkAnimationSpeed": 0.0,
-    "runAnimationSpeed": 0.0,
+    "armRootPosition": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "legRootPosition": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
     "humanDataParameterJSONs": [
         {
             "name": "soldier_black_a",
@@ -441,6 +449,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -454,6 +483,27 @@
             ],
             "models": [
                 "data/model/up0.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -469,6 +519,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -482,6 +553,27 @@
             ],
             "models": [
                 "data/model/up1.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -497,6 +589,27 @@
             "models": [
                 "data/model/up1.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -510,6 +623,27 @@
             ],
             "models": [
                 "data/model/up1.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -525,6 +659,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -538,6 +693,27 @@
             ],
             "models": [
                 "data/model/up1.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -553,6 +729,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -566,6 +763,27 @@
             ],
             "models": [
                 "data/model/up1.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -581,6 +799,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -594,6 +833,27 @@
             ],
             "models": [
                 "data/model/up0.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -609,6 +869,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -622,6 +903,27 @@
             ],
             "models": [
                 "data/model/up2.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -637,6 +939,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -650,6 +973,27 @@
             ],
             "models": [
                 "data/model/up0.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -665,6 +1009,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -678,6 +1043,27 @@
             ],
             "models": [
                 "data/model/up0.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -693,6 +1079,27 @@
             "models": [
                 "data/model/up1.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -706,6 +1113,27 @@
             ],
             "models": [
                 "data/model/up1.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -721,6 +1149,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -734,6 +1183,27 @@
             ],
             "models": [
                 "data/model/up5.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -749,6 +1219,27 @@
             "models": [
                 "data/model/up5.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -762,6 +1253,27 @@
             ],
             "models": [
                 "data/model/up0.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -777,6 +1289,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -790,6 +1323,27 @@
             ],
             "models": [
                 "data/model/up0.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -805,6 +1359,27 @@
             "models": [
                 "data/model/up4.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -818,6 +1393,27 @@
             ],
             "models": [
                 "data/model/up4.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -833,6 +1429,27 @@
             "models": [
                 "data/model/up4.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -846,6 +1463,27 @@
             ],
             "models": [
                 "data/model/up0.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -861,6 +1499,27 @@
             "models": [
                 "data/model/up1.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -874,6 +1533,27 @@
             ],
             "models": [
                 "data/model/up0.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -889,6 +1569,27 @@
             "models": [
                 "data/model/up1.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -902,6 +1603,27 @@
             ],
             "models": [
                 "data/model/up1.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -917,6 +1639,27 @@
             "models": [
                 "data/model/up3.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -930,6 +1673,27 @@
             ],
             "models": [
                 "data/model/up0.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
@@ -945,6 +1709,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -959,6 +1744,27 @@
             "models": [
                 "data/model/up0.x"
             ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            ],
             "textureIndices": [
                 0
             ],
@@ -972,6 +1778,27 @@
             ],
             "models": [
                 "data/model/up3.x"
+            ],
+            "positions": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "rotations": [
+                {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                }
+            ],
+            "scales": [
+                {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
             ],
             "textureIndices": [
                 0
