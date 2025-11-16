@@ -9,7 +9,7 @@ namespace UnityXOPS
         public int weapon0Index;
         public int weapon1Index;
         public int visualIndex;
-        public int typeIndex;
-        public int aiIndex;
+        public string typeClass;
+        public string aiClass;
     }
 }

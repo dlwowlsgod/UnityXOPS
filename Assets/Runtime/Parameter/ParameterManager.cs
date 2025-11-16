@@ -8,12 +8,12 @@ namespace UnityXOPS
         [SerializeField]
         private HumanParameterSO humanParameterSO;
         public HumanParameterSO HumanParameterSO => humanParameterSO;
-        private const string HumanParameterPath = "common/human_parameter.json";
+        private const string HumanParameterPath = "common/parameter/human_parameter.json";
         
         [SerializeField]
         private SkyParameterSO skyParameterSO;
         public SkyParameterSO SkyParameterSO => skyParameterSO;
-        private const string SkyParameterPath = "common/sky_parameter.json";
+        private const string SkyParameterPath = "common/parameter/sky_parameter.json";
         
         public static void Initialize()
         {

@@ -10,11 +10,11 @@ public class HumanParameterSOEditor : Editor
     private SerializedProperty _walkAnimationIndices;
     private SerializedProperty _runAnimationIndices;
     private SerializedProperty _armRootPosition;
+    private SerializedProperty _armRootScale;
     private SerializedProperty _legRootPosition;
+    private SerializedProperty _legRootScale;
     private SerializedProperty _humanDataParameterSOs;
     private SerializedProperty _humanVisualParameterSOs;
-    private SerializedProperty _humanTypeParameterSOs;
-    private SerializedProperty _humanAIParameterSOs;
     private SerializedProperty _humanArmParameterSOs;
     private SerializedProperty _humanLegParameterSOs;
     
@@ -25,13 +25,16 @@ public class HumanParameterSOEditor : Editor
         _walkAnimationIndices = serializedObject.FindProperty("walkAnimationIndices");
         _runAnimationIndices = serializedObject.FindProperty("runAnimationIndices");
         _armRootPosition = serializedObject.FindProperty("armRootPosition");
+        _armRootScale = serializedObject.FindProperty("armRootScale");
         _legRootPosition = serializedObject.FindProperty("legRootPosition");
+        _legRootScale = serializedObject.FindProperty("legRootScale");
         _humanDataParameterSOs = serializedObject.FindProperty("humanDataParameterSOs");
         _humanVisualParameterSOs = serializedObject.FindProperty("humanVisualParameterSOs");
-        _humanTypeParameterSOs = serializedObject.FindProperty("humanTypeParameterSOs");
-        _humanAIParameterSOs = serializedObject.FindProperty("humanAIParameterSOs");
         _humanArmParameterSOs = serializedObject.FindProperty("humanArmParameterSOs");
         _humanLegParameterSOs = serializedObject.FindProperty("humanLegParameterSOs");
+        
+        _armRootScale.vector3Value = new Vector3(1, 1, 1);
+        _legRootScale.vector3Value = new Vector3(1, 1, 1);
     }
     
     public override void OnInspectorGUI()
@@ -66,7 +69,9 @@ public class HumanParameterSOEditor : Editor
         EditorGUI.indentLevel++;
         
         EditorGUILayout.PropertyField(_armRootPosition);
+        EditorGUILayout.PropertyField(_armRootScale);
         EditorGUILayout.PropertyField(_legRootPosition);
+        EditorGUILayout.PropertyField(_legRootScale);
         EditorGUI.indentLevel--;
         
         EditorGUILayout.Space();
@@ -76,15 +81,11 @@ public class HumanParameterSOEditor : Editor
         
         _humanDataParameterSOs.isExpanded = true;
         _humanVisualParameterSOs.isExpanded = true;
-        _humanTypeParameterSOs.isExpanded = true;
-        _humanAIParameterSOs.isExpanded = true;
         _humanArmParameterSOs.isExpanded = true;
         _humanLegParameterSOs.isExpanded = true;
         
         EditorGUILayout.PropertyField(_humanDataParameterSOs, new GUIContent("Human Data Parameter"));
         EditorGUILayout.PropertyField(_humanVisualParameterSOs, new GUIContent("Human Visual Parameter"));
-        EditorGUILayout.PropertyField(_humanTypeParameterSOs, new GUIContent("Human Type Parameter"));
-        EditorGUILayout.PropertyField(_humanAIParameterSOs, new GUIContent("Human AI Parameter"));
         EditorGUILayout.PropertyField(_humanArmParameterSOs, new GUIContent("Human Arm Parameter"));
         EditorGUILayout.PropertyField(_humanLegParameterSOs, new GUIContent("Human Leg Parameter"));
         EditorGUI.indentLevel--;

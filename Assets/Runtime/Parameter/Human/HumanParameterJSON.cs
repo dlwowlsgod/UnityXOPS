@@ -11,11 +11,11 @@ namespace UnityXOPS
         public int[] walkAnimationIndices;
         public int[] runAnimationIndices;
         public Vector3 armRootPosition;
+        public Vector3 armRootScale;
         public Vector3 legRootPosition;
+        public Vector3 legRootScale;
         public HumanDataParameterJSON[] humanDataParameterJSONs;
         public HumanVisualParameterJSON[] humanVisualParameterJSONs;
-        public HumanTypeParameterJSON[] humanTypeParameterJSONs;   
-        public HumanAIParameterJSON[] humanAIParameterJSONs;
         public HumanArmParameterJSON[] humanArmParameterJSONs;
         public HumanLegParameterJSON[] humanLegParameterJSONs;
     }

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UnityXOPS
 {
@@ -9,8 +10,8 @@ namespace UnityXOPS
         public int weapon0Index;
         public int weapon1Index;
         public int visualIndex;
-        public int typeIndex;
-        public int aiIndex;
+        public string typeClass;
+        public string aiClass;
         
         public override ParameterJSON Serialize()
         {
@@ -21,8 +22,8 @@ namespace UnityXOPS
                 weapon0Index = weapon0Index,
                 weapon1Index = weapon1Index,
                 visualIndex = visualIndex,
-                typeIndex = typeIndex,
-                aiIndex = aiIndex
+                typeClass = typeClass,
+                aiClass = aiClass
             };
         }
         
@@ -38,8 +39,8 @@ namespace UnityXOPS
             weapon0Index = dataJson.weapon0Index;
             weapon1Index = dataJson.weapon1Index;
             visualIndex = dataJson.visualIndex;
-            typeIndex = dataJson.typeIndex;
-            aiIndex = dataJson.aiIndex;
+            typeClass = dataJson.typeClass;
+            aiClass = dataJson.aiClass;
 
             return this;
         }
