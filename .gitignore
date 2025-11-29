@@ -12,5 +12,6 @@ Assets/StreamingAssets/data
 Library
 Assets/Resources/char.dds
 Assets/TextMesh Pro
-Assets/XLua
 Temp
+Assets/StreamingAssets/addon
+*.csproj

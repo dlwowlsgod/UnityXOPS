@@ -6,10 +6,6 @@ using System.Runtime.InteropServices;
 
 namespace UnityXOPS
 {
-    /// <summary>
-    /// Utility class for loading 3D models into Unity's runtime environment.
-    /// Provides functionality to import models from specified file paths and cache their instances for reuse.
-    /// </summary>
     public static class ModelLoader
     {
         [StructLayout(LayoutKind.Sequential)]
@@ -58,18 +54,12 @@ namespace UnityXOPS
             }
 #endif
         }
-
-        /// <summary>
-        /// Loads a 3D model from the specified file path and returns it as a Mesh object.
-        /// If the model has been previously loaded, it retrieves the cached instance.
-        /// </summary>
-        /// <param name="filePath">The file path of the 3D model to be loaded.
-        /// The file must exist and have a supported extension.</param>
-        /// <returns>Returns the loaded Mesh object or null if the model file is not found, invalid,
-        /// or an error occurs during the import process.</returns>
+        
         public static Mesh LoadModel(string filePath)
         {
-            if (string.IsNullOrEmpty(filePath))
+            var path = SafeIO.Combine(Application.streamingAssetsPath, filePath);
+            
+            if (string.IsNullOrEmpty(path))
             {
 #if UNITY_EDITOR
                 Debug.LogError("Model path is empty.");
@@ -77,12 +67,12 @@ namespace UnityXOPS
                 return null;
             }
             
-            if (MeshCache.TryGetValue(filePath, out var cachedMesh))
+            if (MeshCache.TryGetValue(path, out var cachedMesh))
             {
                 return cachedMesh;
             }
             
-            if (!File.Exists(filePath))
+            if (!File.Exists(path))
             {
 #if UNITY_EDITOR
                 Debug.LogError("Model file does not exist.");
@@ -90,8 +80,8 @@ namespace UnityXOPS
                 return null;
             }
             
-            var filename = Path.GetFileNameWithoutExtension(filePath);
-            var extension = Path.GetExtension(filePath).ToLower();
+            var filename = Path.GetFileNameWithoutExtension(path);
+            var extension = Path.GetExtension(path).ToLower();
 
             var profile = ModelImportProfile.IMPORT_ABORT;
             switch (extension)
@@ -102,11 +92,11 @@ namespace UnityXOPS
                     break;
             }
 
-            IntPtr meshDataPtr = ImportModel(filePath, profile);
+            IntPtr meshDataPtr = ImportModel(path, profile);
             if (meshDataPtr == IntPtr.Zero)
             {
 #if UNITY_EDITOR
-                Debug.LogError($"Failed to import model {filePath}");
+                Debug.LogError($"Failed to import model {path}");
 #endif
                 return null;
             }
@@ -150,13 +140,13 @@ namespace UnityXOPS
 #endif
 
                 // Add the newly created mesh to the cache before returning.
-                MeshCache[filePath] = mesh;
+                MeshCache[path] = mesh;
                 return mesh;
             }
             catch (Exception e)
             {
 #if UNITY_EDITOR
-                Debug.LogError($"Failed to import model {filePath}: {e.Message}");
+                Debug.LogError($"Failed to import model {path}: {e.Message}");
 #endif
                 return null;
             }

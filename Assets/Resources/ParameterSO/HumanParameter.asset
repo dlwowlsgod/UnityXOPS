@@ -30,10 +30,16 @@ MonoBehaviour:
   - leg@run05
   walkAnimationIndices: 01000000020000000300000004000000
   runAnimationIndices: 05000000060000000700000008000000090000000a000000
-  armRootPosition: {x: 0, y: 0, z: 0}
-  armRootScale: {x: 1, y: 1, z: 1}
+  armRootPosition: {x: 0, y: 1.45, z: -0.045}
+  armRootScale: {x: 0.85, y: 0.85, z: 0.85}
   legRootPosition: {x: 0, y: 0, z: 0}
-  legRootScale: {x: 1, y: 1, z: 1}
+  legRootScale: {x: 0.8, y: 0.8, z: 0.8}
+  headColliderCenter: {x: 0, y: 0, z: 0}
+  headColliderSize: {x: 0, y: 0, z: 0}
+  bodyColliderCenter: {x: 0, y: 0, z: 0}
+  bodyColliderSize: {x: 0, y: 0, z: 0}
+  legColliderCenter: {x: 0, y: 0, z: 0}
+  legColliderSize: {x: 0, y: 0, z: 0}
   humanDataParameterSOs:
   - {fileID: 11400000, guid: 5d6d43309bfa6f24fbce87fb990b9f72, type: 2}
   - {fileID: 11400000, guid: b0eaa59764978c442af258bbd2ea8ad1, type: 2}
@@ -47,7 +53,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7d25d7739b2be4347b3308d7b66b89ab, type: 2}
   - {fileID: 11400000, guid: 1f9080a79495e014bb39939e714ea90d, type: 2}
   - {fileID: 11400000, guid: 86971418aa382994aae3739b22ed4fee, type: 2}
-  - {fileID: 11400000, guid: 2ef09549ea0bbb7428deb3c9ace19bf7, type: 2}
   - {fileID: 11400000, guid: 2ef09549ea0bbb7428deb3c9ace19bf7, type: 2}
   - {fileID: 11400000, guid: 7fb3ae2b9b003f847bb18639de69e9bc, type: 2}
   - {fileID: 11400000, guid: e4f100bd9adf2ae478e1fc080fffd256, type: 2}
@@ -119,6 +124,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 945f0628a681d544294581d0eda2fd60, type: 2}
   - {fileID: 11400000, guid: 1d083008864449f47a2b7bb7ecde5010, type: 2}
   - {fileID: 11400000, guid: dab450621e8ade047a43f3da0f4f2092, type: 2}
+  humanTypeParameterSOs:
+  - {fileID: 11400000, guid: 6262344ab21e0f747a8b19f065bbda2a, type: 2}
+  - {fileID: 11400000, guid: 8a5dd39f3ce9f4d43a377c0f1e11a749, type: 2}
+  - {fileID: 11400000, guid: b50c551c0cb919b4290a8373f5becde7, type: 2}
+  humanAIParameterSOs:
+  - {fileID: 11400000, guid: 340d929bf77c99145bd0b87af8c41ea5, type: 2}
+  - {fileID: 11400000, guid: 0f79ca02fa605ad449ca72f19d737c9c, type: 2}
+  - {fileID: 11400000, guid: b2a5d582b7790924b81c702e61e22bad, type: 2}
+  - {fileID: 11400000, guid: e86eaf88875324a419ad5261b4ddedb0, type: 2}
+  - {fileID: 11400000, guid: 1818969a847aaaf4e858addd70c35c84, type: 2}
+  - {fileID: 11400000, guid: e98992636a6d3934a9118a8887f54d80, type: 2}
   humanArmParameterSOs:
   - {fileID: 11400000, guid: 6ed3a43da7bbd264b9d4af0b9b203a9c, type: 2}
   humanLegParameterSOs:

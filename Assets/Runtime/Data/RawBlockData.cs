@@ -12,7 +12,8 @@ namespace UnityXOPS
         public int flag; 
         
         public int[] subMeshTextureIndices;
-        public Material[] subMeshMaterials;
+        //public Material[] subMeshMaterials;
         public Vector3 position;
+        public bool collider;
     }
 }

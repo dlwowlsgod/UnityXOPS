@@ -1,0 +1,567 @@
+{
+    "name": "MissionParameter(Clone)",
+    "openingData": {
+        "bd1Path": "data/map10/temp.bd1",
+        "pd1Path": "data/map10/op.pd1",
+        "skyIndex": 1
+    },
+    "openingCameraPositionSequence": [],
+    "openingCameraRotationSequence": [],
+    "openingTextSequence": [],
+    "demoData": [
+        {
+            "bd1Path": "data/map2/temp.bd1",
+            "pd1Path": "data/map2/demo.pd1",
+            "skyIndex": 0
+        },
+        {
+            "bd1Path": "data/map4/temp.bd1",
+            "pd1Path": "data/map4/demo.pd1",
+            "skyIndex": 0
+        },
+        {
+            "bd1Path": "data/map5/temp.bd1",
+            "pd1Path": "data/map5/demo.pd1",
+            "skyIndex": 0
+        },
+        {
+            "bd1Path": "data/map7/temp.bd1",
+            "pd1Path": "data/map7/demo.pd1",
+            "skyIndex": 0
+        },
+        {
+            "bd1Path": "data/map8/temp.bd1",
+            "pd1Path": "data/map8/demo.pd1",
+            "skyIndex": 0
+        },
+        {
+            "bd1Path": "data/map16/temp.bd1",
+            "pd1Path": "data/map16/demo.pd1",
+            "skyIndex": 0
+        }
+    ],
+    "officialMissionParameterJSONs": [
+        {
+            "name": "TRAINING YARD",
+            "fullName": "TRAINING YARD training",
+            "txtPath": "data/map0/tr.txt",
+            "bd1Path": "data/map0/temp.bd1",
+            "pd1Path": "data/map0/tr.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "UNDERGROUND_EXT",
+            "fullName": "UNDERGROUND extermination",
+            "txtPath": "data/map5/ext.txt",
+            "bd1Path": "data/map5/temp.bd1",
+            "pd1Path": "data/map5/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "BUILDING_EXT",
+            "fullName": "BUILDING extermination",
+            "txtPath": "data/map1/ext.txt",
+            "bd1Path": "data/map1/temp.bd1",
+            "pd1Path": "data/map1/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "SNOW BASE_EXT",
+            "fullName": "SNOW BASE extermination",
+            "txtPath": "data/map2/ext.txt",
+            "bd1Path": "data/map2/temp.bd1",
+            "pd1Path": "data/map2/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "MBASE_EXT",
+            "fullName": "MILITARY BASE extermination",
+            "txtPath": "data/map4/ext.txt",
+            "bd1Path": "data/map4/temp.bd1",
+            "pd1Path": "data/map4/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "WAREHOUSE_EXT",
+            "fullName": "WAREHOUSE AREA extermination",
+            "txtPath": "data/map7/ext.txt",
+            "bd1Path": "data/map7/temp.bd1",
+            "pd1Path": "data/map7/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "DUEL_EXT",
+            "fullName": "DUEL extermination",
+            "txtPath": "data/map9/ext.txt",
+            "bd1Path": "data/map9/temp.bd1",
+            "pd1Path": "data/map9/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "STATION_EXT",
+            "fullName": "SUBWAY STATION extermination",
+            "txtPath": "data/map6/ext.txt",
+            "bd1Path": "data/map6/temp.bd1",
+            "pd1Path": "data/map6/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "MAZE_EXT",
+            "fullName": "MAZE extermination",
+            "txtPath": "data/map13/ext.txt",
+            "bd1Path": "data/map13/temp.bd1",
+            "pd1Path": "data/map13/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "RUINS_EXT",
+            "fullName": "RUINS extermination",
+            "txtPath": "data/map14/ext.txt",
+            "bd1Path": "data/map14/temp.bd1",
+            "pd1Path": "data/map14/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "URBAN_EXT",
+            "fullName": "URBAN extermination",
+            "txtPath": "data/map8/ext.txt",
+            "bd1Path": "data/map8/temp.bd1",
+            "pd1Path": "data/map8/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "UNDERGROUND_EXT2",
+            "fullName": "UNDERGROUND extermination2",
+            "txtPath": "data/map5/ext2.txt",
+            "bd1Path": "data/map5/temp.bd1",
+            "pd1Path": "data/map5/ext2.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "TUNNEL_EXT",
+            "fullName": "TUNNEL extermination",
+            "txtPath": "data/map12/ext.txt",
+            "bd1Path": "data/map12/temp.bd1",
+            "pd1Path": "data/map12/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "URBAN_DEF",
+            "fullName": "URBAN defend target",
+            "txtPath": "data/map8/def.txt",
+            "bd1Path": "data/map8/temp.bd1",
+            "pd1Path": "data/map8/def.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "DTOWN_EXT",
+            "fullName": "DESERT TOWN extermination",
+            "txtPath": "data/map3/ext.txt",
+            "bd1Path": "data/map3/temp.bd1",
+            "pd1Path": "data/map3/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "URBAN_DEF2",
+            "fullName": "URBAN defend target2",
+            "txtPath": "data/map8/def2.txt",
+            "bd1Path": "data/map8/temp.bd1",
+            "pd1Path": "data/map8/def2.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "WAREHOUSE_KT",
+            "fullName": "WAREHOUSE AREA kill the target",
+            "txtPath": "data/map7/kt.txt",
+            "bd1Path": "data/map7/temp.bd1",
+            "pd1Path": "data/map7/kt.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "RUINS_RE",
+            "fullName": "RUINS release",
+            "txtPath": "data/map14/re.txt",
+            "bd1Path": "data/map14/temp.bd1",
+            "pd1Path": "data/map14/re.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "RELIC_CAP",
+            "fullName": "RELIC capture",
+            "txtPath": "data/map16/cap.txt",
+            "bd1Path": "data/map16/temp.bd1",
+            "pd1Path": "data/map16/cap.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "MBASE_DE",
+            "fullName": "MILITARY BASE destroy",
+            "txtPath": "data/map4/de.txt",
+            "bd1Path": "data/map4/temp.bd1",
+            "pd1Path": "data/map4/de.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "RUINS_CAP",
+            "fullName": "RUINS capture",
+            "txtPath": "data/map14/cap.txt",
+            "bd1Path": "data/map14/temp.bd1",
+            "pd1Path": "data/map14/cap.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "DTOWN_KT",
+            "fullName": "DESERT TOWN kill the target",
+            "txtPath": "data/map3/kt.txt",
+            "bd1Path": "data/map3/temp.bd1",
+            "pd1Path": "data/map3/kt.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "SNOW BASE_RE",
+            "fullName": "SNOW BASE release",
+            "txtPath": "data/map2/re.txt",
+            "bd1Path": "data/map2/temp.bd1",
+            "pd1Path": "data/map2/re.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "UNDERGROUND_DEF",
+            "fullName": "UNDERGROUND defend target",
+            "txtPath": "data/map5/def.txt",
+            "bd1Path": "data/map5/temp.bd1",
+            "pd1Path": "data/map5/def.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "TUNNEL_EXT2",
+            "fullName": "TUNNEL extermination2",
+            "txtPath": "data/map12/ext2.txt",
+            "bd1Path": "data/map12/temp.bd1",
+            "pd1Path": "data/map12/ext2.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "RELIC_DEF",
+            "fullName": "RELIC defend target",
+            "txtPath": "data/map16/def.txt",
+            "bd1Path": "data/map16/temp.bd1",
+            "pd1Path": "data/map16/def.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "URBAN_KT",
+            "fullName": "URBAN kill the target",
+            "txtPath": "data/map8/kt.txt",
+            "bd1Path": "data/map8/temp.bd1",
+            "pd1Path": "data/map8/kt.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "ALLEY_KT",
+            "fullName": "ALLEY kill the target",
+            "txtPath": "data/map10/kt.txt",
+            "bd1Path": "data/map10/temp.bd1",
+            "pd1Path": "data/map10/kt.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "STATION_KT",
+            "fullName": "SUBWAY STATION kill the target",
+            "txtPath": "data/map6/kt.txt",
+            "bd1Path": "data/map6/temp.bd1",
+            "pd1Path": "data/map6/kt.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "WAREHOUSE_DEF",
+            "fullName": "WAREHOUSE AREA defend target",
+            "txtPath": "data/map7/def.txt",
+            "bd1Path": "data/map7/temp.bd1",
+            "pd1Path": "data/map7/def.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "URBAN_KT2",
+            "fullName": "URBAN kill the target2",
+            "txtPath": "data/map8/kt2.txt",
+            "bd1Path": "data/map8/temp.bd1",
+            "pd1Path": "data/map8/kt2.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "OFFICE_DEF",
+            "fullName": "OFFICE defend target",
+            "txtPath": "data/map15/def.txt",
+            "bd1Path": "data/map15/temp.bd1",
+            "pd1Path": "data/map15/def.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "URBAN_CAP",
+            "fullName": "URBAN capture",
+            "txtPath": "data/map8/cap.txt",
+            "bd1Path": "data/map8/temp.bd1",
+            "pd1Path": "data/map8/cap.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "ALLEY_EXT",
+            "fullName": "ALLEY extermination",
+            "txtPath": "data/map10/ext.txt",
+            "bd1Path": "data/map10/temp.bd1",
+            "pd1Path": "data/map10/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": true
+        },
+        {
+            "name": "TUNNEL_ESC",
+            "fullName": "TUNNEL escape",
+            "txtPath": "data/map12/esc.txt",
+            "bd1Path": "data/map12/temp.bd1",
+            "pd1Path": "data/map12/esc.pd1",
+            "adjustCollision": false,
+            "darkScreen": true
+        },
+        {
+            "name": "MAZE_CAP",
+            "fullName": "MAZE capture",
+            "txtPath": "data/map13/cap.txt",
+            "bd1Path": "data/map13/temp.bd1",
+            "pd1Path": "data/map13/cap.pd1",
+            "adjustCollision": false,
+            "darkScreen": true
+        },
+        {
+            "name": "WAREHOUSE_DEF2",
+            "fullName": "WAREHOUSE AREA defend target2",
+            "txtPath": "data/map7/def2.txt",
+            "bd1Path": "data/map7/temp.bd1",
+            "pd1Path": "data/map7/def2.pd1",
+            "adjustCollision": false,
+            "darkScreen": true
+        },
+        {
+            "name": "RUINS_DE",
+            "fullName": "RUINS destroy",
+            "txtPath": "data/map14/de.txt",
+            "bd1Path": "data/map14/temp.bd1",
+            "pd1Path": "data/map14/de.pd1",
+            "adjustCollision": false,
+            "darkScreen": true
+        },
+        {
+            "name": "URBAN_KT3",
+            "fullName": "URBAN kill the target3",
+            "txtPath": "data/map8/kt3.txt",
+            "bd1Path": "data/map8/temp.bd1",
+            "pd1Path": "data/map8/kt3.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "DUEL_EXT2",
+            "fullName": "DUEL extermination2",
+            "txtPath": "data/map9/ext2.txt",
+            "bd1Path": "data/map9/temp.bd1",
+            "pd1Path": "data/map9/ext2.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "RELIC_EXT",
+            "fullName": "RELIC extermination",
+            "txtPath": "data/map16/ext.txt",
+            "bd1Path": "data/map16/temp.bd1",
+            "pd1Path": "data/map16/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "SNOW BASE_DEF",
+            "fullName": "SNOW BASE defend target",
+            "txtPath": "data/map2/def.txt",
+            "bd1Path": "data/map2/temp.bd1",
+            "pd1Path": "data/map2/def.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "BUILDING_KT",
+            "fullName": "BUILDING kill the target",
+            "txtPath": "data/map1/kt.txt",
+            "bd1Path": "data/map1/temp.bd1",
+            "pd1Path": "data/map1/kt.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "MAZE_ESC",
+            "fullName": "MAZE escape",
+            "txtPath": "data/map13/esc.txt",
+            "bd1Path": "data/map13/temp.bd1",
+            "pd1Path": "data/map13/esc.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "ALLEY_EXT2",
+            "fullName": "ALLEY extermination2",
+            "txtPath": "data/map10/ext2.txt",
+            "bd1Path": "data/map10/temp.bd1",
+            "pd1Path": "data/map10/ext2.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "MBASE_ESC",
+            "fullName": "MILITARY BASE escape",
+            "txtPath": "data/map4/esc.txt",
+            "bd1Path": "data/map4/temp.bd1",
+            "pd1Path": "data/map4/esc.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "DTOWN_DEF",
+            "fullName": "DESERT TOWN defend target",
+            "txtPath": "data/map3/def.txt",
+            "bd1Path": "data/map3/temp.bd1",
+            "pd1Path": "data/map3/def.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "OFFICE_KT",
+            "fullName": "OFFICE kill the target",
+            "txtPath": "data/map15/kt.txt",
+            "bd1Path": "data/map15/temp.bd1",
+            "pd1Path": "data/map15/kt.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "BUILDING_DEF",
+            "fullName": "BUILDING defend target",
+            "txtPath": "data/map1/def.txt",
+            "bd1Path": "data/map1/temp.bd1",
+            "pd1Path": "data/map1/def.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "OFFICE_KT2",
+            "fullName": "OFFICE kill the target2",
+            "txtPath": "data/map15/kt2.txt",
+            "bd1Path": "data/map15/temp.bd1",
+            "pd1Path": "data/map15/kt2.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "MBASE_CAP",
+            "fullName": "MILITARY BASE capture",
+            "txtPath": "data/map4/cap.txt",
+            "bd1Path": "data/map4/temp.bd1",
+            "pd1Path": "data/map4/cap.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "TUNNEL_KT",
+            "fullName": "TUNNEL kill the target",
+            "txtPath": "data/map12/kt.txt",
+            "bd1Path": "data/map12/temp.bd1",
+            "pd1Path": "data/map12/kt.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "OFFICE_RE",
+            "fullName": "OFFICE release",
+            "txtPath": "data/map15/re.txt",
+            "bd1Path": "data/map15/temp.bd1",
+            "pd1Path": "data/map15/re.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "URBAN_KT4",
+            "fullName": "URBAN kill the target4",
+            "txtPath": "data/map8/kt4.txt",
+            "bd1Path": "data/map8/temp.bd1",
+            "pd1Path": "data/map8/kt4.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "UNDERGROUND_EXT3",
+            "fullName": "UNDERGROUND extermination3",
+            "txtPath": "data/map5/ext3.txt",
+            "bd1Path": "data/map5/temp.bd1",
+            "pd1Path": "data/map5/ext3.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "SCHOOL_EXT",
+            "fullName": "SCHOOL extermination",
+            "txtPath": "data/map11/ext.txt",
+            "bd1Path": "data/map11/temp.bd1",
+            "pd1Path": "data/map11/ext.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "SCHOOL_EXT2",
+            "fullName": "SCHOOL extermination2",
+            "txtPath": "data/map11/ext2.txt",
+            "bd1Path": "data/map11/temp.bd1",
+            "pd1Path": "data/map11/ext2.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        },
+        {
+            "name": "SCHOOL_DE",
+            "fullName": "SCHOOL destroy",
+            "txtPath": "data/map11/de.txt",
+            "bd1Path": "data/map11/temp.bd1",
+            "pd1Path": "data/map11/de.pd1",
+            "adjustCollision": false,
+            "darkScreen": false
+        }
+    ]
+}

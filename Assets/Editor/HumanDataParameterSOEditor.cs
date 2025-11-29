@@ -9,8 +9,12 @@ public class HumanDataParameterSOEditor : Editor
     private SerializedProperty _weapon0Index;
     private SerializedProperty _weapon1Index;
     private SerializedProperty _visualIndex;
+    private SerializedProperty _typeIndex;
+    private SerializedProperty _aiIndex;
     
     private HumanVisualParameterSO[] _visualParameters;
+    private HumanTypeParameterSO[] _typeParameters;
+    private HumanAIParameterSO[] _aiParameters;
     
     private void OnEnable()
     {
@@ -18,6 +22,8 @@ public class HumanDataParameterSOEditor : Editor
         _weapon0Index = serializedObject.FindProperty("weapon0Index");
         _weapon1Index = serializedObject.FindProperty("weapon1Index");
         _visualIndex = serializedObject.FindProperty("visualIndex");
+        _typeIndex = serializedObject.FindProperty("typeIndex");
+        _aiIndex = serializedObject.FindProperty("aiIndex");
         
         if (!InitSceneObserver.IsInitScene)
         {
@@ -31,6 +37,14 @@ public class HumanDataParameterSOEditor : Editor
             if (humanSO.humanVisualParameterSOs != null)
             {
                 _visualParameters = humanSO.humanVisualParameterSOs;
+            }
+            if (humanSO.humanTypeParameterSOs != null)
+            {
+                _typeParameters = humanSO.humanTypeParameterSOs;
+            }
+            if (humanSO.humanAIParameterSOs != null)
+            {
+                _aiParameters = humanSO.humanAIParameterSOs;
             }
         }
     }
@@ -56,7 +70,29 @@ public class HumanDataParameterSOEditor : Editor
             EditorGUILayout.ObjectField(" ", visualSO, typeof(HumanVisualParameterSO), false);
         }
         
+        EditorGUILayout.PropertyField(_typeIndex);
+        using (new EditorGUI.DisabledScope(true))
+        {
+            var index = _typeIndex.intValue;
+            HumanTypeParameterSO typeSO = null;
+            if (_typeParameters != null && index >= 0 && index < _typeParameters.Length)
+            {
+                typeSO = _typeParameters[index];
+            }
+            EditorGUILayout.ObjectField(" ", typeSO, typeof(HumanTypeParameterSO), false);
+        }
         
+        EditorGUILayout.PropertyField(_aiIndex);
+        using (new EditorGUI.DisabledScope(true))
+        {
+            var index = _aiIndex.intValue;
+            HumanAIParameterSO aiSO = null;
+            if (_aiParameters != null && index >= 0 && index < _aiParameters.Length)
+            {
+                aiSO = _aiParameters[index];
+            }
+            EditorGUILayout.ObjectField(" ", aiSO, typeof(HumanAIParameterSO), false);       
+        }
         
         serializedObject.ApplyModifiedProperties();
     }

@@ -15,13 +15,12 @@ MonoBehaviour:
   textures:
   - data/model/soldier0.bmp
   models:
-  - data/model/up4.x
-  positions:
-  - {x: 0, y: 0, z: 0}
-  rotations:
-  - {x: 0, y: 0, z: 0}
-  scales:
-  - {x: 1, y: 1, z: 1}
-  textureIndices: 00000000
+  - path: data/model/up4.x
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 0.8, y: 0.8, z: 0.8}
+    textureIndex: 0
   armIndex: 0
+  armTextureIndex: 0
   legIndex: 0
+  legTextureIndex: 0

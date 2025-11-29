@@ -11,41 +11,62 @@ namespace UnityXOPS
         
         private Dictionary<string, InputActionWrapper> _actionWrappers = new Dictionary<string, InputActionWrapper>();
         
-        [SerializeField] private Vector2 moveInput;
+        [SerializeField] 
+        private Vector2 moveInput;
         public Vector2 MoveInput => moveInput;
-        [SerializeField] private Vector2 lookInput;
+        
+        [SerializeField] 
+        private Vector2 lookInput;
         public Vector2 LookInput => lookInput;
-        [SerializeField] private bool fireInput;
+        
+        [SerializeField] 
+        private bool fireInput;
         public bool FireInput => fireInput;
-        [SerializeField] private bool zoomInput;
+        
+        [SerializeField] 
+        private bool zoomInput;
         public bool ZoomInput => zoomInput;
-        [SerializeField] private bool primaryWeaponInput;
+        
+        [SerializeField] 
+        private bool primaryWeaponInput;
         public bool PrimaryWeaponInput => primaryWeaponInput;
-        [SerializeField] private bool secondaryWeaponInput;
+        
+        [SerializeField] 
+        private bool secondaryWeaponInput;
         public bool SecondaryWeaponInput => secondaryWeaponInput;
-        [SerializeField] private bool jumpInput;
+        
+        [SerializeField] 
+        private bool jumpInput;
         public bool JumpInput => jumpInput;
-        [SerializeField] private bool interactInput;
+        
+        [SerializeField] 
+        private bool interactInput;
         public bool InteractInput => interactInput;
-        [SerializeField] private bool throwInput;
+        
+        [SerializeField] 
+        private bool throwInput;
         public bool ThrowInput => throwInput;
-        [SerializeField] private bool reloadInput;
+        
+        [SerializeField] 
+        private bool reloadInput;
         public bool ReloadInput => reloadInput;
-        [SerializeField] private bool previousInput;
+        
+        [SerializeField] 
+        private bool previousInput;
         public bool PreviousInput => previousInput;
-        [SerializeField] private bool nextInput;
+        
+        [SerializeField] 
+        private bool nextInput;
         public bool NextInput => nextInput;
-        [SerializeField] private bool walkInput;
+        
+        [SerializeField] 
+        private bool walkInput;
         public bool WalkInput => walkInput;
+        
 
         protected override void Awake()
         {
             base.Awake();
-            InitializeActions();
-        }
-
-        private void InitializeActions()
-        {
             if (inputActions == null) return;
 
             // Vector2
@@ -101,57 +122,6 @@ namespace UnityXOPS
             {
                 wrapper.Disable();
             }
-        }
-
-        public void ResetAllInputs()
-        {
-            moveInput = Vector2.zero;
-            lookInput = Vector2.zero;
-            fireInput = false;
-            zoomInput = false;
-            primaryWeaponInput = false;
-            secondaryWeaponInput = false;
-            jumpInput = false;
-            interactInput = false;
-            throwInput = false;
-            reloadInput = false;
-            previousInput = false;
-            nextInput = false;
-            walkInput = false;
-        }
-    }
-
-    public class InputActionWrapper
-    {
-        private readonly InputAction _action;
-        private readonly Action<InputAction.CallbackContext> _onPerformed;
-        private readonly Action<InputAction.CallbackContext> _onCanceled;
-
-        public InputActionWrapper(InputAction action, 
-                                 Action<InputAction.CallbackContext> onPerformed, 
-                                 Action<InputAction.CallbackContext> onCanceled)
-        {
-            _action = action;
-            _onPerformed = onPerformed;
-            _onCanceled = onCanceled;
-        }
-
-        public void Enable()
-        {
-            if (_action == null) return;
-            
-            _action.Enable();
-            _action.performed += _onPerformed;
-            _action.canceled += _onCanceled;
-        }
-
-        public void Disable()
-        {
-            if (_action == null) return;
-            
-            _action.Disable();
-            _action.performed -= _onPerformed;
-            _action.canceled -= _onCanceled;
         }
     }
 }

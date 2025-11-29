@@ -5,13 +5,6 @@ using System.Linq;
 
 namespace UnityXOPS
 {
-    /// <summary>
-    /// Provides functionalities for loading and initializing custom fonts and sprites used in the application.
-    /// </summary>
-    /// <remarks>
-    /// This class is responsible for dynamically loading fonts and sprites based on the user's language preferences and other configurations.
-    /// It determines the appropriate font to load and configures the sprite assets accordingly.
-    /// </remarks>
     public static class FontLoader
     {
         private const string EnglishFontPath = "WINDOWS/Fonts/segoeui.ttf";
@@ -45,14 +38,14 @@ namespace UnityXOPS
                     break;
             }
             
-            TMP_SpriteAsset temp = Resources.Load<TMP_SpriteAsset>("char_sprite_tmp");
+            TMP_SpriteAsset temp = Resources.Load<TMP_SpriteAsset>("Graphic/char_sprite_tmp");
             
             var useInternalCharDDS = ProfileLoader.GetProfileValue("Stream", "UseInternalCharDDS", "true");
             Texture2D spriteImage;
 
             if (useInternalCharDDS == "true")
             {
-                spriteImage = Resources.Load<Texture2D>("char");
+                spriteImage = Resources.Load<Texture2D>("Graphic/char");
             }
             else
             {
@@ -66,12 +59,7 @@ namespace UnityXOPS
             GameSprite.material.mainTexture = spriteImage;
             GameSprite.name = "GameFont";
         }
-
-        /// <summary>
-        /// Loads an operating system font from the specified path and converts it into a TMP_FontAsset.
-        /// </summary>
-        /// <param name="path">The name or part of the path of the font file to be loaded from the operating system's font directory.</param>
-        /// <returns>A TMP_FontAsset representing the loaded font. If the font is not found, the method returns null.</returns>
+        
         private static TMP_FontAsset LoadOSFont(string path)
         {
             var fontPaths = Font.GetPathsToOSFonts();

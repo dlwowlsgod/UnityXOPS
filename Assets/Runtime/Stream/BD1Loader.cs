@@ -6,42 +6,32 @@ using Object = UnityEngine.Object;
 
 namespace UnityXOPS
 {
-    /// <summary>
-    /// Provides functionality for loading and processing block data files in Unity.
-    /// </summary>
     public static class BD1Loader
     {
         private static bool _textureCountHeader;
-        private static Material _defaultMaterial;
-        private static Material _transparentMaterial;
 
-        private static readonly int[] FaceVertexIndices = new[]
+        private static readonly int[,] FaceVertexIndices =
         {
-            0, 3, 2, 1, // face 0
-            7, 4, 5, 6, // face 1
-            4, 0, 1, 5, // face 2
-            5, 1, 2, 6, // face 3
-            6, 2, 3, 7, // face 4
-            7, 3, 0, 4  // face 5
+            {0, 3, 2, 1}, // face 0
+            {7, 4, 5, 6}, // face 1
+            {4, 0, 1, 5}, // face 2
+            {5, 1, 2, 6}, // face 3
+            {6, 2, 3, 7}, // face 4
+            {7, 3, 0, 4}  // face 5
         };
+
         private static readonly int[] UVIndexOrder = new[] { 3, 0, 1, 2 };
 
         public static void Initialize()
         {
             _textureCountHeader = 
                 ProfileLoader.GetProfileValue("Stream", "UseBlockDataTextureCountHeader", "false") == "true";
-            
-            _defaultMaterial = Resources.Load<Material>("DefaultBlock");
-            _transparentMaterial = Resources.Load<Material>("TransparentBlock");
         }
-
-        /// <summary>
-        /// Loads a BD1 file from the specified path and returns the corresponding BlockData object.
-        /// </summary>
-        /// <param name="path">The file path of the BD1 file to load.</param>
-        /// <returns>A BlockData object containing the loaded block and texture data, or null if the file load fails.</returns>
-        public static BlockData LoadBD1(string path)
+        
+        public static BlockData LoadBD1(string filePath)
         {
+            var path = SafeIO.Combine(Application.streamingAssetsPath, filePath);
+            
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
 #if UNITY_EDITOR
@@ -71,14 +61,19 @@ namespace UnityXOPS
 
                 if (string.IsNullOrEmpty(texturePath))
                 {
-                    blockData.textures[i] = _defaultMaterial;
+                    blockData.textures[i] = ImageLoader.CutoutMaterial;
                     continue;
                 }
                 
-                var texture = ImageLoader.LoadImage(Path.Combine(directory, texturePath));
-                var material = Object.Instantiate(_defaultMaterial);
+                var texture = ImageLoader.LoadImage(SafeIO.Combine(directory, texturePath));
+                var extension = Path.GetExtension(texturePath).ToLower();
+                //var material = extension == ".png" ? Object.Instantiate(_transparentMaterial) : Object.Instantiate(_defaultMaterial);
+                //material.name = texturePath;
+                //material.mainTexture = texture;
+                
+                var material = ImageLoader.ToMaterial(texture, extension == ".png" ? ImageLoader.TransparentMaterial : ImageLoader.CutoutMaterial);
                 material.name = texturePath;
-                material.mainTexture = texture;
+                
                 blockData.textures[i] = material;
             }
             
@@ -106,7 +101,10 @@ namespace UnityXOPS
 
                 var rawBlockData = new RawBlockData
                 {
-                    vertices = FaceVertexIndices.Select(index => uniqueVertices[index]).ToArray(),
+                    vertices = Enumerable.Range(0, FaceVertexIndices.GetLength(0)) // each face
+                        .SelectMany(faceIdx => Enumerable.Range(0, FaceVertexIndices.GetLength(1)) // each vertex per face 
+                            .Select(vtxIdx => uniqueVertices[FaceVertexIndices[faceIdx, vtxIdx]]))
+                        .ToArray(),
                     uvs = Enumerable.Range(0, 6)
                         .SelectMany(faceIndex => UVIndexOrder.Select(uvOrderIndex => new Vector2(
                             floatData[24 + faceIndex * 4 + uvOrderIndex], 
@@ -117,7 +115,8 @@ namespace UnityXOPS
                         intData[0], intData[1], intData[2], intData[3],
                         intData[4], intData[5]
                     },
-                    flag = intData[6]
+                    flag = intData[6],
+                    collider = CheckValidCollider(uniqueVertices)
                 };
 
                 Mesh mesh = new();
@@ -133,6 +132,7 @@ namespace UnityXOPS
 
                 rawBlockData.subMeshTextureIndices = subMeshGroups.Select(g => g.Key).ToArray();
                 
+                /*
                 var materials = new Material[rawBlockData.subMeshTextureIndices.Length];
                 for (int j = 0; j < rawBlockData.subMeshTextureIndices.Length; j++)
                 {
@@ -143,11 +143,11 @@ namespace UnityXOPS
                     }
                     else
                     {
-                        materials[j] = _transparentMaterial;
+                        materials[j] = ImageLoader.NullMaterial;
                     }
                 }
                 rawBlockData.subMeshMaterials = materials;
-
+                */
 
                 var subMeshData = subMeshGroups.Select(group =>
                     group.SelectMany(faceIndex => new[]
@@ -177,6 +177,36 @@ namespace UnityXOPS
             }
 
             return blockData;
+        }
+
+        private static bool CheckValidCollider(Vector3[] uniqueVertices)
+        {
+            const float tolerance = 0.001f;
+            
+            if (uniqueVertices.Length != 8)
+            {
+                return false;
+            }
+            
+            // check duplicated/overlapping vertices
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = i + 1; j < 8; j++)
+                {
+                    /*
+                    if (uniqueVertices[i] == uniqueVertices[j])
+                    {
+                        return false;
+                    }
+                    */
+                    if (Vector3.Distance(uniqueVertices[i], uniqueVertices[j]) < tolerance)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
     }
 }

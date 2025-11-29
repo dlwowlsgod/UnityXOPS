@@ -6,13 +6,11 @@ namespace UnityXOPS
     public class HumanVisualParameterSO : ParameterSO
     {
         public string[] textures;
-        public string[] models;
-        public Vector3[] positions;
-        public Vector3[] rotations;
-        public Vector3[] scales;
-        public int[] textureIndices;
+        public ModelData[] models;
         public int armIndex;
+        public int armTextureIndex;
         public int legIndex;
+        public int legTextureIndex;
         
         public override ParameterJSON Serialize()
         {
@@ -21,12 +19,10 @@ namespace UnityXOPS
                 name = name,
                 textures = textures,
                 models = models,
-                positions = positions, 
-                rotations = rotations, 
-                scales = scales,
-                textureIndices = textureIndices,
                 armIndex = armIndex, 
-                legIndex = legIndex
+                armTextureIndex = armTextureIndex,
+                legIndex = legIndex,
+                legTextureIndex = legTextureIndex
             };
         }
         
@@ -40,13 +36,11 @@ namespace UnityXOPS
             name = visualJson.name;
             textures = visualJson.textures;
             models = visualJson.models;
-            positions = visualJson.positions; 
-            rotations = visualJson.rotations; 
-            scales = visualJson.scales;
-            textureIndices = visualJson.textureIndices;
             armIndex = visualJson.armIndex;
+            armTextureIndex = visualJson.armTextureIndex;
             legIndex = visualJson.legIndex;
-
+            legTextureIndex = visualJson.legTextureIndex;
+            
             return this;
         }
     }

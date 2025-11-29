@@ -1,11 +1,11 @@
 {
-    "name": "UnityXOPS",
+    "name": "Assembly-UnityXOPS",
     "rootNamespace": "UnityXOPS",
     "references": [
         "GUID:6055be8ebefd69e48b49212b09b47b2f",
         "GUID:75469ad4d38634e559750d17036d5f7c",
-        "GUID:34509205969583e4f84d64f53ed52240",
-        "GUID:34509205969583e4f84d64f53ed52240"
+        "GUID:21ac3e1afe94d564a951557e2f91b4f9",
+        "GUID:d525ad6bd40672747bde77962f1c401e"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -26,7 +26,9 @@ namespace UnityXOPS
 
         public static AudioClip LoadSound(string filePath)
         {
-            if (string.IsNullOrEmpty(filePath))
+            var path = SafeIO.Combine(Application.streamingAssetsPath, filePath);
+            
+            if (string.IsNullOrEmpty(path))
             {
 #if UNITY_EDITOR
                 Debug.LogError("Sound path is empty.");
@@ -34,12 +36,12 @@ namespace UnityXOPS
                 return null;
             }
             
-            if (SoundCache.TryGetValue(filePath, out var cachedSound))
+            if (SoundCache.TryGetValue(path, out var cachedSound))
             {
                 return cachedSound;
             }
 
-            if (!File.Exists(filePath))
+            if (!File.Exists(path))
             {
 #if UNITY_EDITOR
                 Debug.LogError("Sound file does not exist.");
@@ -47,8 +49,8 @@ namespace UnityXOPS
                 return null;
             }
             
-            var filename = Path.GetFileNameWithoutExtension(filePath);
-            var extension = Path.GetExtension(filePath).ToLower();
+            var filename = Path.GetFileNameWithoutExtension(path);
+            var extension = Path.GetExtension(path).ToLower();
 
             if (extension != ".wav")
             {
@@ -59,7 +61,7 @@ namespace UnityXOPS
             }
             
 
-            var url = "file://" + filePath;
+            var url = "file://" + path;
             // www is obsolete because only support sync loading (like original xops)
             // if you want to change async loading, use UnityWebRequest
             // with async/await method or coroutine
@@ -81,7 +83,7 @@ namespace UnityXOPS
                 if (audioClip != null)
                 {
                     audioClip.name = filename;
-                    SoundCache.Add(filePath, audioClip);
+                    SoundCache.Add(path, audioClip);
                     return audioClip;
                 }
 #if UNITY_EDITOR

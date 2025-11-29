@@ -32,6 +32,7 @@ namespace UnityXOPS
         {
             ParameterManager.Initialize();
             
+            MIFLoader.Initialize();
             SkyLoader.Initialize();
             BD1Loader.Initialize();
             PD1Loader.Initialize();

@@ -1,14 +1,13 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using Object = UnityEngine.Object;
 
 namespace UnityXOPS
 {
-    /// <summary>
-    /// The ImageLoader class provides functionality for loading images into Unity as Texture2D objects.
-    /// </summary>
     public static class ImageLoader
     {
         [StructLayout(LayoutKind.Sequential)]
@@ -41,6 +40,18 @@ namespace UnityXOPS
 #endif
 
         private static readonly Dictionary<string, Texture2D> ImageCache = new();
+        private static readonly Dictionary<Texture2D, Material> MaterialCache = new();
+        
+        public static Material CutoutMaterial { get; private set; }
+        public static Material TransparentMaterial { get; private set; }
+        public static Material NullMaterial { get; private set; }
+        
+        static ImageLoader()
+        {
+            CutoutMaterial = Resources.Load<Material>("Graphic/CutoutMaterial");
+            TransparentMaterial = Resources.Load<Material>("Graphic/TransparentMaterial");
+            NullMaterial = Resources.Load<Material>("Graphic/NullMaterial");
+        }
 
         public static void Initialize()
         {
@@ -48,28 +59,32 @@ namespace UnityXOPS
             IntPtr versionPtr = GetFreeImageVersion();
             string versionString = Marshal.PtrToStringAnsi(versionPtr);
             Debug.Log($"FreeImage Version: {versionString}");
-
+#endif
             Application.quitting += OnApplicationQuit;
             void OnApplicationQuit()
             {
+#if UNITY_EDITOR
                 ImageCache.Clear();
-                
                 Application.quitting -= OnApplicationQuit;
-            }
 #endif
-        }
+                MaterialCache.Clear();
+                SceneManager.sceneLoaded -= OnSceneLoaded;
+            }
 
-        /// <summary>
-        /// Loads an image from the specified file path and returns it as a Unity Texture2D object.
-        /// </summary>
-        /// <param name="filePath">The file path of the image to load.</param>
-        /// <returns>
-        /// Returns a <see cref="Texture2D"/> object if the image is successfully loaded; otherwise, returns null if the path is invalid,
-        /// the image does not exist, or an error occurs during the loading process.
-        /// </returns>
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            return;
+
+            void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+            {
+                MaterialCache.Clear();
+            }
+        }
+        
         public static Texture2D LoadImage(string filePath)
         {
-            if (string.IsNullOrEmpty(filePath))
+            var path = SafeIO.Combine(Application.streamingAssetsPath, filePath);
+            
+            if (string.IsNullOrEmpty(path))
             {
 #if UNITY_EDITOR
                 Debug.LogError("Image path is empty.");
@@ -77,12 +92,12 @@ namespace UnityXOPS
                 return null;
             }
             
-            if (ImageCache.TryGetValue(filePath, out var cachedTexture))
+            if (ImageCache.TryGetValue(path, out var cachedTexture))
             {
                 return cachedTexture;
             }
 
-            if (!File.Exists(filePath))
+            if (!File.Exists(path))
             {
 #if UNITY_EDITOR
                 Debug.LogError("Image file does not exist.");
@@ -90,8 +105,8 @@ namespace UnityXOPS
                 return null;
             }
             
-            var filename = Path.GetFileNameWithoutExtension(filePath);
-            var extension = Path.GetExtension(filePath).ToLower();
+            var filename = Path.GetFileNameWithoutExtension(path);
+            var extension = Path.GetExtension(path).ToLower();
             
             var profile = ImageImportProfile.IMPORT_ABORT;
             switch (extension)
@@ -114,11 +129,11 @@ namespace UnityXOPS
                     break;
             }
             
-            IntPtr imageDataPtr = ImportImage(filePath, profile);
+            IntPtr imageDataPtr = ImportImage(path, profile);
             if (imageDataPtr == IntPtr.Zero)
             {
 #if UNITY_EDITOR
-                Debug.LogError($"Failed to import image {filePath}");
+                Debug.LogError($"Failed to import image {path}");
 #endif
                 return null;
             }
@@ -145,7 +160,7 @@ namespace UnityXOPS
             catch (Exception e)
             {
 #if UNITY_EDITOR
-                Debug.LogError($"Failed to import image {filePath}: {e.Message}");
+                Debug.LogError($"Failed to import image {path}: {e.Message}");
 #endif
                 return null;
             }
@@ -153,6 +168,24 @@ namespace UnityXOPS
             {
                 DeAllocImage(imageDataPtr);
             }
+        }
+
+        public static Material ToMaterial(Texture2D texture, Material reference)
+        {
+            if (texture == null)
+            {
+                return null;
+            }
+            
+            if (MaterialCache.TryGetValue(texture, out var cachedMaterial))
+            {
+                return cachedMaterial;
+            }
+
+            var material = Object.Instantiate(reference);
+            material.mainTexture = texture;
+            MaterialCache.Add(texture, material);
+            return material;
         }
     }
 }

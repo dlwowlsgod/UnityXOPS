@@ -2,7 +2,7 @@
 
 namespace UnityXOPS
 {
-    [CreateAssetMenu(fileName = "SkyParameter", menuName = "XOPS Parameter/Sky Parameter", order = 1000)]
+    [CreateAssetMenu(fileName = "SkyParameter", menuName = "XOPS Parameter/Sky Parameter", order = 900)]
     public class SkyParameterSO : ParameterSO
     {
         public ScaleAndOffset frontScaleAndOffset;

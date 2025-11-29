@@ -10,8 +10,8 @@ namespace UnityXOPS
         public int weapon0Index;
         public int weapon1Index;
         public int visualIndex;
-        public string typeClass;
-        public string aiClass;
+        public int typeIndex;
+        public int aiIndex;
         
         public override ParameterJSON Serialize()
         {
@@ -22,8 +22,8 @@ namespace UnityXOPS
                 weapon0Index = weapon0Index,
                 weapon1Index = weapon1Index,
                 visualIndex = visualIndex,
-                typeClass = typeClass,
-                aiClass = aiClass
+                typeIndex = typeIndex,
+                aiIndex = aiIndex
             };
         }
         
@@ -39,8 +39,8 @@ namespace UnityXOPS
             weapon0Index = dataJson.weapon0Index;
             weapon1Index = dataJson.weapon1Index;
             visualIndex = dataJson.visualIndex;
-            typeClass = dataJson.typeClass;
-            aiClass = dataJson.aiClass;
+            typeIndex = dataJson.typeIndex;
+            aiIndex = dataJson.aiIndex;
 
             return this;
         }

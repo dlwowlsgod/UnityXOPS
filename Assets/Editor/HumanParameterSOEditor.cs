@@ -13,8 +13,16 @@ public class HumanParameterSOEditor : Editor
     private SerializedProperty _armRootScale;
     private SerializedProperty _legRootPosition;
     private SerializedProperty _legRootScale;
+    private SerializedProperty _headColliderCenter;
+    private SerializedProperty _headColliderSize;
+    private SerializedProperty _bodyColliderCenter;
+    private SerializedProperty _bodyColliderSize;
+    private SerializedProperty _legColliderCenter;
+    private SerializedProperty _legColliderSize;
     private SerializedProperty _humanDataParameterSOs;
     private SerializedProperty _humanVisualParameterSOs;
+    private SerializedProperty _humanTypeParameterSOs;
+    private SerializedProperty _humanAIParameterSOs;
     private SerializedProperty _humanArmParameterSOs;
     private SerializedProperty _humanLegParameterSOs;
     
@@ -28,8 +36,16 @@ public class HumanParameterSOEditor : Editor
         _armRootScale = serializedObject.FindProperty("armRootScale");
         _legRootPosition = serializedObject.FindProperty("legRootPosition");
         _legRootScale = serializedObject.FindProperty("legRootScale");
+        _headColliderCenter = serializedObject.FindProperty("headColliderCenter");
+        _headColliderSize = serializedObject.FindProperty("headColliderSize");
+        _bodyColliderCenter = serializedObject.FindProperty("bodyColliderCenter");
+        _bodyColliderSize = serializedObject.FindProperty("bodyColliderSize");
+        _legColliderCenter = serializedObject.FindProperty("legColliderCenter");
+        _legColliderSize = serializedObject.FindProperty("legColliderSize");
         _humanDataParameterSOs = serializedObject.FindProperty("humanDataParameterSOs");
         _humanVisualParameterSOs = serializedObject.FindProperty("humanVisualParameterSOs");
+        _humanTypeParameterSOs = serializedObject.FindProperty("humanTypeParameterSOs");
+        _humanAIParameterSOs = serializedObject.FindProperty("humanAIParameterSOs");
         _humanArmParameterSOs = serializedObject.FindProperty("humanArmParameterSOs");
         _humanLegParameterSOs = serializedObject.FindProperty("humanLegParameterSOs");
         
@@ -76,16 +92,33 @@ public class HumanParameterSOEditor : Editor
         
         EditorGUILayout.Space();
         
+        EditorGUILayout.LabelField("Collider Settings", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
+        
+        EditorGUILayout.PropertyField(_headColliderCenter);
+        EditorGUILayout.PropertyField(_headColliderSize);
+        EditorGUILayout.PropertyField(_bodyColliderCenter);
+        EditorGUILayout.PropertyField(_bodyColliderSize);
+        EditorGUILayout.PropertyField(_legColliderCenter);
+        EditorGUILayout.PropertyField(_legColliderSize);
+        EditorGUI.indentLevel--;
+        
+        EditorGUILayout.Space();
+        
         EditorGUILayout.LabelField("Parameters", EditorStyles.boldLabel);
         EditorGUI.indentLevel++;
         
         _humanDataParameterSOs.isExpanded = true;
         _humanVisualParameterSOs.isExpanded = true;
+        _humanTypeParameterSOs.isExpanded = true;
+        _humanAIParameterSOs.isExpanded = true;
         _humanArmParameterSOs.isExpanded = true;
         _humanLegParameterSOs.isExpanded = true;
         
         EditorGUILayout.PropertyField(_humanDataParameterSOs, new GUIContent("Human Data Parameter"));
         EditorGUILayout.PropertyField(_humanVisualParameterSOs, new GUIContent("Human Visual Parameter"));
+        EditorGUILayout.PropertyField(_humanTypeParameterSOs, new GUIContent("Human Type Parameter"));
+        EditorGUILayout.PropertyField(_humanAIParameterSOs, new GUIContent("Human AI Parameter"));
         EditorGUILayout.PropertyField(_humanArmParameterSOs, new GUIContent("Human Arm Parameter"));
         EditorGUILayout.PropertyField(_humanLegParameterSOs, new GUIContent("Human Leg Parameter"));
         EditorGUI.indentLevel--;

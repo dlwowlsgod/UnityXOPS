@@ -7,12 +7,11 @@ namespace UnityXOPS
     public class HumanVisualParameterJSON : ParameterJSON
     {
         public string[] textures;
-        public string[] models;
-        public Vector3[] positions;
-        public Vector3[] rotations;
-        public Vector3[] scales;
+        public ModelData[] models;
         public int[] textureIndices;
         public int armIndex;
+        public int armTextureIndex;
         public int legIndex;
+        public int legTextureIndex;
     }
 }

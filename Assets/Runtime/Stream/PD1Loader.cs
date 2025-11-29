@@ -12,8 +12,10 @@ namespace UnityXOPS
             
         }
         
-        public static PointData LoadPD1(string path)
+        public static PointData LoadPD1(string filePath)
         {
+            var path = SafeIO.Combine(Application.streamingAssetsPath, filePath);
+            
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
 #if UNITY_EDITOR
@@ -44,7 +46,7 @@ namespace UnityXOPS
                 rawPointData.position = new Vector3(-x * 0.1f, y * 0.1f, -z * 0.1f);
 
                 var r = br.ReadSingle();
-                rawPointData.rotation = Quaternion.Euler(0, -r, 0);
+                rawPointData.rotation = Quaternion.Euler(0, r * Mathf.Rad2Deg, 0);
 
                 var extended = ProfileLoader.GetProfileValue("Stream", "UseExtendedPointParameter", "false") == "true";
                 if (extended)

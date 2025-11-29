@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e44594a6673c76949b3d7c380e6e7d54, type: 3}
+  m_Name: C
+  m_EditorClassIdentifier: 
+  aimingTime: 0.72
+  rotationTime: 1.15
+  detectionChance: 0.3
+  attackChance: 0.12
+  aimingCorrection: 0
+  horizontalAngle: 72
+  verticalAngle: 72
+  normalViewDistance: 28
+  alertViewDistance: 31
+  normalHearingDistance: 11
+  alertHearingDistance: 13

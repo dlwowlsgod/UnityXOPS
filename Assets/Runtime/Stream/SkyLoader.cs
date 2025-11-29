@@ -17,7 +17,7 @@ namespace UnityXOPS
         
         public static void Initialize()
         {
-            _defaultSky = Resources.Load<Material>("DefaultSky");
+            _defaultSky = Resources.Load<Material>("Graphic/DefaultSky");
             _defaultSky = Object.Instantiate(_defaultSky);
 
             var skyboxSO = ParameterManager.Instance.SkyParameterSO;
@@ -41,16 +41,25 @@ namespace UnityXOPS
             RenderSettings.skybox = _defaultSky;
         }
 
-        public static Material LoadSky(string filePath)
+        public static Material LoadSky(int skyIndex)
         {
-            var image = ImageLoader.LoadImage(filePath);
+            var skySO = ParameterManager.Instance.SkyParameterSO;
+            var skyTextures = skySO.skyTextures;
+            if (skyIndex < 0 || skyIndex >= skyTextures.Length)
+            {
+                return _defaultSky;
+            }
+            
+            var skyPath = skyTextures[skyIndex];
+            
+            var image = ImageLoader.LoadImage(skyPath);
             if (image == null)
             {
                 return _defaultSky;
             }
-
-            var name = image.name;
-            var skybox = Object.Instantiate(_defaultSky);
+            
+            var skybox = ImageLoader.ToMaterial(image, _defaultSky);
+            skybox.name = image.name;
             
             skybox.SetColor(Tint, new Color(0.5f, 0.5f, 0.5f, 0.5f));
 

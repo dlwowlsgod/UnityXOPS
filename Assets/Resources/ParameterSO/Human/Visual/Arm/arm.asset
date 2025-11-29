@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: arm
   m_EditorClassIdentifier: 
   armModelsLeft:
-  - data/model/arm00.x
   - data/model/arm01.x
   - data/model/arm02.x
+  - data/model/arm00.x
   armModelsRight:
   - 
   - 
