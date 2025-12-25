@@ -1,191 +1,341 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using UnityEngine;
-using Random = UnityEngine.Random;
+using System.Collections.Generic;
 
 namespace UnityXOPS
 {
     public class MapManager : Singleton<MapManager>
     {
-        [SerializeField]
-        private BriefingData briefing;
+        public string mapName;
+        public string mapFullName;
+        public Texture2D briefingImage0;
+        public Texture2D briefingImage1;
+        public string briefingText;
         
+        public string bd1Name;
         [SerializeField]
-        private Material[] blockTextures;
+        private Material[] textures;
+        public int blockCount;
 
-        [SerializeField]
-        private string[] messages;
+        public string pd1Name;
+        public int pointCount;
+        public int activeHumanCount;
+        public int deadHumanCount;
+        public int equippedWeaponCount;
+        public int droppedWeaponCount;
+        public int activeObjectCount;
+        public int destroyedObjectCount;
+        public string[] messages;
 
         [SerializeField]
         private Human player;
+        public Human Player => player;
+        public int time;
+        public int fired;
+        public int hit;
+        public int killed;
+        public int headshot;
         
-        [SerializeField]
-        private Transform blockRoot;
+        private Transform _blockRoot;
+        private Transform _pointRoot;
+        private Transform _humanRoot;
+        private Transform _weaponRoot;
+        private Transform _objectRoot;
 
-        [SerializeField]
-        private Transform humanRoot;
-        
-        private readonly Dictionary<int, int> _humanParameters = new();
-        private readonly Dictionary<int, int> _paths = new();
-        private readonly Dictionary<int, Branch> _randomPaths = new();
+        private List<Human> _humanList;
+        private int _playerHumanIndex;
 
-        private void Start()
+        public Dictionary<int, int> HumanParameter { get; } = new();
+
+        private float _timer;
+
+        private void Update()
         {
-            var missionSO = ParameterManager.Instance.MissionParameterSO.officialMissionParameterSOs[0];
-            CreateMap(missionSO);
-        }
-
-        public void CreateMap(OfficialMissionParameterSO missionSO)
-        {
-            var bd1Path = SafeIO.Combine(Application.streamingAssetsPath, missionSO.bd1Path);
-            var bd1 = BD1Loader.LoadBD1(bd1Path);
-            var pd1Path = SafeIO.Combine(Application.streamingAssetsPath, missionSO.pd1Path);
-            var pd1 = PD1Loader.LoadPD1(pd1Path);
-
-            briefing = new BriefingData();
-            var txt = SafeIO.Combine(Application.streamingAssetsPath, missionSO.txtPath);
-            var briefingPath = Path.Combine(Application.streamingAssetsPath, "data/briefing");
-            var txtLine = EncodingHelper.ReadAllLinesWithEncoding(txt);
-            if (!string.IsNullOrWhiteSpace(txtLine[0]) && txtLine[0] != "!")
+            _timer += Time.deltaTime;
+            if (_timer >= 1)
             {
-                var image0Path = SafeIO.Combine(briefingPath, txtLine[0] + ".bmp");
-                briefing.image0 = ImageLoader.LoadImage(image0Path);
+                _timer -= 1;
+                time++;
             }
-
-            if (!string.IsNullOrWhiteSpace(txtLine[1]) && txtLine[1] != "!")
-            {
-                var image1Path = SafeIO.Combine(briefingPath, txtLine[1] + ".bmp");
-                briefing.image1 = ImageLoader.LoadImage(image1Path);
-            }
-
-            briefing.title = missionSO.fullName;
-            briefing.text = string.Join("\n", txtLine[3..]);
-
-            var skyIndex = int.TryParse(txtLine[2], out var parse) ? parse : 0;
-            
-            CreateBlock(bd1);
-            CreatePoint(pd1);
-            CreateSky(skyIndex);
         }
 
-        public void CreateMap(AddonMissionParameterSO missionSO)
-        {
-            
-        }
-
-        public void CreateMap(DemoData demo)
+        public void LoadMap(DemoData demo)
         {
             var bd1Path = SafeIO.Combine(Application.streamingAssetsPath, demo.bd1Path);
-            var bd1 = BD1Loader.LoadBD1(bd1Path);
             var pd1Path = SafeIO.Combine(Application.streamingAssetsPath, demo.pd1Path);
-            var pd1 = PD1Loader.LoadPD1(pd1Path);
+            LoadBlock(bd1Path);
+            LoadPoint(pd1Path);
+            LoadSky(demo.skyIndex);
+        }
+
+        public void LoadMap(OfficialMissionParameterSO officialMission)
+        {
+            mapName = officialMission.name;
+            mapFullName = officialMission.fullName;
             
-            CreateBlock(bd1);
-            CreatePoint(pd1);
-            CreateSky(demo.skyIndex);
+            var txtPath = SafeIO.Combine(Application.streamingAssetsPath, officialMission.txtPath);
+            var bd1Path = SafeIO.Combine(Application.streamingAssetsPath, officialMission.bd1Path);
+            var pd1Path = SafeIO.Combine(Application.streamingAssetsPath, officialMission.pd1Path);
+            
+            LoadBriefing(txtPath, out var skyIndex);
+            LoadBlock(bd1Path);
+            LoadPoint(pd1Path);
+            LoadSky(skyIndex);
+
+            ForceSetPlayer();
+        }
+
+        public void LoadMap(AddonMissionParameterSO addonMission)
+        {
+            mapName = addonMission.name;
+            mapFullName = addonMission.fullName;
+            briefingText = addonMission.description;
+
+            var image0Path = SafeIO.Combine(Application.streamingAssetsPath, addonMission.briefing0Path);
+            var image1Path = SafeIO.Combine(Application.streamingAssetsPath, addonMission.briefing1Path);
+            
+            briefingImage0 = ImageLoader.LoadImage(image0Path);
+            briefingImage1 = ImageLoader.LoadImage(image1Path);
+            
+            var bd1Path = SafeIO.Combine(Application.streamingAssetsPath, addonMission.bd1Path);
+            var pd1Path = SafeIO.Combine(Application.streamingAssetsPath, addonMission.pd1Path);
+            
+            LoadBlock(bd1Path);
+            LoadPoint(pd1Path);
+            LoadSky(addonMission.skyIndex);
+            
+            //todo: load addon objects
+            
+            ForceSetPlayer();
+        }
+
+        public void ClearMap()
+        {
+            mapName = null;
+            mapFullName = null;
+            briefingText = null;
+            briefingImage0 = null;
+            briefingImage1 = null;
+            bd1Name = null;
+            textures = null;
+            blockCount = 0;
+            pd1Name = null;
+            pointCount = 0;
+            activeHumanCount = 0;
+            deadHumanCount = 0;
+            equippedWeaponCount = 0;
+            droppedWeaponCount = 0;
+            activeObjectCount = 0;
+            destroyedObjectCount = 0;
+            messages = null;
+            player = null;
+            time = 0;
+            fired = 0;
+            hit = 0;
+            killed = 0;
+            headshot = 0;
+            
+            HumanParameter.Clear();
+        }
+
+        public Human PreviousHuman()
+        {
+            _playerHumanIndex--;
+            if (_playerHumanIndex < 0)
+            {
+                _playerHumanIndex = _humanRoot.childCount - 1;
+            }
+            
+            //player = _humanRoot.GetChild(_playerHumanIndex).GetComponent<Human>();
+            player = _humanList[_playerHumanIndex];
+            return player;
+        }
+
+        public Human NextHuman()
+        {
+            _playerHumanIndex++;
+            if (_playerHumanIndex >= _humanRoot.childCount)
+            {
+                _playerHumanIndex = 0;
+            }
+            
+            //player = _humanRoot.GetChild(_playerHumanIndex).GetComponent<Human>();
+            player = _humanList[_playerHumanIndex];
+            return player;
         }
         
-        private void CreateBlock(BlockData data)
+        private void LoadBriefing(string txtPath, out int skyIndex)
         {
-            blockTextures = data.textures;
-            
-            for (int i = 0; i < data.blocks.Length; i++)
+            if (txtPath != null)
             {
-                var block = new GameObject($"block_{i}");
-                block.transform.parent = blockRoot;
-                block.transform.localPosition = data.rawBlockData[i].position;
-                block.transform.localRotation = Quaternion.identity;
-                block.transform.localScale = Vector3.one;
+                var fullPath = SafeIO.Combine(Application.streamingAssetsPath, txtPath);
+                var txt = EncodingHelper.ReadAllLinesWithEncoding(fullPath);
                 
-                block.AddComponent<MeshFilter>().sharedMesh = data.blocks[i];
-                var materials = new Material[data.rawBlockData[i].subMeshTextureIndices.Length];
-                for (int j = 0; j < materials.Length; j++)
+                var usePath = ProfileLoader.GetProfileValue("Stream", "UseBriefingFolderForMissionTxt", "false") == "true";
+                if (usePath)
                 {
-                    materials[j] = blockTextures[data.rawBlockData[i].subMeshTextureIndices[j]];
+                    var image0Path = SafeIO.Combine(Application.streamingAssetsPath, txt[0]);
+                    var image1Path = SafeIO.Combine(Application.streamingAssetsPath, txt[1]);
+                    
+                    briefingImage0 = ImageLoader.LoadImage(image0Path);
+                    briefingImage1 = ImageLoader.LoadImage(image1Path);
+                    briefingText = string.Join("\n", txt[3..]);
+                    skyIndex = int.TryParse(txt[2], out var index) ? index : 0;
                 }
-                block.AddComponent<MeshRenderer>().sharedMaterials = materials;
-                //block.AddComponent<MeshRenderer>().sharedMaterials = data.rawBlockData[i].subMeshMaterials;
-                if (data.rawBlockData[i].collider)
+                else
                 {
-                    block.AddComponent<MeshCollider>().sharedMesh = data.blocks[i];
+                    var image0Path =
+                        SafeIO.Combine(Application.streamingAssetsPath, "data/briefing/" + txt[0] + ".bmp");
+                    var image1Path =
+                        SafeIO.Combine(Application.streamingAssetsPath, "data/briefing/" + txt[1] + ".bmp");
+                    
+                    briefingImage0 = ImageLoader.LoadImage(image0Path);
+                    briefingImage1 = ImageLoader.LoadImage(image1Path);
+                    briefingText = string.Join("\n", txt[3..]);
+                    skyIndex = int.TryParse(txt[2], out var index) ? index : 0;
+                }
+
+                return;
+            }
+
+            skyIndex = 0;
+        }
+
+        private void LoadBlock(string bd1Path)
+        {
+            bd1Name = System.IO.Path.GetFileName(bd1Path);
+            
+            if (_blockRoot == null)
+            {
+                _blockRoot = new GameObject("BlockRoot").transform;
+                _blockRoot.parent = transform;
+            }
+            
+            var bd1 = BD1Loader.LoadBD1(bd1Path);
+            textures = bd1.textures;
+            blockCount = bd1.blocks.Length;
+
+            for (int i = 0; i < bd1.blocks.Length; i++)
+            {
+                var raw = bd1.rawBlockData[i];
+                var blockObj = new GameObject($"block_{i}");
+                blockObj.layer = LayerMask.NameToLayer("Block");
+                blockObj.transform.parent = _blockRoot;
+                blockObj.transform.localPosition = raw.position;
+                blockObj.transform.localRotation = Quaternion.identity;
+                blockObj.transform.localScale = Vector3.one;
+                
+                var meshFilter = blockObj.AddComponent<MeshFilter>();
+                meshFilter.sharedMesh = bd1.blocks[i];
+                
+                var meshRenderer = blockObj.AddComponent<MeshRenderer>();
+                var subMeshTextures = new Material[raw.subMeshTextureIndices.Length];
+                for (int j = 0; j < raw.subMeshTextureIndices.Length; j++)
+                {
+                    subMeshTextures[j] = textures[raw.subMeshTextureIndices[j]];
+                }
+                meshRenderer.sharedMaterials = subMeshTextures;
+                
+                if (raw.collider)
+                {
+                    var meshCollider = blockObj.AddComponent<MeshCollider>();
+                    meshCollider.sharedMesh = bd1.blocks[i];
+                }
+            }
+        }
+        
+        private void LoadPoint(string pd1Path)
+        {
+            if (_pointRoot == null)
+            {
+                _pointRoot = new GameObject("PointRoot").transform;
+                _pointRoot.parent = transform;
+            }
+
+            if (_humanRoot == null)
+            {
+                _humanRoot = new GameObject("HumanRoot").transform;
+                _humanRoot.parent = transform;
+            }
+
+            if (_weaponRoot == null)
+            {
+                _weaponRoot = new GameObject("WeaponRoot").transform;
+                _weaponRoot.parent = transform;
+            }
+
+            if (_objectRoot == null)
+            {
+                _objectRoot = new GameObject("ObjectRoot").transform;
+                _objectRoot.parent = transform;
+            }
+            
+            pd1Name = System.IO.Path.GetFileName(pd1Path);
+            var pd1 = PD1Loader.LoadPD1(pd1Path);
+            pointCount = pd1.rawPointData.Length;
+
+            //collect parameter info
+            for (int i = 0; i < pd1.rawPointData.Length; i++)
+            {
+                var raw = pd1.rawPointData[i];
+                if (raw.type == PointType.Parameter)
+                {
+                    HumanParameter[raw.param2] = raw.param0;
+                }
+            }
+            
+            //create human
+            var humanSO = ParameterManager.Instance.HumanParameterSO;
+            var dataSOs = humanSO.humanDataParameterSOs;
+            var humanPrefab = Resources.Load<GameObject>("Prefab/Human");
+            _humanList = new List<Human>();
+            for (int i = 0; i < pd1.rawPointData.Length; i++)
+            {
+                var raw = pd1.rawPointData[i];
+                if (raw.type is PointType.Human or PointType.HumanNoPrimaryWeapon)
+                {
+                    var humanObj = Instantiate(humanPrefab, raw.position, raw.rotation, _humanRoot);
+                    var human = humanObj.GetComponent<Human>();
+                    human.InitializeHuman(raw.param0, raw.param1, raw.param2);
+                    _humanList.Add(human);
+                    activeHumanCount++;
+                    
+                    if (raw.param2 == 0)
+                    {
+                        player = human;
+                    }
                 }
             }
         }
 
-        private void CreatePoint(PointData data)
+        private void LoadSky(int skyIndex)
         {
-            messages = data.msgData;
-
-            foreach (var raw in data.rawPointData)
+            var skyPaths = ParameterManager.Instance.SkyParameterSO.skyTextures;
+            if (skyIndex < 0 || skyIndex >= skyPaths.Length)
             {
-                var type = raw.type;
-                switch (type)
-                {
-                    case PointType.Path:
-                        _paths[raw.param2] = raw.param1;
-                        break;
-                    case PointType.RandomPath:
-                        _randomPaths[raw.param2] = new Branch(raw.param0, raw.param1);
-                        break;
-                    case PointType.Parameter:
-                        _humanParameters[raw.param2] = raw.param0;
-                        break;
-                    case PointType.EventSuccess:
-                    case PointType.EventFailure:
-                    case PointType.EventIfHumanKilled:
-                    case PointType.EventIfHumanArrived:
-                    case PointType.EventInvokePathWait:
-                    case PointType.EventIfObjectDestroyed:
-                    case PointType.EventIfHumanArrivedWithCase:
-                    case PointType.EventTimer:
-                    case PointType.EventMessage:
-                    case PointType.EventChangeTeamNumberTo0:
-                        break;
-                }
+                return;
             }
             
-            //human
-            var humans = data.rawPointData
-                .Where(p => p.type is PointType.Human or PointType.HumanNoPrimaryWeapon).ToArray();
-            for (int i = 0; i < humans.Length; i++)
-            {
-                //basic
-                var humanObj = Instantiate(Resources.Load<GameObject>("Prefab/Human"), humanRoot);
-                humanObj.name = $"Human_{i}";
-                humanObj.transform.localPosition = humans[i].position;
-                humanObj.transform.localRotation = humans[i].rotation;
-                humanObj.transform.localScale = Vector3.one;
-                
-                //create human
-                var human = humanObj.GetComponent<Human>();
-                var paramLength = ParameterManager.Instance.HumanParameterSO.humanDataParameterSOs.Length;
-                var paramIndex = _humanParameters.GetValueOrDefault(humans[i].param0, 0);
-                if (paramIndex < 0 || paramIndex >= paramLength)
-                {
-                    paramIndex = 0;
-                }
-                var humanData = ParameterManager.Instance.HumanParameterSO.humanDataParameterSOs[paramIndex];
-                human.CreateHuman(humanData);
-                
-                
-                if (humans[i].param2 == 0)
-                {
-                    player = human;
-                }
-            }
-            if (player == null)
-            {
-                // set last created human as player
-                var humanObj = humanRoot.GetChild(humanRoot.childCount - 1).gameObject;
-                player = humanObj.GetComponent<Human>();
-            }
-        }
-
-        private void CreateSky(int skyIndex)
-        {
             var skybox = SkyLoader.LoadSky(skyIndex);
             RenderSettings.skybox = skybox;
+        }
+
+        private void ForceSetPlayer()
+        {
+            if (player == null)
+            {
+                player = _humanRoot.GetChild(_humanRoot.childCount - 1).GetComponent<Human>();
+            }
+
+            var i = 0;
+            foreach (Transform child in _humanRoot)
+            {
+                if (child.GetComponent<Human>() == player)
+                {
+                    _playerHumanIndex = i;
+                    return;
+                }
+                i++;
+            }
         }
     }
 }

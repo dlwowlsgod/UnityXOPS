@@ -12,10 +12,19 @@ namespace UnityXOPS
     /// </remarks>
     public static class InitializeOnLoad
     {
+        private static bool _initializedBeforeSplashScreen;
+        private static bool _initializedBeforeSceneLoad;
+        private static bool _initializedAfterSceneLoad;
+        
+        public static bool Initialized => _initializedBeforeSplashScreen && _initializedBeforeSceneLoad && _initializedAfterSceneLoad;
+        
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
         public static void InitializeBeforeSplashScreen()
         {
             ProfileLoader.Initialize();
+            Timestep.Initialize();
+
+            _initializedBeforeSplashScreen = true;
         }
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -25,6 +34,8 @@ namespace UnityXOPS
             ImageLoader.Initialize();
             SoundLoader.Initialize();
             FontLoader.Initialize();
+            
+            _initializedBeforeSceneLoad = true;
         }
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -36,6 +47,8 @@ namespace UnityXOPS
             SkyLoader.Initialize();
             BD1Loader.Initialize();
             PD1Loader.Initialize();
+            
+            _initializedAfterSceneLoad = true;
         }
     }
 }

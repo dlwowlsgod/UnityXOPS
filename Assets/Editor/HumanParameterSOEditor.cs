@@ -9,6 +9,7 @@ public class HumanParameterSOEditor : Editor
     private SerializedProperty _legName;
     private SerializedProperty _walkAnimationIndices;
     private SerializedProperty _runAnimationIndices;
+    private SerializedProperty _humanScale;
     private SerializedProperty _armRootPosition;
     private SerializedProperty _armRootScale;
     private SerializedProperty _legRootPosition;
@@ -19,6 +20,12 @@ public class HumanParameterSOEditor : Editor
     private SerializedProperty _bodyColliderSize;
     private SerializedProperty _legColliderCenter;
     private SerializedProperty _legColliderSize;
+    private SerializedProperty _controllerHeight;
+    private SerializedProperty _controllerRadius;
+    private SerializedProperty _slopeAngle;
+    private SerializedProperty _stepHeight;
+    private SerializedProperty _viewportHeight;
+    private SerializedProperty _tpsCameraDistance;
     private SerializedProperty _humanDataParameterSOs;
     private SerializedProperty _humanVisualParameterSOs;
     private SerializedProperty _humanTypeParameterSOs;
@@ -32,6 +39,7 @@ public class HumanParameterSOEditor : Editor
         _legName = serializedObject.FindProperty("legName");
         _walkAnimationIndices = serializedObject.FindProperty("walkAnimationIndices");
         _runAnimationIndices = serializedObject.FindProperty("runAnimationIndices");
+        _humanScale = serializedObject.FindProperty("humanScale");
         _armRootPosition = serializedObject.FindProperty("armRootPosition");
         _armRootScale = serializedObject.FindProperty("armRootScale");
         _legRootPosition = serializedObject.FindProperty("legRootPosition");
@@ -42,6 +50,12 @@ public class HumanParameterSOEditor : Editor
         _bodyColliderSize = serializedObject.FindProperty("bodyColliderSize");
         _legColliderCenter = serializedObject.FindProperty("legColliderCenter");
         _legColliderSize = serializedObject.FindProperty("legColliderSize");
+        _controllerHeight = serializedObject.FindProperty("controllerHeight");
+        _controllerRadius = serializedObject.FindProperty("controllerRadius");
+        _slopeAngle = serializedObject.FindProperty("slopeAngle");
+        _stepHeight = serializedObject.FindProperty("stepHeight");
+        _viewportHeight = serializedObject.FindProperty("viewportHeight");
+        _tpsCameraDistance = serializedObject.FindProperty("tpsCameraDistance");
         _humanDataParameterSOs = serializedObject.FindProperty("humanDataParameterSOs");
         _humanVisualParameterSOs = serializedObject.FindProperty("humanVisualParameterSOs");
         _humanTypeParameterSOs = serializedObject.FindProperty("humanTypeParameterSOs");
@@ -71,19 +85,22 @@ public class HumanParameterSOEditor : Editor
         
         EditorGUILayout.LabelField("Animation Settings", EditorStyles.boldLabel);
         EditorGUI.indentLevel++;
-        
+
         _walkAnimationIndices.isExpanded = true;
         _runAnimationIndices.isExpanded = true;
         
         EditorGUILayout.PropertyField(_walkAnimationIndices);
         EditorGUILayout.PropertyField(_runAnimationIndices);
+
         EditorGUI.indentLevel--;
         
         EditorGUILayout.Space();
+
         
-        EditorGUILayout.LabelField("Arm&Leg Root Position Settings", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Arm & Leg Root Position Settings", EditorStyles.boldLabel);
         EditorGUI.indentLevel++;
         
+        EditorGUILayout.PropertyField(_humanScale);
         EditorGUILayout.PropertyField(_armRootPosition);
         EditorGUILayout.PropertyField(_armRootScale);
         EditorGUILayout.PropertyField(_legRootPosition);
@@ -101,6 +118,26 @@ public class HumanParameterSOEditor : Editor
         EditorGUILayout.PropertyField(_bodyColliderSize);
         EditorGUILayout.PropertyField(_legColliderCenter);
         EditorGUILayout.PropertyField(_legColliderSize);
+        EditorGUI.indentLevel--;
+        
+        EditorGUILayout.Space();
+        
+        EditorGUILayout.LabelField("Controller Settings", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
+        
+        EditorGUILayout.PropertyField(_controllerHeight);
+        EditorGUILayout.PropertyField(_controllerRadius);
+        EditorGUILayout.PropertyField(_slopeAngle);
+        EditorGUILayout.PropertyField(_stepHeight);
+        EditorGUI.indentLevel--;
+        
+        EditorGUILayout.Space();
+        
+        EditorGUILayout.LabelField("Camera Settings", EditorStyles.boldLabel);
+        
+        EditorGUI.indentLevel++;
+        EditorGUILayout.PropertyField(_viewportHeight);
+        EditorGUILayout.PropertyField(_tpsCameraDistance);
         EditorGUI.indentLevel--;
         
         EditorGUILayout.Space();

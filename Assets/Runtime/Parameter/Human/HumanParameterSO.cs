@@ -10,6 +10,7 @@ namespace UnityXOPS
         public string[] legName;
         public int[] walkAnimationIndices;
         public int[] runAnimationIndices;
+        public Vector3 humanScale;
         public Vector3 armRootPosition;
         public Vector3 armRootScale;
         public Vector3 legRootPosition;
@@ -20,6 +21,12 @@ namespace UnityXOPS
         public Vector3 bodyColliderSize;
         public Vector3 legColliderCenter;
         public Vector3 legColliderSize;
+        public float controllerHeight;
+        public float controllerRadius;
+        public float slopeAngle;
+        public float stepHeight;
+        public float viewportHeight;
+        public float tpsCameraDistance;
         public HumanDataParameterSO[] humanDataParameterSOs;
         public HumanVisualParameterSO[] humanVisualParameterSOs;
         public HumanTypeParameterSO[] humanTypeParameterSOs;
@@ -35,7 +42,8 @@ namespace UnityXOPS
                 armName = armName,
                 legName = legName, 
                 walkAnimationIndices = walkAnimationIndices, 
-                runAnimationIndices = runAnimationIndices, 
+                runAnimationIndices = runAnimationIndices,
+                humanScale = humanScale,
                 armRootPosition = armRootPosition, 
                 armRootScale = armRootScale,
                 legRootPosition = legRootPosition,
@@ -46,6 +54,12 @@ namespace UnityXOPS
                 bodyColliderSize = bodyColliderSize,
                 legColliderCenter = legColliderCenter,
                 legColliderSize = legColliderSize,
+                controllerHeight = controllerHeight,
+                controllerRadius = controllerRadius,
+                slopeAngle = slopeAngle,
+                stepHeight = stepHeight,
+                viewportHeight = viewportHeight,
+                tpsCameraDistance = tpsCameraDistance,
                 humanDataParameterJSONs = humanDataParameterSOs
                     ?.Select(so => (HumanDataParameterJSON)so.Serialize()).ToArray(),
                 humanVisualParameterJSONs = humanVisualParameterSOs
@@ -72,7 +86,8 @@ namespace UnityXOPS
             armName = humanJson.armName;
             legName = humanJson.legName; 
             walkAnimationIndices = humanJson.walkAnimationIndices; 
-            runAnimationIndices = humanJson.runAnimationIndices; 
+            runAnimationIndices = humanJson.runAnimationIndices;
+            humanScale = humanJson.humanScale;
             armRootPosition = humanJson.armRootPosition; 
             armRootScale = humanJson.armRootScale;
             legRootPosition = humanJson.legRootPosition;
@@ -83,6 +98,12 @@ namespace UnityXOPS
             bodyColliderSize = humanJson.bodyColliderSize;
             legColliderCenter = humanJson.legColliderCenter;
             legColliderSize = humanJson.legColliderSize;
+            controllerHeight = humanJson.controllerHeight;
+            controllerRadius = humanJson.controllerRadius;
+            slopeAngle = humanJson.slopeAngle;
+            stepHeight = humanJson.stepHeight;
+            viewportHeight = humanJson.viewportHeight;
+            tpsCameraDistance = humanJson.tpsCameraDistance;
             humanDataParameterSOs = humanJson.humanDataParameterJSONs
                 .Select(j => (HumanDataParameterSO)CreateInstance<HumanDataParameterSO>().Deserialize(j))
                 .ToArray();

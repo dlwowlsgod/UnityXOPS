@@ -10,6 +10,7 @@ namespace UnityXOPS
         public string[] legName;
         public int[] walkAnimationIndices;
         public int[] runAnimationIndices;
+        public Vector3 humanScale;
         public Vector3 armRootPosition;
         public Vector3 armRootScale;
         public Vector3 legRootPosition;
@@ -20,6 +21,12 @@ namespace UnityXOPS
         public Vector3 bodyColliderSize;
         public Vector3 legColliderCenter;
         public Vector3 legColliderSize;
+        public float controllerHeight;
+        public float controllerRadius;
+        public float slopeAngle;
+        public float stepHeight;
+        public float viewportHeight;
+        public float tpsCameraDistance;
         public HumanDataParameterJSON[] humanDataParameterJSONs;
         public HumanVisualParameterJSON[] humanVisualParameterJSONs;
         public HumanTypeParameterJSON[] humanTypeParameterJSONs;

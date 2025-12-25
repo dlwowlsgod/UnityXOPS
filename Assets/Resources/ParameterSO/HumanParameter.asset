@@ -30,16 +30,23 @@ MonoBehaviour:
   - leg@run05
   walkAnimationIndices: 01000000020000000300000004000000
   runAnimationIndices: 05000000060000000700000008000000090000000a000000
-  armRootPosition: {x: 0, y: 1.45, z: -0.045}
-  armRootScale: {x: 0.85, y: 0.85, z: 0.85}
+  humanScale: {x: 0.9, y: 0.9, z: 0.9}
+  armRootPosition: {x: 0, y: 0, z: 0}
+  armRootScale: {x: 0.95, y: 0.95, z: 0.95}
   legRootPosition: {x: 0, y: 0, z: 0}
-  legRootScale: {x: 0.8, y: 0.8, z: 0.8}
+  legRootScale: {x: 0.9, y: 0.9, z: 0.9}
   headColliderCenter: {x: 0, y: 0, z: 0}
   headColliderSize: {x: 0, y: 0, z: 0}
   bodyColliderCenter: {x: 0, y: 0, z: 0}
   bodyColliderSize: {x: 0, y: 0, z: 0}
   legColliderCenter: {x: 0, y: 0, z: 0}
   legColliderSize: {x: 0, y: 0, z: 0}
+  controllerHeight: 2
+  controllerRadius: 0.21
+  slopeAngle: 50
+  stepHeight: 0.2
+  viewportHeight: 1.9
+  tpsCameraDistance: 1.4
   humanDataParameterSOs:
   - {fileID: 11400000, guid: 5d6d43309bfa6f24fbce87fb990b9f72, type: 2}
   - {fileID: 11400000, guid: b0eaa59764978c442af258bbd2ea8ad1, type: 2}

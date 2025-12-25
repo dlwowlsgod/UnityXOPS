@@ -5,10 +5,10 @@ namespace UnityXOPS
     [CreateAssetMenu(fileName = "HumanTypeParameter", menuName = "XOPS Parameter/Human Type Parameter", order = 4)]
     public class HumanTypeParameterSO : ParameterSO
     {
-        public float walkSpeed;
-        public float runProgressSpeed;
-        public float runSidewaySpeed;
-        public float runRegressSpeed;
+        public float speed;
+        public float runProgressSpeedMultiplier;
+        public float runSidewaySpeedMultiplier;
+        public float runRegressSpeedMultiplier;
         public float jumpHeight;
 
         public float headDamageMultiplier;
@@ -25,10 +25,10 @@ namespace UnityXOPS
             return new HumanTypeParameterJSON
             {
                 name = name,
-                walkSpeed = walkSpeed,
-                runProgressSpeed = runProgressSpeed,
-                runSidewaySpeed = runSidewaySpeed,
-                runRegressSpeed = runRegressSpeed,
+                speed = speed,
+                runProgressSpeedMultiplier = runProgressSpeedMultiplier,
+                runSidewaySpeedMultiplier = runSidewaySpeedMultiplier,
+                runRegressSpeedMultiplier = runRegressSpeedMultiplier,
                 jumpHeight = jumpHeight,
                 headDamageMultiplier = headDamageMultiplier,
                 bodyDamageMultiplier = bodyDamageMultiplier,
@@ -48,10 +48,10 @@ namespace UnityXOPS
             }
             
             name = typeJson.name;
-            walkSpeed = typeJson.walkSpeed;
-            runProgressSpeed = typeJson.runProgressSpeed;
-            runSidewaySpeed = typeJson.runSidewaySpeed;
-            runRegressSpeed = typeJson.runRegressSpeed;
+            speed = typeJson.speed;
+            runProgressSpeedMultiplier = typeJson.runProgressSpeedMultiplier;
+            runSidewaySpeedMultiplier = typeJson.runSidewaySpeedMultiplier;
+            runRegressSpeedMultiplier = typeJson.runRegressSpeedMultiplier;
             jumpHeight = typeJson.jumpHeight;
             headDamageMultiplier = typeJson.headDamageMultiplier;
             bodyDamageMultiplier = typeJson.bodyDamageMultiplier;

@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ac35e8d7729aeb46a589f2739d9b5c3, type: 3}
   m_Name: Robot
   m_EditorClassIdentifier: 
-  walkSpeed: 0.35
-  runProgressSpeed: 0.7
-  runSidewaySpeed: 0.5
-  runRegressSpeed: 0.38
+  speed: 3.5
+  runProgressSpeedMultiplier: 2
+  runSidewaySpeedMultiplier: 1.428
+  runRegressSpeedMultiplier: 1.085
   jumpHeight: 1
   headDamageMultiplier: 2
   bodyDamageMultiplier: 1

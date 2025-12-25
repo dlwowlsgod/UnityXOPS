@@ -9,7 +9,7 @@ namespace UnityXOPS
     {
         [SerializeField] private InputActionAsset inputActions;
         
-        private Dictionary<string, InputActionWrapper> _actionWrappers = new Dictionary<string, InputActionWrapper>();
+        private readonly Dictionary<string, InputActionWrapper> _actionWrappers = new();
         
         [SerializeField] 
         private Vector2 moveInput;

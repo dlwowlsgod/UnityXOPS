@@ -5,10 +5,10 @@ namespace UnityXOPS
     [Serializable]
     public class HumanTypeParameterJSON : ParameterJSON
     {
-        public float walkSpeed;
-        public float runProgressSpeed;
-        public float runSidewaySpeed;
-        public float runRegressSpeed;
+        public float speed;
+        public float runProgressSpeedMultiplier;
+        public float runSidewaySpeedMultiplier;
+        public float runRegressSpeedMultiplier;
         public float jumpHeight;
 
         public float headDamageMultiplier;

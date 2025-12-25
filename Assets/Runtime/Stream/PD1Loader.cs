@@ -46,7 +46,7 @@ namespace UnityXOPS
                 rawPointData.position = new Vector3(-x * 0.1f, y * 0.1f, -z * 0.1f);
 
                 var r = br.ReadSingle();
-                rawPointData.rotation = Quaternion.Euler(0, r * Mathf.Rad2Deg, 0);
+                rawPointData.rotation = Quaternion.Euler(0, r * Mathf.Rad2Deg - 180, 0);
 
                 var extended = ProfileLoader.GetProfileValue("Stream", "UseExtendedPointParameter", "false") == "true";
                 if (extended)
