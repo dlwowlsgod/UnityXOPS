@@ -6,7 +6,6 @@ namespace JJLUtility.IO
 {
     public partial class ImageLoader : SingletonBehavior<ImageLoader>
     {
-#if JJLUTILITY_IMAGELOADER_CACHE
 #if UNITY_EDITOR
         private Dictionary<string, int> m_textureCache = new Dictionary<string, int>();
         [SerializeField]
@@ -14,7 +13,6 @@ namespace JJLUtility.IO
 #else
         private Dictionary<string, Texture2D> _textureCache = new Dictionary<string, Texture2D>();
 #endif //UNITY_EDITOR
-#endif //JJLUTILITY_IMAGELOADER_CACHE
 
         public static Texture2D LoadTexture(string filepath)
         {
@@ -30,7 +28,6 @@ namespace JJLUtility.IO
                 return null;
             }
 
-#if JJLUTILITY_IMAGELOADER_CACHE
             if (Instance.m_textureCache.ContainsKey(filepath))
             {
 #if UNITY_EDITOR
@@ -39,7 +36,6 @@ namespace JJLUtility.IO
         return _textureCache[filepath];
 #endif //UNITY_EDITOR
             }
-#endif //JGLUTILITY_IMAGELOADER_CACHE
 
             
             string filename = Path.GetFileNameWithoutExtension(filepath);
@@ -64,6 +60,28 @@ namespace JJLUtility.IO
                     texture.SetPixels32(bmpFile.Pixels);
                     texture.Apply();
                     break;
+                case ".tga":
+                    TGAFile tgaFile = LoadTGAFile(filepath);
+                    if (tgaFile == null)
+                    {
+                        Debugger.LogError($"Unsupported image extension: {filepath}", Instance, nameof(ImageLoader));
+                        return null;
+                    }
+                    texture = new Texture2D(tgaFile.Header.Width, tgaFile.Header.Height);
+                    texture.SetPixels32(tgaFile.Pixels);
+                    texture.Apply();
+                    break;
+                case ".dds":
+                    DDSFile ddsFile = LoadDDSFile(filepath);
+                    if (ddsFile == null)
+                    {
+                        Debugger.LogError($"Unsupported image extension: {filepath}", Instance, nameof(ImageLoader));
+                        return null;
+                    }
+                    texture = new Texture2D((int)ddsFile.Header.Width, (int)ddsFile.Header.Height);
+                    texture.SetPixels32(ddsFile.Pixels);
+                    texture.Apply();
+                    break;
                 default:
                     Debugger.LogError($"Unsupported image extension: {filepath}", Instance, nameof(ImageLoader));
                     return null;
@@ -71,14 +89,12 @@ namespace JJLUtility.IO
             
             texture.name = filename;
             
-#if JJLUTILITY_IMAGELOADER_CACHE
 #if UNITY_EDITOR
             Instance.textureCacheList.Add(texture);
             Instance.m_textureCache.Add(filepath, Instance.textureCacheList.Count - 1);
 #else
             Instance._textureCache.Add(filepath, texture);
 #endif //UNITY_EDITOR
-#endif //JGLUTILITY_IMAGELOADER_CACHE
             
             return texture;
         }

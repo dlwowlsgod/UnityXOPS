@@ -1,0 +1,18 @@
+{
+    "name": "JJLUtilityEditor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:cc89de7b79d76e04aa75b0e4b455618a"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
