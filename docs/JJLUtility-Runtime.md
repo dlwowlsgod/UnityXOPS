@@ -26,7 +26,7 @@ namespace: `JJLUtility`, `JJLUtility.IO`
 
 | 파일 | 클래스 | 역할 |
 |---|---|---|
-| `Runtime/IO/Image/ImageLoader.cs` | `ImageLoader` (partial, singleton) | 디스크 경로에서 `Texture2D` 로드 + 인메모리 캐시. 지원 포맷: `.jpg`, `.png`, `.bmp`, `.tga`, `.dds`. 에디터 빌드에서는 캐시를 `List<Texture2D>`로 직렬화해 Inspector에 표시. |
+| `Runtime/IO/Image/ImageLoader.cs` | `ImageLoader` (partial, singleton) | 디스크 경로에서 `Texture2D` 로드 + 인메모리 캐시. 지원 포맷: `.jpg`, `.png`, `.bmp`, `.tga`, `.dds`. `MaxTextureSize`(기본 4096) 초과 시 비율 유지 바이리니어 리사이징. 에디터 빌드에서는 캐시를 `List<Texture2D>`로 직렬화해 Inspector에 표시. |
 
 ### BMP (`Runtime/IO/Image/BMP/`)
 
@@ -60,3 +60,30 @@ namespace: `JJLUtility`, `JJLUtility.IO`
 | `DDSFourCC.cs` | `DDSFourCC` | DDS FourCC 코드 열거형 (DXT1~DXT5, ATI1/2, BC4/5, DX10 등). |
 | `DXGIFormat.cs` | `DXGIFormat` | DXGI 포맷 열거형. DX10 헤더에서 사용. |
 | `D3D10ResourceDimension.cs` | `D3D10ResourceDimension` | D3D10 리소스 차원 열거형. |
+
+---
+
+## IO / Mesh
+
+| 파일 | 클래스 | 역할 |
+|---|---|---|
+| `Runtime/IO/Mesh/MeshLoader.cs` | `MeshLoader` (partial, singleton) | 디스크 경로에서 `Mesh` 로드 + 인메모리 캐시. 지원 포맷: `.x`. 에디터 빌드에서는 캐시를 `List<Mesh>`로 직렬화해 Inspector에 표시. |
+
+### DirectX X (`Runtime/IO/Mesh/X/`)
+
+| 파일 | 클래스 | 역할 |
+|---|---|---|
+| `XFile.cs` | `XFile` + `MeshLoader` (partial) | `.x` 텍스트 포맷 파싱 로직. 토크나이저 + 재귀 파서. `MeshLoader`의 partial 메서드로 분리. |
+| `XMeshData.cs` | `XMeshData` | 파싱된 정점(Vertices), 삼각형 인덱스(Indices), UV(UVs) 데이터. |
+
+#### .x 파서 구현 메모
+
+- **헤더**: `xof VVVV fmt SSSS` — 정확히 16바이트. 줄바꿈 없이 바로 다음 토큰이 이어지는 경우도 있음 (`mac10.x` 계열).
+- **토크나이저**: `;`, `,`을 공백과 동일하게 처리. `<GUID>` 블록 자동 스킵. `{`, `}`만 구조 토큰.
+- **template 블록**: `SkipBlock()`으로 전부 건너뜀.
+- **Frame 래퍼**: 있을 수도 없을 수도 있음. `FrameTransformMatrix`는 무시.
+- **Mesh 이름**: `Mesh {` (익명) / `Mesh obj11 {` (이름 있음) 모두 `SkipOptionalName()`으로 처리.
+- **면 삼각화**: Fan triangulation. **와인딩 반전 없음** — DirectX와 Unity 모두 왼손 좌표계 + CW = 앞면 규칙 동일.
+- **MeshNormals**: 스킵. `RecalculateNormals()` / `RecalculateTangents()`로 재계산.
+- **MeshMaterialList**: 스킵. 머티리얼 미사용, 서브메시 전부 하나로 병합.
+- **UV**: `1f - v` 변환 적용 (DirectX V=0 상단 → Unity V=0 하단).
