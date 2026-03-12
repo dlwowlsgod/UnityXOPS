@@ -57,7 +57,8 @@ namespace: `UnityXOPS`
     "skyTexturePath": [
         "",
         "data/sky/sky1.bmp",
-        "data/sky/sky2.bmp"
+        "data/sky/sky2.bmp",
+        ...
     ]
 }
 ```
