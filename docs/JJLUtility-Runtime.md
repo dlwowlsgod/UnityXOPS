@@ -63,22 +63,22 @@ namespace: `JJLUtility`, `JJLUtility.IO`
 
 ---
 
-## IO / Mesh
+## IO / Model
 
 | 파일 | 클래스 | 역할 |
 |---|---|---|
-| `Runtime/IO/Mesh/MeshLoader.cs` | `MeshLoader` (partial, singleton) | 디스크 경로에서 `Mesh` 로드 + 인메모리 캐시. 지원 포맷: `.x`. 에디터 빌드에서는 캐시를 `List<Mesh>`로 직렬화해 Inspector에 표시. |
+| `Runtime/IO/Model/ModelLoader.cs` | `ModelLoader` (partial, singleton) | 디스크 경로에서 `Mesh` 로드 + 인메모리 캐시. 지원 포맷: `.x`. 에디터 빌드에서는 캐시를 `List<Mesh>`로 직렬화해 Inspector에 표시. |
 
-### DirectX X (`Runtime/IO/Mesh/X/`)
+### DirectX X (`Runtime/IO/Model/X/`)
 
 | 파일 | 클래스 | 역할 |
 |---|---|---|
-| `XFile.cs` | `XFile` + `MeshLoader` (partial) | `.x` 텍스트 포맷 파싱 로직. 토크나이저 + 재귀 파서. `MeshLoader`의 partial 메서드로 분리. |
+| `XFile.cs` | `XFile` + `ModelLoader` (partial) | `.x` 텍스트 포맷 파싱 로직. 토크나이저 + 재귀 파서. `ModelLoader`의 partial 메서드로 분리. |
 | `XMeshData.cs` | `XMeshData` | 파싱된 정점(Vertices), 삼각형 인덱스(Indices), UV(UVs) 데이터. |
 
 #### .x 파서 구현 메모
 
-- **헤더**: `xof VVVV fmt SSSS` — 정확히 16바이트. 줄바꿈 없이 바로 다음 토큰이 이어지는 경우도 있음 (`mac10.x` 계열).
+- **헤더**: `xof VVVV fmt SSSS` — 정확히 16바이트. 줄바꿈 없이 바로 다음 토큰이 이어지는 경우도 있음.
 - **토크나이저**: `;`, `,`을 공백과 동일하게 처리. `<GUID>` 블록 자동 스킵. `{`, `}`만 구조 토큰.
 - **template 블록**: `SkipBlock()`으로 전부 건너뜀.
 - **Frame 래퍼**: 있을 수도 없을 수도 있음. `FrameTransformMatrix`는 무시.

@@ -20,8 +20,8 @@ namespace: `JJLUtilityEditor`, `JJLUtilityEditor.IO`
 
 ---
 
-## IO / Mesh
+## IO / Model
 
 | 파일 | 클래스 | 역할 |
 |---|---|---|
-| `Editor/IO/MeshLoaderEditor.cs` | `MeshLoaderEditor` | `MeshLoader`의 커스텀 Inspector. 메시 캐시 리스트를 읽기 쉬운 형태로 표시. |
+| `Editor/IO/ModelLoaderEditor.cs` | `ModelLoaderEditor` | `ModelLoader`의 커스텀 Inspector. 메시 캐시 리스트를 읽기 쉬운 형태로 표시. |

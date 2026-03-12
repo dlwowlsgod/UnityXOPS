@@ -9,19 +9,19 @@ namespace JJLUtility
         [Conditional("UNITY_EDITOR")]
         public static void Log(object message, Object context = null, string label = "[UnityXOPS]")
         {
-            Debug.Log($"{label}: {message}", context);
+            Debug.Log($"{label} {message}", context);
         }
 
         [Conditional("UNITY_EDITOR")]
         public static void LogWarning(object message, Object context = null, string label = "[UnityXOPS]")
         {
-            Debug.LogWarning($"{label}: {message}", context);
+            Debug.LogWarning($"{label} {message}", context);
         }
 
         [Conditional("UNITY_EDITOR")]
         public static void LogError(object message, Object context = null, string label = "[UnityXOPS]")
         {
-            Debug.LogError($"{label}: {message}", context);
+            Debug.LogError($"{label} {message}", context);
         }
     }
 }

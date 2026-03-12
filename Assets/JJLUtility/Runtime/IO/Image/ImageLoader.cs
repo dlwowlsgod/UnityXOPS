@@ -6,7 +6,7 @@ namespace JJLUtility.IO
 {
     public partial class ImageLoader : SingletonBehavior<ImageLoader>
     {
-        public static int MaxTextureSize = 4096;
+        private const int MaxTextureSize = 4096;
 
 #if UNITY_EDITOR
         private Dictionary<string, int> m_textureCache = new Dictionary<string, int>();
@@ -16,7 +16,7 @@ namespace JJLUtility.IO
         private Dictionary<string, Texture2D> _textureCache = new Dictionary<string, Texture2D>();
 #endif //UNITY_EDITOR
 
-        public static Texture2D LoadTexture(string filepath)
+        public static Texture2D LoadTexture(string filepath, FilterMode filter = FilterMode.Bilinear)
         {
             if (string.IsNullOrEmpty(filepath))
             {
@@ -101,6 +101,7 @@ namespace JJLUtility.IO
             }
 
             texture.name = filename;
+            texture.filterMode = filter;
 
 #if UNITY_EDITOR
             Instance.textureCacheList.Add(texture);
