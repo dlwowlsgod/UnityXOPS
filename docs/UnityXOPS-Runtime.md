@@ -18,6 +18,9 @@ namespace: `UnityXOPS`
 | 파일 | 클래스 | 역할 |
 |---|---|---|
 | `Runtime/Map/MapLoader.cs` | `MapLoader` (partial, singleton) | BD1 블록 데이터 및 스카이 로드/언로드 진입점. `blockRoot`, `skyRoot` Transform을 Inspector에서 설정. `LateUpdate`에서 `skyRoot`를 `Camera.main` 위치로 동기화(프러스텀 컬링 방지). |
+| `Runtime/Map/Block/BlockData.cs` | `BlockData` + `MapLoader` (partial) | BD1 파일 파싱 로직. 텍스처 경로 10개, `RawBlockData` 배열, 빌드된 `Block` 배열 보관. `MapLoader`의 partial 메서드로 분리. |
+| `Runtime/Map/Block/RawBlockData.cs` | `RawBlockData` | BD1 파일에서 읽은 원시 블록 데이터 구조체. 정점 8개, UV 24개(6면×4), 텍스처 인덱스 6개, 활성 플래그. |
+| `Runtime/Map/Block/Block.cs` | `Block` | 빌드 완료된 블록. `Mesh`(서브메시 포함), `subMeshTextureIndices`, 월드 `position`, `collider` 플래그. |
 | `Runtime/Map/Sky/SkyData.cs` | `SkyData` | 스카이 데이터 JSON 구조체. `skyMeshPath`(메시 경로), `skyTexturePath`(텍스처 변형 목록). 인덱스 0은 빈 문자열(검은 하늘). |
 
 ### MapLoader 공개 API
@@ -28,6 +31,23 @@ namespace: `UnityXOPS`
 | `UnloadBlockData()` | `blockRoot` 하위 오브젝트 전부 제거. |
 | `LoadSkyData(SkyData skyData, int textureIndex)` | 스카이 메시 + 지정 인덱스 텍스처 로드. `skyRoot` 하위에 GameObject 생성. `RenderSettings.skybox = null` 적용. |
 | `UnloadSkyData()` | `skyRoot` 하위 오브젝트 전부 제거. |
+
+### BD1 바이너리 포맷 (`openxops.net/filesystem-bd1.php`)
+
+```
+[텍스처 경로] 10개 × 31바이트 (ASCII null 종료)
+[블록 수]    uint16 리틀 엔디안
+[블록 반복]
+  X[8] float32 → Y[8] float32 → Z[8] float32  (정점 좌표, 축별 분리)
+  U[24] float32 → V[24] float32               (UV, 6면×4개 분리)
+  텍스처 인덱스[6] int32                        (유효값 최하위 1바이트)
+  활성 플래그 int32
+```
+
+- **좌표 변환**: `(-x, y, -z)` — Y축 기준 180° 회전 (XOPS 원점 정렬)
+- **UV 변환**: `v = 1f - v` (DirectX V=0 상단 → Unity V=0 하단)
+- **메시 빌드**: 블록당 1개의 `Mesh`. 사용된 고유 텍스처 수 = 서브메시 수. 각 서브메시에 해당 텍스처 면의 삼각형이 모임.
+- **GameObject 위치**: 8개 정점의 평균 = 블록 중심. 메시 정점은 중심 기준 로컬 좌표.
 
 ### SkyData JSON 형식 (`StreamingAssets/unitydata/sky_data.json`)
 
