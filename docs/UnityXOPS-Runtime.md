@@ -61,6 +61,40 @@ namespace: `UnityXOPS`
 | `Jump`, `Walk`, `Drop`, `Fire`, `Zoom` | `InputAction` | 버튼 액션 |
 | `Previous`, `Next`, `Reload`, `First`, `Second` | `InputAction` | 버튼 액션 |
 
+---
+
+## DataManager
+
+| 파일 | 클래스 | 역할 |
+|---|---|---|
+| `Runtime/DataManager.cs` | `DataManager` (singleton) | 게임 전역 데이터 로드/보관. `Start()`에서 `sky_data.json` → `SkyData`, `mission_data.json` → `MissionData` 로드. |
+
+### DataManager 공개 프로퍼티
+
+| 프로퍼티 | 타입 | 설명 |
+|---|---|---|
+| `SkyData` | `SkyData` | 스카이 메시/텍스처 경로 목록 |
+| `MissionData` | `MissionData` | 공식 미션 목록 |
+
+---
+
+## Shaders
+
+| 파일 | 셰이더 이름 | 역할 |
+|---|---|---|
+| `Shaders/SkyMesh.shader` | `UnityXOPS/SkyMesh` | 스카이 메시 전용 Unlit 셰이더. |
+
+### SkyMesh 구현 메모
+
+- **Queue**: `Background` — 씬 오브젝트보다 먼저 렌더링.
+- **ZWrite Off / ZTest Always**: Unity 6 Reversed-Z(far=0.0) 환경에서 `ZTest LEqual`은 항상 실패하므로 `Always` 사용.
+- **Cull Back**: sky.x 큐브는 내부 시점용으로 설계되어 안쪽에서 면이 front face(CCW). `Cull Front`를 사용하면 보이는 면이 모두 제거됨.
+- **카메라 고정**: 버텍스 셰이더에서 `_WorldSpaceCameraPos + vertex`로 월드 위치 계산 — 오브젝트 트랜스폼 무시. `skyRoot`의 LateUpdate 위치 동기화는 프러스텀 컬링 방지 전용.
+- **180° 보정**: 원본 XOPS 기준 정렬을 위해 X, Z 반전 (`float3(-x, y, -z)`) 적용.
+- **UV**: sky.x UV의 U값이 음수 범위 — Repeat 래핑으로 아틀라스 정상 샘플링.
+
+---
+
 ## 파일 형식
 
 ### BD1 바이너리 포맷 (`openxops.net/filesystem-bd1.php`)
@@ -137,35 +171,3 @@ namespace: `UnityXOPS`
     "second": "<Keyboard>/2"
 }
 ```
-
----
-
-## DataManager
-
-| 파일 | 클래스 | 역할 |
-|---|---|---|
-| `Runtime/DataManager.cs` | `DataManager` (singleton) | 게임 전역 데이터 로드/보관. `Start()`에서 `sky_data.json` → `SkyData`, `mission_data.json` → `MissionData` 로드. |
-
-### DataManager 공개 프로퍼티
-
-| 프로퍼티 | 타입 | 설명 |
-|---|---|---|
-| `SkyData` | `SkyData` | 스카이 메시/텍스처 경로 목록 |
-| `MissionData` | `MissionData` | 공식 미션 목록 |
-
----
-
-## Shaders
-
-| 파일 | 셰이더 이름 | 역할 |
-|---|---|---|
-| `Shaders/SkyMesh.shader` | `UnityXOPS/SkyMesh` | 스카이 메시 전용 Unlit 셰이더. |
-
-### SkyMesh 구현 메모
-
-- **Queue**: `Background` — 씬 오브젝트보다 먼저 렌더링.
-- **ZWrite Off / ZTest Always**: Unity 6 Reversed-Z(far=0.0) 환경에서 `ZTest LEqual`은 항상 실패하므로 `Always` 사용.
-- **Cull Back**: sky.x 큐브는 내부 시점용으로 설계되어 안쪽에서 면이 front face(CCW). `Cull Front`를 사용하면 보이는 면이 모두 제거됨.
-- **카메라 고정**: 버텍스 셰이더에서 `_WorldSpaceCameraPos + vertex`로 월드 위치 계산 — 오브젝트 트랜스폼 무시. `skyRoot`의 LateUpdate 위치 동기화는 프러스텀 컬링 방지 전용.
-- **180° 보정**: 원본 XOPS 기준 정렬을 위해 X, Z 반전 (`float3(-x, y, -z)`) 적용.
-- **UV**: sky.x UV의 U값이 음수 범위 — Repeat 래핑으로 아틀라스 정상 샘플링.
