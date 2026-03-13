@@ -62,7 +62,7 @@ namespace UnityXOPS
 
                     Vector3[] vertices = new Vector3[8];
                     for (int i = 0; i < 8; i++)
-                        vertices[i] = new Vector3(-xs[i], ys[i], -zs[i]); // Y축 기준 180° 회전
+                        vertices[i] = new Vector3(-xs[i] * 0.1f, ys[i] * 0.1f, -zs[i] * 0.1f); // Y축 기준 180° 회전
 
                     // UV 좌표: U[24] → V[24] 순서 (6면 × 4개씩 분리 저장됨)
                     float[] us = new float[24];
@@ -108,13 +108,17 @@ namespace UnityXOPS
         {
             Block[] blocks = new Block[rawBlocks.Length];
             for (int i = 0; i < rawBlocks.Length; i++)
+            {
                 blocks[i] = BuildBlock(rawBlocks[i]);
+                blocks[i].mesh.name = $"block_{i}";
+            }
+                
             return blocks;
         }
 
         private static Block BuildBlock(RawBlockData raw)
         {
-            // 블럭 중심 계산 (GameObject transform 위치로 사용)
+            // 블럭 중심 계산
             Vector3 center = Vector3.zero;
             for (int i = 0; i < 8; i++) center += raw.vertices[i];
             center /= 8f;

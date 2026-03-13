@@ -30,8 +30,8 @@ namespace JJLUtility
             // fullCombined가 fullRoot로 시작하지 않으면 탈출 시도로 간주
             if (!fullCombined.StartsWith(fullRoot, PathComparison))
             {
-                throw new UnauthorizedAccessException(
-                    $"Traversal directory detected: '{string.Join(", ", paths)}' → '{fullCombined}' is outside of '{root}'");
+                Debugger.LogError($"Traversal directory detected: '{string.Join(", ", paths)}' → '{fullCombined}' is outside of '{root}'");
+                return null;
             }
 
             return fullCombined;

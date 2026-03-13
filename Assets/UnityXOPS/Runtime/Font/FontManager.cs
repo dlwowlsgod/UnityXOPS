@@ -22,11 +22,6 @@ namespace UnityXOPS
         [SerializeField]
         private Texture2D SpriteFontTexture;
 
-        [SerializeField]
-        private GameObject OSFontTMPPrefab;
-        [SerializeField]
-        private GameObject XOPSFontPrefab;
-
         private void Start()
         {
             var spriteFontTexturePath = SafePath.Combine(Application.streamingAssetsPath, "data/char.dds");

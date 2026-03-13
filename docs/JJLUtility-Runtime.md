@@ -9,7 +9,8 @@ namespace: `JJLUtility`, `JJLUtility.IO`
 | 파일 | 클래스 | 역할 |
 |---|---|---|
 | `Runtime/Utility/SingletonBehavior.cs` | `SingletonBehavior<T>` | MonoBehaviour 싱글톤 베이스. 인스턴스 없으면 GameObject 자동 생성, `DontDestroyOnLoad` 적용. 앱 종료 시 `null` 반환. |
-| `Runtime/Utility/SafePath.cs` | `SafePath` | `Path.Combine` 래퍼. 디렉토리 트래버설 시도 시 `UnauthorizedAccessException` 발생. |
+| `Runtime/Utility/SafePath.cs` | `SafePath` | `Path.Combine` 래퍼. 디렉토리 트래버설 감지 시 `null` 반환 (예외 미발생). |
+| `Runtime/Utility/EncodingHelper.cs` | `EncodingHelper` | 시스템 언어(`Application.systemLanguage`) 기반 인코딩 반환. 한국어→CP949(EUC-KR), 일본어→CP932(Shift-JIS), 기타→CP1252(Windows-1252). |
 | `Runtime/Utility/BitReader.cs` | `BitReader` | `BinaryReader` 확장 (`System.IO` 네임스페이스). 비트 단위 또는 N비트 단위 읽기. 인덱스드 BMP 로딩에 사용. |
 
 ---

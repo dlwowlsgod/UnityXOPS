@@ -3,6 +3,7 @@ using JJLUtility.IO;
 using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 
 namespace UnityXOPS
 {
@@ -11,19 +12,39 @@ namespace UnityXOPS
         [SerializeField]
         private Transform blockRoot;
         [SerializeField]
+        private Transform skyRoot;
+        [SerializeField]
         private Material BlockOpaqueMaterial;
         [SerializeField]
         private Material BlockTransparentMaterial;
+
+        [SerializeField]
+        private int blockCount;
         [SerializeField]
         private List<Material> blockMaterials;
-        [SerializeField]
-        private Transform skyRoot;
 
-        private void LateUpdate()
-        {
-            if (skyRoot.childCount > 0 && Camera.main != null)
-                skyRoot.position = Camera.main.transform.position;
-        }
+        [SerializeField]
+        private string missionName;
+        [SerializeField]
+        private string missionFullname;
+        [SerializeField]
+        private string missionBD1Path;
+        [SerializeField]
+        private string missionPD1Path;
+        [SerializeField]
+        private string missionAddonObjectPath;
+        [SerializeField]
+        private string missionImage0;
+        [SerializeField]
+        private string missionImage1;
+        [SerializeField]
+        private int skyIndex;
+        [SerializeField]
+        private string missionBriefing;
+        [SerializeField]
+        private bool adjustCollision;
+        [SerializeField]
+        private bool darkScreen;
 
         public static void LoadBlockData(string filepath)
         {
@@ -45,6 +66,7 @@ namespace UnityXOPS
                 return;
             }
 
+            Instance.blockCount = blockData.rawBlockData.Length;
             blockData.blocks = BuildBlocks(blockData.rawBlockData);
 
             Instance.blockMaterials = new List<Material>();
@@ -117,11 +139,13 @@ namespace UnityXOPS
             Instance.blockMaterials.Clear();
         }
 
-        public static void LoadSkyData(SkyData skyData, int textureIndex)
+        public static void LoadSkyData(int textureIndex)
         {
+            var skyData = DataManager.Instance.SkyData;
+
             if (skyData == null)
             {
-                Debugger.LogError("SkyData가 null입니다.", Instance, nameof(MapLoader));
+                Debugger.LogError("SkyData is null.", Instance, nameof(MapLoader));
                 return;
             }
 
@@ -175,6 +199,62 @@ namespace UnityXOPS
                     Destroy(child.gameObject);
                 }
             }
+        }
+
+        public static void LoadMissionData(int index, bool mif)
+        {
+            if (mif)
+            {
+
+            }
+            else
+            {
+                var officialMission = DataManager.Instance.MissionData.officialMissions[index];
+                Instance.missionName = officialMission.name;
+                Instance.missionFullname = officialMission.fullname;
+                Instance.missionBD1Path = SafePath.Combine(Application.streamingAssetsPath, officialMission.bd1Path);
+                Instance.missionPD1Path = SafePath.Combine(Application.streamingAssetsPath, officialMission.pd1Path);
+                Instance.adjustCollision = officialMission.adjustCollision;
+                Instance.darkScreen = officialMission.darkScreen;
+
+                var txtPath = SafePath.Combine(Application.streamingAssetsPath, officialMission.txtPath);
+                if (File.Exists(txtPath))
+                {
+                    var txt = File.ReadAllLines(txtPath, EncodingHelper.GetEncoding());
+                    if (txt.Length > 2)
+                    {
+                        var briefingPath = Path.Combine(Application.streamingAssetsPath, "data/briefing");
+                        if (!string.IsNullOrEmpty(txt[0]) && txt[0] != "!")
+                        {
+                            Instance.missionImage0 = SafePath.Combine(briefingPath, txt[0]) + ".bmp";
+                        }
+                        if (!string.IsNullOrEmpty(txt[1]) && txt[1] != "!")
+                        {
+                            Instance.missionImage1 = SafePath.Combine(briefingPath, txt[1]) + ".bmp";
+                        }
+                        if (int.TryParse(txt[2], out int skyIndex))
+                        {
+                            Instance.skyIndex = skyIndex;
+                        }
+                        Instance.missionBriefing = string.Join("\n", txt, 3, txt.Length - 3);
+                    }
+                }
+            }
+        }
+
+        public static void UnloadMissionData()
+        {
+            Instance.missionName = string.Empty;
+            Instance.missionFullname = string.Empty;
+            Instance.missionBD1Path = string.Empty;
+            Instance.missionPD1Path = string.Empty;
+            Instance.missionAddonObjectPath = string.Empty;
+            Instance.missionImage0 = string.Empty;
+            Instance.missionImage1 = string.Empty;
+            Instance.skyIndex = 0;
+            Instance.missionBriefing = string.Empty;
+            Instance.adjustCollision = false;
+            Instance.darkScreen = false;
         }
     }
 }
