@@ -2,6 +2,9 @@ using System;
 
 namespace UnityXOPS
 {
+    /// <summary>
+    /// 입력 바인딩 설정을 JSON으로 직렬화/역직렬화하기 위한 데이터 클래스.
+    /// </summary>
     [Serializable]
     public class InputBindingData
     {

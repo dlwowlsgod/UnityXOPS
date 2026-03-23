@@ -3,6 +3,9 @@ using System.IO;
 
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// 파싱된 TGA 파일 데이터를 담는 컨테이너 클래스.
+    /// </summary>
     public class TGAFile
     {
         public TGAHeader Header;
@@ -12,6 +15,11 @@ namespace JJLUtility.IO
 
     public partial class ImageLoader
     {
+        /// <summary>
+        /// 지정 경로의 TGA 파일을 파싱해 TGAFile 객체로 반환한다.
+        /// </summary>
+        /// <param name="filepath">TGA 파일 경로.</param>
+        /// <returns>파싱된 TGAFile. 실패 시 null.</returns>
         private static TGAFile LoadTGAFile(string filepath)
         {
             if (Path.GetExtension(filepath).ToLower() != ".tga")
@@ -73,6 +81,9 @@ namespace JJLUtility.IO
             return tgaFile;
         }
 
+        /// <summary>
+        /// BinaryReader로부터 TGA 헤더를 읽어 반환한다.
+        /// </summary>
         private static TGAHeader LoadTGAHeader(BinaryReader binaryReader)
         {
             var header = new TGAHeader();
@@ -91,6 +102,9 @@ namespace JJLUtility.IO
             return header;
         }
 
+        /// <summary>
+        /// TGA 컬러맵(팔레트) 데이터를 읽어 tgaFile.Palettes에 채운다.
+        /// </summary>
         private static void LoadTGAColorMap(BinaryReader binaryReader, ref TGAFile tgaFile)
         {
             int count = tgaFile.Header.ColorMapLength;
@@ -100,6 +114,9 @@ namespace JJLUtility.IO
                 tgaFile.Palettes[i] = ReadTGAColor(binaryReader, depth, 0);
         }
 
+        /// <summary>
+        /// TrueColor(RGB/RGBA) TGA 픽셀 데이터를 읽는다.
+        /// </summary>
         private static bool LoadTrueColorTGA(BinaryReader binaryReader, ref TGAFile tgaFile)
         {
             int depth = tgaFile.Header.PixelDepth;
@@ -111,6 +128,9 @@ namespace JJLUtility.IO
                 : ReadTGARawPixels(binaryReader, ref tgaFile, depth, null, false);
         }
 
+        /// <summary>
+        /// 팔레트 인덱스 방식 TGA 픽셀 데이터를 읽는다.
+        /// </summary>
         private static bool LoadColorMappedTGA(BinaryReader binaryReader, ref TGAFile tgaFile)
         {
             if (tgaFile.Palettes == null)
@@ -128,6 +148,9 @@ namespace JJLUtility.IO
                 : ReadTGARawPixels(binaryReader, ref tgaFile, depth, tgaFile.Palettes, false);
         }
 
+        /// <summary>
+        /// 그레이스케일 TGA 픽셀 데이터를 읽는다.
+        /// </summary>
         private static bool LoadGrayscaleTGA(BinaryReader binaryReader, ref TGAFile tgaFile)
         {
             bool isRLE = tgaFile.Header.ImageType == TGAImageType.GrayscaleRLE;
@@ -138,6 +161,9 @@ namespace JJLUtility.IO
                 : ReadTGARawPixels(binaryReader, ref tgaFile, 8, null, true);
         }
 
+        /// <summary>
+        /// 비압축 TGA 픽셀 데이터를 순차적으로 읽어 픽셀 배열에 채운다.
+        /// </summary>
         private static bool ReadTGARawPixels(BinaryReader binaryReader, ref TGAFile tgaFile,
             int depth, Color32[] palette, bool isGrayscale)
         {
@@ -166,6 +192,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// RLE 압축 TGA 픽셀 데이터를 디코딩해 픽셀 배열에 채운다.
+        /// </summary>
         private static bool ReadTGARLEPixels(BinaryReader binaryReader, ref TGAFile tgaFile,
             int depth, Color32[] palette, bool isGrayscale)
         {
@@ -224,6 +253,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// 지정된 비트 심도로 TGA 픽셀 색상 하나를 읽어 Color32로 반환한다.
+        /// </summary>
         private static Color32 ReadTGAColor(BinaryReader binaryReader, int depth, int alphaBits)
         {
             switch (depth)
@@ -267,12 +299,18 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// 그레이스케일 TGA 픽셀 하나를 읽어 Color32(R=G=B=V, A=255)로 반환한다.
+        /// </summary>
         private static Color32 ReadTGAGrayscale(BinaryReader binaryReader)
         {
             byte v = binaryReader.ReadByte();
             return new Color32(v, v, v, 255);
         }
 
+        /// <summary>
+        /// 팔레트 인덱스를 읽고 해당 팔레트 색상을 반환한다.
+        /// </summary>
         private static Color32 ReadTGAPaletteColor(BinaryReader binaryReader, int indexDepth,
             Color32[] palette, int colorMapStart)
         {

@@ -3,6 +3,9 @@ using System.IO;
 
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// 파싱된 DDS 파일 데이터를 담는 컨테이너 클래스.
+    /// </summary>
     public class DDSFile
     {
         public DDSHeader Header;
@@ -15,6 +18,11 @@ namespace JJLUtility.IO
     {
         private const uint DDSMagic = 0x20534444;
 
+        /// <summary>
+        /// 지정 경로의 DDS 파일을 파싱해 DDSFile 객체로 반환한다.
+        /// </summary>
+        /// <param name="filepath">DDS 파일 경로.</param>
+        /// <returns>파싱된 DDSFile. 실패 시 null.</returns>
         private static DDSFile LoadDDSFile(string filepath)
         {
             if (Path.GetExtension(filepath).ToLower() != ".dds")
@@ -110,6 +118,9 @@ namespace JJLUtility.IO
             return ddsFile;
         }
 
+        /// <summary>
+        /// BinaryReader로부터 DDS 기본 헤더를 읽어 반환한다.
+        /// </summary>
         private static DDSHeader LoadDDSHeader(BinaryReader reader)
         {
             var h = new DDSHeader();
@@ -130,6 +141,9 @@ namespace JJLUtility.IO
             return h;
         }
 
+        /// <summary>
+        /// BinaryReader로부터 DDS 픽셀 포맷 구조체를 읽어 반환한다.
+        /// </summary>
         private static DDSPixelFormat LoadDDSPixelFormat(BinaryReader reader)
         {
             var pf = new DDSPixelFormat();
@@ -144,6 +158,9 @@ namespace JJLUtility.IO
             return pf;
         }
 
+        /// <summary>
+        /// BinaryReader로부터 DX10 확장 헤더를 읽어 반환한다.
+        /// </summary>
         private static DDSHeaderDX10 LoadDDSHeaderDX10(BinaryReader reader)
         {
             var dx10 = new DDSHeaderDX10();
@@ -155,6 +172,9 @@ namespace JJLUtility.IO
             return dx10;
         }
 
+        /// <summary>
+        /// FourCC 값에 따라 적합한 BC 포맷 디코더를 선택해 픽셀 데이터를 로드한다.
+        /// </summary>
         private static bool LoadFourCCDDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             switch (ddsFile.Header.PixelFormat.FourCC)
@@ -183,6 +203,9 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// DXGI 포맷에 따라 DX10 확장 DDS 픽셀 데이터를 로드한다.
+        /// </summary>
         private static bool LoadDX10DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             switch (ddsFile.DX10Header.DxgiFormat)
@@ -227,6 +250,9 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// BC1(DXT1) 압축 DDS를 디코딩해 픽셀 배열로 채운다.
+        /// </summary>
         private static bool LoadBC1DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -243,6 +269,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// BC2(DXT2/DXT3) 압축 DDS를 디코딩해 픽셀 배열로 채운다.
+        /// </summary>
         private static bool LoadBC2DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -259,6 +288,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// BC3(DXT4/DXT5) 압축 DDS를 디코딩해 픽셀 배열로 채운다.
+        /// </summary>
         private static bool LoadBC3DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -275,6 +307,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// BC4(ATI1) 압축 DDS를 디코딩해 그레이스케일 픽셀 배열로 채운다.
+        /// </summary>
         private static bool LoadBC4DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -291,6 +326,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// BC5(ATI2) 압축 DDS를 디코딩해 RG 노말맵 픽셀 배열로 채운다.
+        /// </summary>
         private static bool LoadBC5DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -307,6 +345,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// 비압축 RGB/RGBA DDS 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadUncompressedDDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -347,6 +388,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// 루미넌스(밝기) DDS 픽셀 데이터를 읽어 그레이스케일 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadLuminanceDDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -364,6 +408,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// DX10 RGBA8 포맷 DDS 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadDX10RGBA8DDS(BinaryReader reader, ref DDSFile ddsFile, bool hasAlpha)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -384,6 +431,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// DX10 BGRA8 포맷 DDS 픽셀 데이터를 읽어 RGBA Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadDX10BGRA8DDS(BinaryReader reader, ref DDSFile ddsFile, bool hasAlpha)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -404,6 +454,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// DX10 B5G6R5 포맷 DDS 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadDX10B5G6R5DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -428,6 +481,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// DX10 B5G5R5A1 포맷 DDS 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadDX10B5G5R5A1DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -453,6 +509,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// DX10 B4G4R4A4 포맷 DDS 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadDX10B4G4R4A4DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -478,6 +537,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// DX10 R8 또는 A8 포맷 DDS 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadDX10R8DDS(BinaryReader reader, ref DDSFile ddsFile, bool isAlphaOnly)
         {
             int width  = (int)ddsFile.Header.Width;
@@ -497,6 +559,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// BC1 블록 하나를 디코딩해 픽셀 배열에 쓴다.
+        /// </summary>
         private static void DecodeBC1Block(BinaryReader reader, Color32[] pixels,
             int blockX, int blockY, int width, int height, bool force4Color)
         {
@@ -542,6 +607,9 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// BC2 블록 하나를 디코딩해 픽셀 배열에 쓴다.
+        /// </summary>
         private static void DecodeBC2Block(BinaryReader reader, Color32[] pixels,
             int blockX, int blockY, int width, int height)
         {
@@ -585,6 +653,9 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// BC3 블록 하나를 디코딩해 픽셀 배열에 쓴다.
+        /// </summary>
         private static void DecodeBC3Block(BinaryReader reader, Color32[] pixels,
             int blockX, int blockY, int width, int height)
         {
@@ -622,6 +693,9 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// BC4 블록 하나를 디코딩해 그레이스케일 픽셀을 픽셀 배열에 쓴다.
+        /// </summary>
         private static void DecodeBC4Block(BinaryReader reader, Color32[] pixels,
             int blockX, int blockY, int width, int height)
         {
@@ -637,6 +711,9 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// BC5 블록 하나를 디코딩해 RG 채널 값을 픽셀 배열에 쓴다.
+        /// </summary>
         private static void DecodeBC5Block(BinaryReader reader, Color32[] pixels,
             int blockX, int blockY, int width, int height)
         {
@@ -653,6 +730,9 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// BC3/BC4/BC5에서 사용되는 알파 보간 블록을 디코딩해 16개의 값을 반환한다.
+        /// </summary>
         private static byte[] DecodeBC3AlphaBlock(BinaryReader reader)
         {
             byte a0 = reader.ReadByte();
@@ -691,6 +771,9 @@ namespace JJLUtility.IO
             return result;
         }
 
+        /// <summary>
+        /// RGB565 인코딩 값을 Color32(RGB888)로 변환해 반환한다.
+        /// </summary>
         private static Color32 DDSExpand565(ushort value)
         {
             byte r5 = (byte)((value >> 11) & 0x1F);
@@ -703,6 +786,9 @@ namespace JJLUtility.IO
                 255);
         }
 
+        /// <summary>
+        /// DDS 픽셀 배열을 수직으로 뒤집어 상하 방향을 보정한다.
+        /// </summary>
         private static void FlipDDS(ref DDSFile ddsFile)
         {
             int width  = (int)ddsFile.Header.Width;

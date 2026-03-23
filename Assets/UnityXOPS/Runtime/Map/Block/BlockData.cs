@@ -8,6 +8,9 @@ using UnityEngine.Rendering;
 
 namespace UnityXOPS
 {
+    /// <summary>
+    /// BD1 파일 전체의 텍스처 경로, 원시 블록 데이터, 빌드된 블록 배열을 담는 컨테이너 클래스.
+    /// </summary>
     [Serializable]
     public class BlockData
     {
@@ -30,6 +33,11 @@ namespace UnityXOPS
             new int[] { 7, 3, 0, 4 }, // 면 5
         };
 
+        /// <summary>
+        /// BD1 바이너리 파일을 파싱해 BlockData 객체로 반환한다.
+        /// </summary>
+        /// <param name="filepath">BD1 파일 경로.</param>
+        /// <returns>파싱된 BlockData. 실패 시 null.</returns>
         private static BlockData LoadBD1File(string filepath)
         {
             try
@@ -104,6 +112,9 @@ namespace UnityXOPS
             }
         }
 
+        /// <summary>
+        /// 원시 블록 데이터 배열을 Unity Mesh가 포함된 Block 배열로 빌드한다.
+        /// </summary>
         private static Block[] BuildBlocks(RawBlockData[] rawBlocks)
         {
             Block[] blocks = new Block[rawBlocks.Length];
@@ -116,6 +127,9 @@ namespace UnityXOPS
             return blocks;
         }
 
+        /// <summary>
+        /// 하나의 RawBlockData로부터 서브메시로 구성된 Unity Mesh와 Block 객체를 생성한다.
+        /// </summary>
         private static Block BuildBlock(RawBlockData raw)
         {
             // 블럭 중심 계산

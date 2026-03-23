@@ -1,6 +1,6 @@
 {
     "name": "JJLUtilityEditor",
-    "rootNamespace": "",
+    "rootNamespace": "JJLUtilityEditor",
     "references": [
         "GUID:cc89de7b79d76e04aa75b0e4b455618a"
     ],

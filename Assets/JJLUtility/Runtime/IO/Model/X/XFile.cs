@@ -5,6 +5,9 @@ using System.Globalization;
 
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// 파싱된 .x 파일의 모든 메시 데이터를 담는 컨테이너 클래스.
+    /// </summary>
     public class XFile
     {
         public List<XMeshData> Meshes = new List<XMeshData>();
@@ -12,17 +15,26 @@ namespace JJLUtility.IO
 
     public partial class ModelLoader
     {
+        /// <summary>
+        /// .x 파일 텍스트를 토큰 단위로 파싱하는 내부 클래스.
+        /// </summary>
         private class XTokenizer
         {
             private readonly string _text;
             private int _pos;
 
+            /// <summary>
+            /// 지정된 텍스트로 토크나이저를 초기화한다.
+            /// </summary>
             public XTokenizer(string text)
             {
                 _text = text;
                 _pos = 0;
             }
 
+            /// <summary>
+            /// 공백, 구분자, 주석을 건너뛰어 다음 토큰의 시작 위치로 이동한다.
+            /// </summary>
             private void SkipSeparators()
             {
                 while (_pos < _text.Length)
@@ -44,6 +56,9 @@ namespace JJLUtility.IO
                 }
             }
 
+            /// <summary>
+            /// 현재 위치를 변경하지 않고 다음 토큰을 미리 읽어 반환한다.
+            /// </summary>
             public string Peek()
             {
                 int saved = _pos;
@@ -52,6 +67,9 @@ namespace JJLUtility.IO
                 return token;
             }
 
+            /// <summary>
+            /// 현재 위치에서 다음 토큰을 읽고 위치를 전진시켜 반환한다.
+            /// </summary>
             public string Read()
             {
                 SkipSeparators();
@@ -97,17 +115,26 @@ namespace JJLUtility.IO
                 }
             }
 
+            /// <summary>
+            /// 다음 토큰을 float으로 파싱해 반환한다.
+            /// </summary>
             public float ReadFloat()
             {
                 return float.Parse(Read(), CultureInfo.InvariantCulture);
             }
 
+            /// <summary>
+            /// 다음 토큰을 int로 파싱해 반환한다.
+            /// </summary>
             public int ReadInt()
             {
                 return int.Parse(Read(), CultureInfo.InvariantCulture);
             }
 
             // '{' 를 이미 소비한 상태에서 호출 - matching '}' 까지 전부 건너뜀
+            /// <summary>
+            /// 현재 블록의 닫는 중괄호까지 모든 토큰을 건너뛴다. '{' 는 이미 소비한 상태여야 한다.
+            /// </summary>
             public void SkipBlock()
             {
                 int depth = 1;
@@ -122,12 +149,20 @@ namespace JJLUtility.IO
         }
 
         // 블록 이름이 있을 수도 없을 수도 있음 (예: "Mesh {" vs "Mesh obj11 {")
+        /// <summary>
+        /// 블록 앞에 선택적으로 붙는 이름 토큰이 있으면 읽어 건너뛴다.
+        /// </summary>
         private static void SkipOptionalName(XTokenizer tokenizer)
         {
             if (tokenizer.Peek() != "{")
                 tokenizer.Read();
         }
 
+        /// <summary>
+        /// 지정 경로의 .x 파일을 파싱해 XFile 객체로 반환한다.
+        /// </summary>
+        /// <param name="filepath">.x 파일 경로.</param>
+        /// <returns>파싱된 XFile. 실패 시 null.</returns>
         private static XFile LoadXFile(string filepath)
         {
             if (!File.Exists(filepath))
@@ -162,6 +197,9 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// .x 파일 최상위 블록을 순회하며 Frame과 Mesh를 파싱한다.
+        /// </summary>
         private static void ParseTopLevel(XTokenizer tokenizer, XFile xFile)
         {
             string token;
@@ -205,6 +243,9 @@ namespace JJLUtility.IO
             }
         }
 
+        /// <summary>
+        /// Frame 블록을 재귀적으로 파싱해 내부 Mesh를 XFile에 추가한다.
+        /// </summary>
         private static void ParseFrame(XTokenizer tokenizer, XFile xFile)
         {
             string token;
@@ -245,6 +286,9 @@ namespace JJLUtility.IO
             if (tokenizer.Peek() == "}") tokenizer.Read();
         }
 
+        /// <summary>
+        /// Mesh 블록을 파싱해 정점, 면, UV를 포함하는 XMeshData를 반환한다.
+        /// </summary>
         private static XMeshData ParseMesh(XTokenizer tokenizer)
         {
             var meshData = new XMeshData();
@@ -307,6 +351,9 @@ namespace JJLUtility.IO
             return meshData;
         }
 
+        /// <summary>
+        /// MeshTextureCoords 블록을 파싱해 meshData의 UV 목록을 갱신한다.
+        /// </summary>
         private static void ParseMeshTextureCoords(XTokenizer tokenizer, XMeshData meshData)
         {
             int nCoords = tokenizer.ReadInt();

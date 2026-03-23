@@ -5,6 +5,9 @@ using System.Text;
 
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// 파싱된 BMP 파일 데이터를 담는 컨테이너 클래스.
+    /// </summary>
     public class BMPFile
     {
         public BMPFileHeader FileHeader;
@@ -15,6 +18,11 @@ namespace JJLUtility.IO
 
     public partial class ImageLoader
     {
+        /// <summary>
+        /// 지정 경로의 BMP 파일을 파싱해 BMPFile 객체로 반환한다.
+        /// </summary>
+        /// <param name="filepath">BMP 파일 경로.</param>
+        /// <returns>파싱된 BMPFile. 실패 시 null.</returns>
         private static BMPFile LoadBMPFile(string filepath)
         {
             if (Path.GetExtension(filepath).ToLower() != ".bmp")
@@ -204,6 +212,9 @@ namespace JJLUtility.IO
             return null;
         }
 
+        /// <summary>
+        /// BinaryReader로부터 BMP 파일 헤더를 읽어 반환한다.
+        /// </summary>
         private static BMPFileHeader LoadBMPFileHeader(BinaryReader binaryReader)
         {
             var fileHeader = new BMPFileHeader();
@@ -213,6 +224,9 @@ namespace JJLUtility.IO
             return fileHeader;
         }
 
+        /// <summary>
+        /// BinaryReader로부터 BMP 정보 헤더를 읽어 반환한다.
+        /// </summary>
         private static BMPInfoHeader LoadBMPInfoHeader(BinaryReader binaryReader)
         {
             var infoHeader = new BMPInfoHeader();
@@ -231,6 +245,9 @@ namespace JJLUtility.IO
             return infoHeader;
         }
 
+        /// <summary>
+        /// 32비트 BMP 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool Load32BitBMPFile(BinaryReader binaryReader, ref BMPFile bmpFile)
         {
             int width = Mathf.Abs(bmpFile.InfoHeader.Width);
@@ -297,6 +314,9 @@ namespace JJLUtility.IO
         }
 
 
+        /// <summary>
+        /// 24비트 BMP 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool Load24BitBMPFile(BinaryReader binaryReader, ref BMPFile bmpFile)
         {
             int width = Mathf.Abs(bmpFile.InfoHeader.Width);
@@ -357,6 +377,9 @@ namespace JJLUtility.IO
         }
 
 
+        /// <summary>
+        /// 16비트 BMP 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool Load16BitBMPFile(BinaryReader binaryReader, ref BMPFile bmpFile)
         {
             int width = Mathf.Abs(bmpFile.InfoHeader.Width);
@@ -428,6 +451,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// 팔레트 인덱스 방식 BMP 픽셀 데이터를 읽어 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadIndexedBMPFile(BinaryReader binaryReader, ref BMPFile bmpFile)
         {
             int width = Mathf.Abs(bmpFile.InfoHeader.Width);
@@ -477,6 +503,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// RLE4 압축 BMP 픽셀 데이터를 디코딩해 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadRLE4BMPFile(BinaryReader binaryReader, ref BMPFile bmpFile)
         {
             int width = Mathf.Abs(bmpFile.InfoHeader.Width);
@@ -551,6 +580,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// RLE8 압축 BMP 픽셀 데이터를 디코딩해 Color32 배열로 채운다.
+        /// </summary>
         private static bool LoadRLE8BMPFile(BinaryReader binaryReader, ref BMPFile bmpFile)
         {
             int width = Mathf.Abs(bmpFile.InfoHeader.Width);
@@ -607,6 +639,9 @@ namespace JJLUtility.IO
             return true;
         }
 
+        /// <summary>
+        /// BMP 픽셀 배열을 수직으로 뒤집어 상하 방향을 보정한다.
+        /// </summary>
         private static void FlipHeight(ref BMPFile bmpFile)
         {
             int width = Mathf.Abs(bmpFile.InfoHeader.Width);
@@ -627,6 +662,9 @@ namespace JJLUtility.IO
             bmpFile.InfoHeader.Height = height;
         }
 
+        /// <summary>
+        /// 비트마스크에서 최하위 세트 비트의 위치(시프트 수)를 반환한다.
+        /// </summary>
         private static int GetShiftCount(uint mask)
         {
             if (mask == 0) return 0;
@@ -642,6 +680,9 @@ namespace JJLUtility.IO
             return 0;
         }
 
+        /// <summary>
+        /// 정수에서 1로 설정된 비트 수를 계산해 반환한다.
+        /// </summary>
         private static int CountSetBits(uint n)
         {
             int count = 0;

@@ -1,5 +1,8 @@
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// DDS 압축 포맷 식별자(FourCC)를 나타내는 열거형.
+    /// </summary>
     public enum DDSFourCC : uint
     {
         DXT1 = 0x31545844,

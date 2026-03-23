@@ -1,5 +1,8 @@
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// TGA 파일 헤더 정보를 담는 구조체.
+    /// </summary>
     public struct TGAHeader
     {
         public byte IDLength;

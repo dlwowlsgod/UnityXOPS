@@ -3,6 +3,9 @@ using UnityEngine.UI;
 
 namespace UnityXOPS
 {
+    /// <summary>
+    /// char.dds 스프라이트 폰트 텍스처를 사용해 UI 텍스트를 렌더링하는 커스텀 그래픽 컴포넌트.
+    /// </summary>
     [RequireComponent(typeof(CanvasRenderer))]
     public class XOPSSpriteText : MaskableGraphic
     {
@@ -21,23 +24,55 @@ namespace UnityXOPS
 
         public override Texture mainTexture => _charTexture != null ? _charTexture : base.mainTexture;
 
+        public Texture2D CharTexture
+        {
+            get => (Texture2D)mainTexture;
+            set { _charTexture = value; }
+        }
+
         public string Text
         {
             get => _text;
             set { _text = value; SetVerticesDirty(); }
         }
-        public float CharWidth => _charWidth;
-        public float CharHeight => _charHeight;
-        public float Spacing => _spacing;
-        public TextAnchor Alignment => _alignment;
-        public Color32 FontColor => color;
+        public float CharWidth
+        {
+            get => _charWidth;
+            set { _charWidth = value; SetVerticesDirty(); }
+        }
+        public float CharHeight
+        {
+            get => _charHeight;
+            set { _charHeight = value; SetVerticesDirty(); }
+        }
+        public float Spacing 
+        {
+            get => _spacing;
+            set { _spacing = value; SetVerticesDirty(); }
+        }
+        public TextAnchor Alignment
+        {
+            get => _alignment;
+            set { _alignment = value; SetVerticesDirty(); }
+        }
+        public Color32 FontColor
+        {
+            get => color;
+            set { color = value; SetVerticesDirty(); }    
+        }
 
+        /// <summary>
+        /// 에디터에서 프로퍼티 변경 시 메시를 재생성한다.
+        /// </summary>
         protected override void OnValidate()
         {
             base.OnValidate();
             SetVerticesDirty();
         }
 
+        /// <summary>
+        /// 문자별 UV를 계산해 쿼드 버텍스와 삼각형을 생성한다.
+        /// </summary>
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();

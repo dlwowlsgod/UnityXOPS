@@ -1,5 +1,8 @@
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// TGA 파일의 이미지 데이터 타입을 나타내는 열거형.
+    /// </summary>
     public enum TGAImageType : byte
     {
         NoImage        = 0,

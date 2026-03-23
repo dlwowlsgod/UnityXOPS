@@ -7,12 +7,13 @@ using UnityEngine.Rendering;
 
 namespace UnityXOPS
 {
+    /// <summary>
+    /// BD1 맵 블록, 스카이, 미션 데이터를 로드/언로드하고 씬에 오브젝트를 생성하는 싱글톤 매니저.
+    /// </summary>
     public partial class MapLoader : SingletonBehavior<MapLoader>
     {
         [SerializeField]
         private Transform blockRoot;
-        [SerializeField]
-        private Transform skyRoot;
         [SerializeField]
         private Material BlockOpaqueMaterial;
         [SerializeField]
@@ -46,6 +47,22 @@ namespace UnityXOPS
         [SerializeField]
         private bool darkScreen;
 
+        public string MissionName => missionName;
+        public string MissionFullname => missionFullname;
+        public string MissionBD1Path => missionBD1Path;
+        public string MissionPD1Path => missionPD1Path;
+        public string MissionAddonObjectPath => missionAddonObjectPath;
+        public string MissionImage0 => missionImage0;
+        public string MissionImage1 => missionImage1;
+        public int SkyIndex => skyIndex;
+        public string MissionBriefing => missionBriefing;
+        public bool AdjusterCollision => adjustCollision;
+        public bool DarkScreen => darkScreen;
+
+        /// <summary>
+        /// BD1 파일을 파싱해 블록 메시와 머티리얼을 생성하고 씬에 배치한다.
+        /// </summary>
+        /// <param name="filepath">BD1 파일 경로.</param>
         public static void LoadBlockData(string filepath)
         {
             if (string.IsNullOrEmpty(filepath))
@@ -130,6 +147,9 @@ namespace UnityXOPS
             }
         }
 
+        /// <summary>
+        /// 씬에 생성된 모든 블록 오브젝트와 머티리얼을 제거한다.
+        /// </summary>
         public static void UnloadBlockData()
         {
             foreach (Transform child in Instance.blockRoot)
@@ -139,6 +159,10 @@ namespace UnityXOPS
             Instance.blockMaterials.Clear();
         }
 
+        /// <summary>
+        /// 스카이 메시와 텍스처를 로드해 메인 카메라 하위에 스카이박스 오브젝트를 생성한다.
+        /// </summary>
+        /// <param name="textureIndex">SkyData 텍스처 경로 목록의 인덱스.</param>
         public static void LoadSkyData(int textureIndex)
         {
             var skyData = DataManager.Instance.SkyData;
@@ -148,8 +172,6 @@ namespace UnityXOPS
                 Debugger.LogError("SkyData is null.", Instance, nameof(MapLoader));
                 return;
             }
-
-            UnloadSkyData();
 
             string streamingPath = Application.streamingAssetsPath;
             string fullMeshPath = SafePath.Combine(streamingPath, skyData.skyMeshPath);
@@ -184,28 +206,67 @@ namespace UnityXOPS
                 }
             }
 
-            GameObject skyObject = new GameObject("Sky");
-            skyObject.transform.SetParent(Instance.skyRoot, false);
+            GameObject skyObject = new GameObject("Skybox");
+            skyObject.transform.parent = Camera.main.transform;
             skyObject.AddComponent<MeshFilter>().sharedMesh = skyMesh;
             skyObject.AddComponent<MeshRenderer>().sharedMaterial = skyMaterial;
         }
 
+        /// <summary>
+        /// 메인 카메라 하위의 스카이박스 오브젝트를 제거한다.
+        /// </summary>
         public static void UnloadSkyData()
         {
-            if (Instance.skyRoot.childCount > 0)
+            var skyObject = Camera.main.transform.Find("Skybox");
+            if (skyObject != null)
             {
-                foreach (Transform child in Instance.skyRoot)
-                {
-                    Destroy(child.gameObject);
-                }
+                Destroy(skyObject.gameObject);
             }
         }
 
+        /// <summary>
+        /// 지정된 미션 데이터를 읽어 MapLoader 인스턴스 필드에 세팅한다.
+        /// </summary>
+        /// <param name="index">미션 목록의 인덱스.</param>
+        /// <param name="mif">true면 어드온 .mif 파일, false면 공식 미션 데이터를 로드한다.</param>
         public static void LoadMissionData(int index, bool mif)
         {
             if (mif)
             {
+                string addonMissionPath = DataManager.Instance.MissionData.addonMissions[index].mifPath;
+                string[] mifLines = File.ReadAllLines(addonMissionPath, EncodingHelper.GetEncoding());
 
+                Instance.missionName = mifLines[0];
+                Instance.missionFullname = mifLines[1];
+                Instance.missionBD1Path = SafePath.Combine(
+                    Application.streamingAssetsPath, mifLines[2].TrimStart('.').TrimStart('\\').Replace('\\', '/'));
+                Instance.missionPD1Path = SafePath.Combine(
+                    Application.streamingAssetsPath, mifLines[3].TrimStart('.').TrimStart('\\').Replace('\\', '/'));
+                Instance.skyIndex = int.TryParse(mifLines[4], out var si) ? si : 0;
+                
+                if (int.TryParse(mifLines[5], out var bit))
+                {
+                    Instance.adjustCollision = (bit & 1) != 0;
+                    Instance.darkScreen = (bit & 2) != 0;
+                }
+                else
+                {
+                    Instance.adjustCollision = Instance.darkScreen = false;
+                }
+
+                if (string.IsNullOrEmpty(mifLines[6]) || mifLines[6] != "!")
+                {
+                    Instance.missionAddonObjectPath = SafePath.Combine(
+                        Application.streamingAssetsPath, mifLines[6].TrimStart('.').TrimStart('\\').Replace('\\', '/'));
+                }
+                Instance.missionImage0 = SafePath.Combine(
+                    Application.streamingAssetsPath, mifLines[7].TrimStart('.').TrimStart('\\').Replace('\\', '/'));
+                if (string.IsNullOrEmpty(mifLines[8]) || mifLines[8] != "!")
+                {
+                    Instance.missionAddonObjectPath = SafePath.Combine(
+                        Application.streamingAssetsPath, mifLines[8].TrimStart('.').TrimStart('\\').Replace('\\', '/'));
+                }
+                Instance.missionBriefing = string.Join('\n', mifLines[9..]);
             }
             else
             {
@@ -242,6 +303,9 @@ namespace UnityXOPS
             }
         }
 
+        /// <summary>
+        /// MapLoader 인스턴스에 저장된 모든 미션 데이터 필드를 초기화한다.
+        /// </summary>
         public static void UnloadMissionData()
         {
             Instance.missionName = string.Empty;

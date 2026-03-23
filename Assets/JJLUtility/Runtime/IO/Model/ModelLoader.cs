@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// 다양한 3D 모델 파일(.x)을 로드하고 메시 캐시를 관리하는 싱글톤 클래스.
+    /// </summary>
     public partial class ModelLoader : SingletonBehavior<ModelLoader>
     {
 #if UNITY_EDITOR
@@ -15,6 +18,11 @@ namespace JJLUtility.IO
         private Dictionary<string, Mesh> m_meshCache = new Dictionary<string, Mesh>();
 #endif
 
+        /// <summary>
+        /// 지정 경로의 3D 메시 파일을 로드해 Mesh를 반환한다. 캐시된 메시는 재사용한다.
+        /// </summary>
+        /// <param name="filepath">메시 파일 경로.</param>
+        /// <returns>로드된 Mesh. 실패 시 null.</returns>
         public static Mesh LoadMesh(string filepath)
         {
             if (string.IsNullOrEmpty(filepath))
@@ -67,6 +75,9 @@ namespace JJLUtility.IO
             return mesh;
         }
 
+        /// <summary>
+        /// XFile의 모든 메시 데이터를 하나의 Unity Mesh로 합쳐 반환한다.
+        /// </summary>
         private static Mesh BuildMeshFromXFile(XFile xFile, string meshName)
         {
             if (xFile.Meshes.Count == 0)

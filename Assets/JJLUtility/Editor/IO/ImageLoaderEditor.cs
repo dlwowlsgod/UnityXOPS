@@ -4,16 +4,25 @@ using JJLUtility.IO;
 
 namespace JJLUtilityEditor.IO
 {
+    /// <summary>
+    /// ImageLoader 컴포넌트의 텍스처 캐시를 인스펙터에서 시각화하는 에디터 클래스.
+    /// </summary>
     [CustomEditor(typeof(ImageLoader))]
     public class ImageLoaderEditor : Editor
     {
         private SerializedProperty m_textureCache;
 
+        /// <summary>
+        /// 직렬화 프로퍼티 참조를 초기화한다.
+        /// </summary>
         private void OnEnable()
         {
             m_textureCache = serializedObject.FindProperty("textureCacheList");
         }
 
+        /// <summary>
+        /// 텍스처 캐시 목록을 인스펙터에 렌더링한다.
+        /// </summary>
         public override void OnInspectorGUI()
         {
             serializedObject.Update();

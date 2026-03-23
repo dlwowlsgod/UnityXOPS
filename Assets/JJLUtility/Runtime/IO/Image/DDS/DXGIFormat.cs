@@ -1,5 +1,8 @@
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// DXGI 텍스처 픽셀 포맷을 나타내는 열거형.
+    /// </summary>
     public enum DXGIFormat : uint
     {
         Unknown                = 0,

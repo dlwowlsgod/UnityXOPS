@@ -1,6 +1,6 @@
 {
     "name": "UnityXOPSEditor",
-    "rootNamespace": "",
+    "rootNamespace": "UnityXOPSEditor",
     "references": [
         "GUID:4c5302be45b111640a65fbd8e57333c6"
     ],

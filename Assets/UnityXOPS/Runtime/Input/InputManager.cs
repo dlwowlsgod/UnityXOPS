@@ -5,6 +5,9 @@ using System.IO;
 
 namespace UnityXOPS
 {
+    /// <summary>
+    /// JSON 바인딩 파일을 읽어 InputSystem 액션을 구성하고 키보드/마우스 입력을 관리하는 싱글톤 매니저.
+    /// </summary>
     public class InputManager : SingletonBehavior<InputManager>
     {
         public InputAction Look     { get; private set; }
@@ -24,8 +27,19 @@ namespace UnityXOPS
 
         private const string bindingsPath = "unitydata/input_bindings.json";
 
+        public static Keyboard Keyboard {  get; private set; }
+        public static Mouse Mouse { get; private set; }
+
+        private bool m_hideInWindow;
+
+        /// <summary>
+        /// 바인딩 JSON을 읽어 InputActionMap을 생성하고 모든 액션을 등록한 뒤 활성화한다.
+        /// </summary>
         private void Start()
         {
+            Keyboard = Keyboard.current;
+            Mouse = Mouse.current;
+
             string fullPath = SafePath.Combine(Application.streamingAssetsPath, bindingsPath);
             string json = File.ReadAllText(fullPath);
             var binding = JsonUtility.FromJson<InputBindingData>(json);
@@ -61,6 +75,24 @@ namespace UnityXOPS
             m_map.Enable();
         }
 
+        /// <summary>
+        /// hideInWindow 모드일 때 마우스 커서 가시성을 매 프레임 갱신한다.
+        /// </summary>
+        private void Update()
+        {
+            if (m_hideInWindow && Mouse != null)
+            {
+                var pos = Mouse.position.ReadValue();
+                bool inside = pos.x >= 0 && pos.x < Screen.width
+                           && pos.y >= 0 && pos.y < Screen.height;
+                Cursor.visible = !inside;
+            }
+
+#if UNITY_EDITOR
+            UpdateDebugValues();
+#endif
+        }
+
 #if UNITY_EDITOR
         [SerializeField] private Vector2 lookValue;
         [SerializeField] private Vector2 moveValue;
@@ -75,7 +107,10 @@ namespace UnityXOPS
         [SerializeField] private bool firstValue;
         [SerializeField] private bool secondValue;
 
-        private void Update()
+        /// <summary>
+        /// 에디터 인스펙터에서 입력값을 실시간으로 확인할 수 있도록 직렬화 필드를 갱신한다.
+        /// </summary>
+        private void UpdateDebugValues()
         {
             if (m_map == null) return;
 
@@ -92,12 +127,44 @@ namespace UnityXOPS
             firstValue    = First.IsPressed();
             secondValue   = Second.IsPressed();
         }
-
 #endif
+        /// <summary>
+        /// InputActionMap을 비활성화하고 해제한다.
+        /// </summary>
         private void OnDestroy()
         {
             m_map?.Disable();
             m_map?.Dispose();
+        }
+
+        // hideInWindow: true이면 마우스가 창 안에 있을 때만 커서 숨김
+        /// <summary>
+        /// 마우스 커서 표시 여부, 잠금 모드, 화면 중앙 이동 여부를 설정한다.
+        /// </summary>
+        /// <param name="hideInWindow">true면 창 안에 마우스가 있을 때만 커서를 숨긴다.</param>
+        /// <param name="centered">true면 커서를 중앙에 고정(Locked)한다.</param>
+        /// <param name="moveToCenter">true면 커서를 즉시 화면 중앙으로 이동시킨다.</param>
+        public static void MouseCursorMode(bool hideInWindow, bool centered, bool moveToCenter)
+        {
+            Instance.m_hideInWindow = hideInWindow;
+            if (!hideInWindow)
+            {
+                Cursor.visible = true;
+            }
+
+            if (moveToCenter)
+            {
+                Mouse.WarpCursorPosition(new Vector2(Screen.width / 2, Screen.height / 2));
+            }
+                
+            if (centered)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.None;
+            }
         }
     }
 }

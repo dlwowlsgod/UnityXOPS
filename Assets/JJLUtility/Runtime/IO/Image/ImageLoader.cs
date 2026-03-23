@@ -4,6 +4,9 @@ using System.IO;
 
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// 다양한 이미지 포맷(BMP, TGA, DDS, JPG, PNG)을 로드하고 텍스처 캐시를 관리하는 싱글톤 클래스.
+    /// </summary>
     public partial class ImageLoader : SingletonBehavior<ImageLoader>
     {
         private const int MaxTextureSize = 4096;
@@ -16,6 +19,12 @@ namespace JJLUtility.IO
         private Dictionary<string, Texture2D> _textureCache = new Dictionary<string, Texture2D>();
 #endif //UNITY_EDITOR
 
+        /// <summary>
+        /// 지정된 경로의 이미지 파일을 로드해 Texture2D로 반환한다. 이미 로드된 텍스처는 캐시에서 반환한다.
+        /// </summary>
+        /// <param name="filepath">이미지 파일 경로.</param>
+        /// <param name="filter">텍스처 필터 모드.</param>
+        /// <returns>로드된 Texture2D. 실패 시 null.</returns>
         public static Texture2D LoadTexture(string filepath, FilterMode filter = FilterMode.Bilinear)
         {
             if (string.IsNullOrEmpty(filepath))
@@ -113,6 +122,9 @@ namespace JJLUtility.IO
             return texture;
         }
 
+        /// <summary>
+        /// 이미지가 최대 크기를 초과하면 비율을 유지하며 축소한다.
+        /// </summary>
         private static (int width, int height, Color32[] pixels) GetScaledPixels(int width, int height, Color32[] pixels)
         {
             if (width <= MaxTextureSize && height <= MaxTextureSize)
@@ -124,6 +136,9 @@ namespace JJLUtility.IO
             return (newW, newH, ResizePixels(pixels, width, height, newW, newH));
         }
 
+        /// <summary>
+        /// 쌍선형 보간(bilinear)으로 픽셀 배열을 지정 크기로 리샘플링한다.
+        /// </summary>
         private static Color32[] ResizePixels(Color32[] src, int srcW, int srcH, int dstW, int dstH)
         {
             Color32[] dst = new Color32[dstW * dstH];

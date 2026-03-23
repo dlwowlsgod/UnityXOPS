@@ -2,6 +2,9 @@ using System;
 
 namespace JJLUtility.IO
 {
+    /// <summary>
+    /// DDS 헤더의 유효 필드를 나타내는 플래그 열거형.
+    /// </summary>
     [Flags]
     public enum DDSFlags : uint
     {

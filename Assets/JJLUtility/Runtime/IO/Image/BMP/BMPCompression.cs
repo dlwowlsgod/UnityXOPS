@@ -1,5 +1,8 @@
 ﻿namespace JJLUtility.IO
 {
+    /// <summary>
+    /// BMP 파일의 압축 방식을 나타내는 열거형.
+    /// </summary>
     public enum BMPCompression : uint
     {
         BI_RGB = 0,
