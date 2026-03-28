@@ -22,6 +22,7 @@ namespace UnityXOPS
         public InputAction Reload   { get; private set; }
         public InputAction First    { get; private set; }
         public InputAction Second   { get; private set; }
+        public InputAction Interact { get; private set; }
 
         private InputActionMap m_map;
 
@@ -61,16 +62,38 @@ namespace UnityXOPS
                 .With("Left",  binding.moveLeft)
                 .With("Right", binding.moveRight);
 
-            Jump     = m_map.AddAction("Jump");     Jump.AddBinding(binding.jump);
-            Walk     = m_map.AddAction("Walk");     Walk.AddBinding(binding.walk);
-            Drop     = m_map.AddAction("Drop");     Drop.AddBinding(binding.drop);
-            Fire     = m_map.AddAction("Fire");     Fire.AddBinding(binding.fire);
-            Zoom     = m_map.AddAction("Zoom");     Zoom.AddBinding(binding.zoom);
-            Previous = m_map.AddAction("Previous"); Previous.AddBinding(binding.previous);
-            Next     = m_map.AddAction("Next");     Next.AddBinding(binding.next);
-            Reload   = m_map.AddAction("Reload");   Reload.AddBinding(binding.reload);
-            First    = m_map.AddAction("First");    First.AddBinding(binding.first);
-            Second   = m_map.AddAction("Second");   Second.AddBinding(binding.second);
+            Jump = m_map.AddAction("Jump");
+            Jump.AddBinding(binding.jump);
+
+            Walk = m_map.AddAction("Walk");
+            Walk.AddBinding(binding.walk);
+
+            Drop = m_map.AddAction("Drop");
+            Drop.AddBinding(binding.drop);
+
+            Fire = m_map.AddAction("Fire");
+            Fire.AddBinding(binding.fire);
+
+            Zoom = m_map.AddAction("Zoom");
+            Zoom.AddBinding(binding.zoom);
+
+            Previous = m_map.AddAction("Previous");
+            Previous.AddBinding(binding.previous);
+
+            Next = m_map.AddAction("Next");
+            Next.AddBinding(binding.next);
+
+            Reload = m_map.AddAction("Reload");
+            Reload.AddBinding(binding.reload);
+
+            First = m_map.AddAction("First");
+            First.AddBinding(binding.first);
+
+            Second = m_map.AddAction("Second"); 
+            Second.AddBinding(binding.second);
+
+            Interact = m_map.AddAction("Interact");
+            Interact.AddBinding(binding.interact);
 
             m_map.Enable();
         }
@@ -106,6 +129,7 @@ namespace UnityXOPS
         [SerializeField] private bool reloadValue;
         [SerializeField] private bool firstValue;
         [SerializeField] private bool secondValue;
+        [SerializeField] private bool interactValue;
 
         /// <summary>
         /// 에디터 인스펙터에서 입력값을 실시간으로 확인할 수 있도록 직렬화 필드를 갱신한다.
@@ -126,6 +150,7 @@ namespace UnityXOPS
             reloadValue   = Reload.IsPressed();
             firstValue    = First.IsPressed();
             secondValue   = Second.IsPressed();
+            interactValue = Interact.IsPressed();
         }
 #endif
         /// <summary>

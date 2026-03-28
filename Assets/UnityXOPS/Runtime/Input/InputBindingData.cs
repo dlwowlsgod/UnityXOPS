@@ -32,5 +32,6 @@ namespace UnityXOPS
         public string reload;
         public string first;
         public string second;
+        public string interact;
     }
 }

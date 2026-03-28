@@ -167,7 +167,9 @@ MonoBehaviour:
     skyMeshPath: 
     skyTexturePath: []
   missionData:
+    demoData: []
     officialMissions: []
+    addonMissions: []
 --- !u!1 &100955335
 GameObject:
   m_ObjectHideFlags: 0
@@ -214,8 +216,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockRoot: {fileID: 1499613604}
-  BlockOpaqueMaterial: {fileID: 2100000, guid: 23c8c940226e0c04285bb771bc6a9a16, type: 2}
-  BlockTransparentMaterial: {fileID: 2100000, guid: 5b329996d4c4e244c9f29683752078aa, type: 2}
+  nullMaterial: {fileID: 2100000, guid: cf74391680bdab24aabf6ceb5d9b8421, type: 2}
+  transparentMaterial: {fileID: 2100000, guid: 353379480f8250943866b8b5ba9c03b8, type: 2}
+  mainMaterial: {fileID: 2100000, guid: ab7f36728aab7ea4db08b1f5820d3f16, type: 2}
+  skyMaterial: {fileID: 2100000, guid: 5a6e090f3f9e2234db5d72e166fe56fb, type: 2}
   blockCount: 0
   blockMaterials: []
   missionName: 
@@ -419,7 +423,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c547b5675831a7428f790c52039d9b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OSFont: {fileID: 0}
+  osFont: {fileID: 0}
   SpriteFontTexture: {fileID: 0}
 --- !u!1 &1049169626
 GameObject:

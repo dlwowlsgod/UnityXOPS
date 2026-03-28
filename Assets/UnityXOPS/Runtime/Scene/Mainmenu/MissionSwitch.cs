@@ -37,6 +37,8 @@ namespace UnityXOPS
             officialButtonText.color = officialButtonText.NormalColor = normalColor;
             officialButtonText.HoverColor = hoverColor;
             officialButtonText.PressedColor = pressedColor;
+            officialButtonText.MovePixelX = 1f;
+            officialButtonText.MovePixelY = -1f;
             toAddonButton = officialButtonText;
 
             var addonShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
@@ -50,6 +52,8 @@ namespace UnityXOPS
             addonButtonText.color = addonButtonText.NormalColor = normalColor;
             addonButtonText.HoverColor = hoverColor;
             addonButtonText.PressedColor = pressedColor;
+            addonButtonText.MovePixelX = 1f;
+            addonButtonText.MovePixelY = -1f;
             toOfficialButton = addonButtonText;
 
             toAddonButton.OnClick += () => ToAddonSwitchClicked();

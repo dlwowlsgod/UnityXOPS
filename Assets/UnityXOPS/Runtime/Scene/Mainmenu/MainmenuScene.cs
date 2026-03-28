@@ -9,12 +9,12 @@ namespace UnityXOPS
     /// </summary>
     public class MainmenuScene : MonoBehaviour
     {
-        public static bool    IsAddonTab          = false;
-        public static int     OfficialScrollIndex = 0;
-        public static int     AddonScrollIndex    = 0;
+        public static bool IsAddonTab = false;
+        public static int OfficialScrollIndex = 0;
+        public static int AddonScrollIndex = 0;
 
         [SerializeField]
-        private GameObject switchCanvas;
+        private GameObject switchCanvas, exitCanvas;
 
         /// <summary>
         /// 랜덤 데모 맵을 로드하고, 애드온 미션이 없을 경우 탭 전환 UI를 비활성화한다.
@@ -56,7 +56,7 @@ namespace UnityXOPS
         {
             if (InputManager.Keyboard.escapeKey.wasPressedThisFrame)
             {
-                Debugger.Log("exit.");
+                exitCanvas.SetActive(true);
             }
         }
 
@@ -70,7 +70,10 @@ namespace UnityXOPS
             MapLoader.UnloadBlockData();
             //
             MapLoader.UnloadBlockData();
+
             MapLoader.LoadMissionData(index, mif);
+            MapLoader.LoadBlockData(MapLoader.Instance.MissionBD1Path);
+            MapLoader.LoadSkyData(MapLoader.Instance.SkyIndex);
             Camera.main.gameObject.SetActive(false);
             SceneManager.LoadScene(3);
         }

@@ -23,9 +23,16 @@ namespace UnityXOPS
         {
             if (InputManager.Keyboard.escapeKey.wasPressedThisFrame)
             {
+                MapLoader.UnloadBlockData();
                 MapLoader.UnloadMissionData();
                 Camera.main.gameObject.SetActive(false);
                 SceneManager.LoadScene(2);
+            }
+
+            if (InputManager.Mouse.leftButton.wasPressedThisFrame)
+            {
+                Camera.main.gameObject.SetActive(false);
+                SceneManager.LoadScene(4);
             }
         }
     }

@@ -26,8 +26,6 @@ namespace JJLUtilityEditor.IO
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            m_meshCache.isExpanded = true;
             EditorGUILayout.LabelField("Mesh Cache", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
             for (int i = 0; i < m_meshCache.arraySize; i++)
@@ -40,8 +38,6 @@ namespace JJLUtilityEditor.IO
                 EditorGUILayout.LabelField("No cached meshes.");
             }
             EditorGUI.indentLevel--;
-
-            serializedObject.ApplyModifiedProperties();
         }
     }
 }

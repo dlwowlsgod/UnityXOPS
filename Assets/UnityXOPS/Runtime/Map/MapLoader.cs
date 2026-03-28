@@ -15,9 +15,8 @@ namespace UnityXOPS
         [SerializeField]
         private Transform blockRoot;
         [SerializeField]
-        private Material BlockOpaqueMaterial;
-        [SerializeField]
-        private Material BlockTransparentMaterial;
+        private Material nullMaterial, transparentMaterial, mainMaterial, skyMaterial;
+        
 
         [SerializeField]
         private int blockCount;
@@ -94,14 +93,12 @@ namespace UnityXOPS
 
                 if (string.IsNullOrEmpty(texturePath))
                 {
-                    Instance.blockMaterials.Add(Instance.BlockOpaqueMaterial);
+                    Instance.blockMaterials.Add(Instance.nullMaterial);
                     continue;
                 }
 
                 string extension = Path.GetExtension(texturePath).ToLower();
-                Material baseMaterial = extension is ".png" or ".dds"
-                    ? Instance.BlockTransparentMaterial
-                    : Instance.BlockOpaqueMaterial;
+                Material baseMaterial = Instance.mainMaterial;
 
                 string fullTexturePath = SafePath.Combine(bd1Dir, texturePath);
                 Texture2D blockTexture = ImageLoader.LoadTexture(fullTexturePath);
@@ -115,6 +112,7 @@ namespace UnityXOPS
                 Material blockMaterial = new Material(baseMaterial);
                 blockMaterial.name = Path.GetFileName(texturePath);
                 blockMaterial.mainTexture = blockTexture;
+
                 Instance.blockMaterials.Add(blockMaterial);
             }
 
@@ -138,7 +136,8 @@ namespace UnityXOPS
                     }
                     else
                     {
-                        materials[j] = new Material(Instance.BlockOpaqueMaterial);
+                        //투명벽 처리
+                        materials[j] = Instance.transparentMaterial;
                     }
                 }
                 meshRenderer.sharedMaterials = materials;
@@ -183,15 +182,8 @@ namespace UnityXOPS
                 return;
             }
 
-            Shader skyShader = Shader.Find("UnityXOPS/SkyMesh");
-            if (skyShader == null)
-            {
-                Debugger.LogError($"Failed to load sky shader.", Instance, nameof(MapLoader));
-                return;
-            }
-
             // textureIndex가 유효하고 경로가 비어있지 않으면 텍스처 적용, 아니면 검은색
-            Material skyMaterial = new Material(skyShader);
+            Material skyMaterial = new Material(Instance.skyMaterial);
             skyMaterial.name = "SkyMaterial";
 
             if (textureIndex > 0 && textureIndex < skyData.skyTexturePath.Count)

@@ -18,35 +18,35 @@ namespace JJLUtilityEditor
         [UnityEditor.Callbacks.OnOpenAsset()]
         private static bool OnOpenLog(int instanceID)
         {
-            // OpenAsset�� Debug �ܼ�â���� Ȯ��
+            // 클릭된 오브젝트가 Debug인지 확인
             string name = EditorUtility.InstanceIDToObject(instanceID).name;
             if (!name.Equals("Debug"))
             {
                 return false;
             }
 
-            // EditorWindow ������� ��������
+            // EditorWindow 어셈블리 가져오기
             var editorWindowAssembly = Assembly.GetAssembly(typeof(EditorWindow));
             if (editorWindowAssembly == null)
             {
                 return false;
             }
 
-            // EditorWindow ����������� internal/private Ŭ������ ConsoleWindow Ÿ�� ��������
+            // EditorWindow 어셈블리에서 internal 클래스인 ConsoleWindow 타입 가져오기
             var consoleWindowType = editorWindowAssembly.GetType("UnityEditor.ConsoleWindow");
             if (consoleWindowType == null)
             {
                 return false;
             }
 
-            // typeof(ConsoleWindow)�� ����� �� ���� private static �ʵ��� ms_ConsoleWindow ��������
+            // ConsoleWindow 타입에서 현재 열린 창을 가리키는 private static 필드 ms_ConsoleWindow 가져오기
             var consoleWindowField = consoleWindowType.GetField("ms_ConsoleWindow", BindingFlags.Static | BindingFlags.NonPublic);
             if (consoleWindowField == null)
             {
                 return false;
             }
 
-            // ms_ConsoleWindow �ʵ忡�� ���� consoleWindow �ν��Ͻ� �б�
+            // ms_ConsoleWindow 필드에서 ConsoleWindow 인스턴스 읽기
             var consoleWindowInstance = consoleWindowField.GetValue(null);
             if (consoleWindowInstance == null) return false;
 
@@ -55,23 +55,23 @@ namespace JJLUtilityEditor
                 return false;
             }
 
-            // ConsoleWindow �ν��Ͻ����� private �ʵ��� m_ActiveText ��������
+            // ConsoleWindow 인스턴스에서 선택된 로그 텍스트를 담는 private 필드 m_ActiveText 가져오기
             var activeTextField = consoleWindowType.GetField("m_ActiveText", BindingFlags.Instance | BindingFlags.NonPublic);
             if (activeTextField == null)
             {
                 return false;
             }
 
-            // m_ActiveText �ʵ忡�� ���� activeText �� �б�
+            // m_ActiveText 필드에서 현재 선택된 로그의 스택 트레이스 텍스트 읽기
             string activeTextValue = activeTextField.GetValue(consoleWindowInstance).ToString();
             if (string.IsNullOrEmpty(activeTextValue)) return false;
 
-            // stackTrace�� ���Խ����� �Ľ��Ͽ� ���� ��θ� ����
+            // 스택 트레이스를 정규식으로 파싱하여 "(at 파일경로:줄번호)" 패턴 추출
             var match = Regex.Match(activeTextValue, @"\(at (.+)\)");
             if (match.Success)
             {
-                // ù ��° ��Ī�� ���� (ù ���� ��Ī�� Debugger.cs�� ����Ŵ)
-                match.NextMatch();
+                // 첫 번째 매칭 건너뜀 (Debugger.cs 자신을 가리키므로)
+                match = match.NextMatch();
             }
 
             if (match.Success)
@@ -84,7 +84,7 @@ namespace JJLUtilityEditor
                 string dataPath = Application.dataPath[..Application.dataPath.LastIndexOf("Assets")];
                 InternalEditorUtility.OpenFileAtLineExternal(dataPath + filePath, lineNumber);
 
-                // true�� ��ȯ�ؾ� UnityEditor�� OnOpenAsset �ݹ��� ó����
+                // true 반환 시 UnityEditor가 OnOpenAsset 이벤트를 처리 완료로 간주
                 return true;
             }
 
