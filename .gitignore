@@ -8,6 +8,7 @@ UserSettings
 Logs
 Assets/Plugins
 Assets/StreamingAssets/data
+OpenXOPS
 *.meta
 Library
 Assets/Resources/char.dds
@@ -18,3 +19,4 @@ Assets/StreamingAssets/addon
 .vs
 CLAUDE.md
 Assets/StreamingAssets
+.claude

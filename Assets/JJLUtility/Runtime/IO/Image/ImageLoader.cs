@@ -9,14 +9,14 @@ namespace JJLUtility.IO
     /// </summary>
     public partial class ImageLoader : SingletonBehavior<ImageLoader>
     {
-        private const int MaxTextureSize = 4096;
+        private const int k_maxTextureSize = 4096;
 
 #if UNITY_EDITOR
         private Dictionary<string, int> m_textureCache = new Dictionary<string, int>();
         [SerializeField]
         private List<Texture2D> textureCacheList = new List<Texture2D>();
 #else
-        private Dictionary<string, Texture2D> _textureCache = new Dictionary<string, Texture2D>();
+        private Dictionary<string, Texture2D> m_textureCache = new Dictionary<string, Texture2D>();
 #endif //UNITY_EDITOR
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace JJLUtility.IO
 #if UNITY_EDITOR
                 return Instance.textureCacheList[Instance.m_textureCache[filepath]];
 #else
-        return _textureCache[filepath];
+        return Instance.m_textureCache[filepath];
 #endif //UNITY_EDITOR
             }
 
@@ -59,7 +59,7 @@ namespace JJLUtility.IO
                     byte[] imageData = File.ReadAllBytes(filepath);
                     texture = new Texture2D(2, 2);
                     texture.LoadImage(imageData);
-                    if (texture.width > MaxTextureSize || texture.height > MaxTextureSize)
+                    if (texture.width > k_maxTextureSize || texture.height > k_maxTextureSize)
                     {
                         var (newW, newH, resized) = GetScaledPixels(texture.width, texture.height, texture.GetPixels32());
                         Object.Destroy(texture);
@@ -127,10 +127,10 @@ namespace JJLUtility.IO
         /// </summary>
         private static (int width, int height, Color32[] pixels) GetScaledPixels(int width, int height, Color32[] pixels)
         {
-            if (width <= MaxTextureSize && height <= MaxTextureSize)
+            if (width <= k_maxTextureSize && height <= k_maxTextureSize)
                 return (width, height, pixels);
 
-            float scale = (float)MaxTextureSize / Mathf.Max(width, height);
+            float scale = (float)k_maxTextureSize / Mathf.Max(width, height);
             int newW = Mathf.Max(1, Mathf.FloorToInt(width  * scale));
             int newH = Mathf.Max(1, Mathf.FloorToInt(height * scale));
             return (newW, newH, ResizePixels(pixels, width, height, newW, newH));

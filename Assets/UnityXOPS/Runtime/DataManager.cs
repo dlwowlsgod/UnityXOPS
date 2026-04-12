@@ -11,6 +11,14 @@ namespace UnityXOPS
     public class DataManager : SingletonBehavior<DataManager>
     {
         [SerializeField]
+        private HumanParameterData humanParameterData;
+        public HumanParameterData HumanParameterData => humanParameterData;
+
+        [SerializeField]
+        private WeaponParameterData weaponParameterData;
+        public WeaponParameterData WeaponParameterData => weaponParameterData;
+
+        [SerializeField]
         private SkyData skyData;
         public SkyData SkyData => skyData;
 
@@ -18,16 +26,34 @@ namespace UnityXOPS
         private MissionData missionData;
         public MissionData MissionData => missionData;
 
-        private const string skyDataPath = "unitydata/sky_data.json";
-        private const string missionDataPath = "unitydata/mission_data.json";
+        private const string k_humanParameterDataPath = "unitydata/human_parameter_data.json";
+        private const string k_weaponParameterDataPath = "unitydata/weapon_parameter_data.json";
+        private const string k_skyDataPath = "unitydata/sky_data.json";
+        private const string k_missionDataPath = "unitydata/mission_data.json";
 
         /// <summary>
         /// 스카이 데이터와 미션 데이터를 로드한다.
         /// </summary>
         public void Start()
         {
+            LoadHumanParameterData();
+            LoadWeaponParameterData();
             LoadSkyData();
             LoadMissionData();
+        }
+
+        private void LoadHumanParameterData()
+        {
+            string fullPath = Path.Combine(Application.streamingAssetsPath, k_humanParameterDataPath);
+            string json = File.ReadAllText(fullPath);
+            humanParameterData = JsonUtility.FromJson<HumanParameterData>(json);
+        }
+
+        private void LoadWeaponParameterData()
+        {
+            string fullPath = Path.Combine(Application.streamingAssetsPath, k_weaponParameterDataPath);
+            string json = File.ReadAllText (fullPath);
+            weaponParameterData = JsonUtility.FromJson<WeaponParameterData>(json);
         }
 
         /// <summary>
@@ -35,7 +61,7 @@ namespace UnityXOPS
         /// </summary>
         private void LoadSkyData()
         {
-            string fullPath = SafePath.Combine(Application.streamingAssetsPath, skyDataPath);
+            string fullPath = Path.Combine(Application.streamingAssetsPath, k_skyDataPath);
             string json = File.ReadAllText(fullPath);
             skyData = JsonUtility.FromJson<SkyData>(json);
         }
@@ -45,7 +71,7 @@ namespace UnityXOPS
         /// </summary>
         private void LoadMissionData()
         {
-            string fullPath = SafePath.Combine(Application.streamingAssetsPath, missionDataPath);
+            string fullPath = Path.Combine(Application.streamingAssetsPath, k_missionDataPath);
             string json = File.ReadAllText(fullPath);
             missionData = JsonUtility.FromJson<MissionData>(json);
             missionData.addonMissions = new List<AddonMissionData>();

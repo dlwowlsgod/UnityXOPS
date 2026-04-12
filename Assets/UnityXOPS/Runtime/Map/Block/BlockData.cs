@@ -127,17 +127,12 @@ namespace UnityXOPS
             return blocks;
         }
 
-        /// <summary>
-        /// 하나의 RawBlockData로부터 서브메시로 구성된 Unity Mesh와 Block 객체를 생성한다.
-        /// </summary>
         private static Block BuildBlock(RawBlockData raw)
         {
-            // 블럭 중심 계산
             Vector3 center = Vector3.zero;
             for (int i = 0; i < 8; i++) center += raw.vertices[i];
             center /= 8f;
 
-            // 사용된 고유 텍스쳐 인덱스 수집 (등장 순서 유지 → 서브메시 순서)
             var uniqueTextures = new List<int>();
             for (int f = 0; f < 6; f++)
             {
@@ -158,15 +153,13 @@ namespace UnityXOPS
                 int subMeshIdx = uniqueTextures.IndexOf(raw.textureIndices[f]);
                 int vertexBase = allVertices.Count;
 
-                // 면의 4개 버텍스를 FaceVertexIndices 순서로 추가 (중심 기준 로컬 좌표)
                 int[] faceVerts = FaceVertexIndices[f];
                 for (int v = 0; v < 4; v++)
                 {
                     allVertices.Add(raw.vertices[faceVerts[v]] - center);
-                    allUVs.Add(raw.uvs[f * 4 + (v + 3) % 4]); 
+                    allUVs.Add(raw.uvs[f * 4 + (v + 3) % 4]);
                 }
 
-                // 쿼드 → 삼각형 2개 (0,1,2 / 0,2,3)
                 subTriangles[subMeshIdx].Add(vertexBase + 0);
                 subTriangles[subMeshIdx].Add(vertexBase + 1);
                 subTriangles[subMeshIdx].Add(vertexBase + 2);
@@ -186,13 +179,72 @@ namespace UnityXOPS
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
 
+            Vector3[] expanded = ExpandVertices(raw.vertices);
+
+            Vector3[] faceNormals = new Vector3[6];
+            Vector3[] faceCenters = new Vector3[6];
+            for (int f = 0; f < 6; f++)
+            {
+                int[] fi = FaceVertexIndices[f];
+                Vector3 v0 = expanded[fi[0]];
+                Vector3 v1 = expanded[fi[1]];
+                Vector3 v2 = expanded[fi[2]];
+
+                Vector3 fc = (v0 + v1 + v2 + expanded[fi[3]]) * 0.25f;
+                faceCenters[f] = fc;
+
+                Vector3 n = Vector3.Cross(v1 - v0, v2 - v0).normalized;
+                // 법선이 중심에서 바깥쪽을 향하도록 보정
+                if (Vector3.Dot(n, fc - center) < 0f)
+                    n = -n;
+                faceNormals[f] = n;
+            }
+
+            bool isBoardBlock = HasDuplicateExpandedVertices(expanded)
+                || IsCenterVisibleFromAnyFace(center, faceNormals, faceCenters);
+
             return new Block
             {
                 mesh = mesh,
                 subMeshTextureIndices = uniqueTextures.ToArray(),
                 position = center,
-                collider = true,
+                collider = !isBoardBlock,
+                faceNormals = faceNormals,
+                faceCenters = faceCenters,
             };
+        }
+
+        private static Vector3[] ExpandVertices(Vector3[] verts)
+        {
+            Vector3[] result = new Vector3[8];
+            for (int i = 0; i < 8; i++)
+            {
+                float r = verts[i].magnitude + 0.01f;
+                result[i] = verts[i].normalized * r;
+            }
+            return result;
+        }
+
+        private static bool HasDuplicateExpandedVertices(Vector3[] ev)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = i + 1; j < 8; j++)
+                {
+                    if (ev[i] == ev[j]) return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool IsCenterVisibleFromAnyFace(Vector3 center, Vector3[] normals, Vector3[] centers)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                float d = Vector3.Dot(normals[i], centers[i] - center);
+                if (d <= 0f) return true;
+            }
+            return false;
         }
     }
 }

@@ -13,27 +13,27 @@ namespace JJLUtility
         /// 일반 로그 메시지를 콘솔에 출력한다. 에디터 전용.
         /// </summary>
         [Conditional("UNITY_EDITOR")]
-        public static void Log(object message, Object context = null, string label = "[UnityXOPS]")
+        public static void Log(object message, Object context = null, string label = "UnityXOPS")
         {
-            Debug.Log($"{label} {message}", context);
+            Debug.Log($"[{label}] {message}", context);
         }
 
         /// <summary>
         /// 경고 로그 메시지를 콘솔에 출력한다. 에디터 전용.
         /// </summary>
         [Conditional("UNITY_EDITOR")]
-        public static void LogWarning(object message, Object context = null, string label = "[UnityXOPS]")
+        public static void LogWarning(object message, Object context = null, string label = "UnityXOPS")
         {
-            Debug.LogWarning($"{label} {message}", context);
+            Debug.LogWarning($"[{label}] {message}", context);
         }
 
         /// <summary>
         /// 에러 로그 메시지를 콘솔에 출력한다. 에디터 전용.
         /// </summary>
         [Conditional("UNITY_EDITOR")]
-        public static void LogError(object message, Object context = null, string label = "[UnityXOPS]")
+        public static void LogError(object message, Object context = null, string label = "UnityXOPS")
         {
-            Debug.LogError($"{label} {message}", context);
+            Debug.LogError($"[{label}] {message}", context);
         }
     }
 }

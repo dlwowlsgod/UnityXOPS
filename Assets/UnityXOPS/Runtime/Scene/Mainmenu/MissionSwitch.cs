@@ -12,7 +12,7 @@ namespace UnityXOPS
         [SerializeField]
         private Transform officialSwitchTransform, addonSwitchTransform;
 
-        private const string toAddonText = "ADD-ON MISSIONS >>", toOfficialText = "<< STANDARD MISSIONS";
+        private const string k_toAddonText = "ADD-ON MISSIONS >>", k_toOfficialText = "<< STANDARD MISSIONS";
 
         [SerializeField]
         private Color32 normalColor, hoverColor, pressedColor, shadowColor;
@@ -27,10 +27,10 @@ namespace UnityXOPS
         private void Start()
         {
             var officialShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                officialSwitchTransform, toAddonText, new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, -1)
+                officialSwitchTransform, k_toAddonText, new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, -1)
                 , Vector2.zero, fontSize, shadowColor, TextAnchor.UpperLeft, 0);
             var officialButtonText = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
-                officialSwitchTransform, toAddonText, new Vector2(0, 1), new Vector2(0, 1), Vector2.zero
+                officialSwitchTransform, k_toAddonText, new Vector2(0, 1), new Vector2(0, 1), Vector2.zero
                 , new Vector2(340, 25), fontSize, normalColor, TextAnchor.UpperLeft, 0);
             officialShadowText.name = "officialShadowText";
             officialButtonText.name = "officialButtonText";
@@ -42,10 +42,10 @@ namespace UnityXOPS
             toAddonButton = officialButtonText;
 
             var addonShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                addonSwitchTransform, toOfficialText, new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, -1)
+                addonSwitchTransform, k_toOfficialText, new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, -1)
                 , Vector2.zero, fontSize, shadowColor, TextAnchor.UpperLeft, 0);
             var addonButtonText = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
-                addonSwitchTransform, toOfficialText, new Vector2(0, 1), new Vector2(0, 1), Vector2.zero
+                addonSwitchTransform, k_toOfficialText, new Vector2(0, 1), new Vector2(0, 1), Vector2.zero
                 , new Vector2(340, 25), fontSize, normalColor, TextAnchor.UpperLeft, 0);
             addonShadowText.name = "addonShadowText";
             addonButtonText.name = "addonButtonText";

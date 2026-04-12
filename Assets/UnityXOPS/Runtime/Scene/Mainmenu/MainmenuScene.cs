@@ -38,7 +38,7 @@ namespace UnityXOPS
             string pd1FullPath = SafePath.Combine(Application.streamingAssetsPath, demo.pd1Path);
 
             MapLoader.LoadBlockData(bd1FullPath);
-            
+            MapLoader.LoadPointData(pd1FullPath);
             MapLoader.LoadSkyData(demo.skyIndex);
 
 
@@ -68,11 +68,12 @@ namespace UnityXOPS
         public void Load(int index, bool mif)
         {
             MapLoader.UnloadBlockData();
-            //
+            MapLoader.UnloadPointData();
             MapLoader.UnloadBlockData();
 
             MapLoader.LoadMissionData(index, mif);
             MapLoader.LoadBlockData(MapLoader.Instance.MissionBD1Path);
+            MapLoader.LoadPointData(MapLoader.Instance.MissionPD1Path);
             MapLoader.LoadSkyData(MapLoader.Instance.SkyIndex);
             Camera.main.gameObject.SetActive(false);
             SceneManager.LoadScene(3);

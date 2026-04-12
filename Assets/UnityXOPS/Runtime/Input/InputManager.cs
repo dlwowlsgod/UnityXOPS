@@ -26,7 +26,7 @@ namespace UnityXOPS
 
         private InputActionMap m_map;
 
-        private const string bindingsPath = "unitydata/input_bindings.json";
+        private const string k_bindingsPath = "unitydata/input_bindings.json";
 
         public static Keyboard Keyboard {  get; private set; }
         public static Mouse Mouse { get; private set; }
@@ -41,7 +41,7 @@ namespace UnityXOPS
             Keyboard = Keyboard.current;
             Mouse = Mouse.current;
 
-            string fullPath = SafePath.Combine(Application.streamingAssetsPath, bindingsPath);
+            string fullPath = SafePath.Combine(Application.streamingAssetsPath, k_bindingsPath);
             string json = File.ReadAllText(fullPath);
             var binding = JsonUtility.FromJson<InputBindingData>(json);
 

@@ -12,9 +12,9 @@ namespace UnityXOPS
     /// </summary>
     public class FontManager : SingletonBehavior<FontManager>
     {
-        private const string KoreanOSFontPath = "WINDOWS/Fonts/malgun.ttf";
-        private const string JapaneseOSFontPath = "WINDOWS/Fonts/YuGothR.ttc";
-        private const string EnglishOSFontPath = "WINDOWS/Fonts/segoeui.ttf";
+        private const string k_koreanOSFontPath = "WINDOWS/Fonts/malgun.ttf";
+        private const string k_japaneseOSFontPath = "WINDOWS/Fonts/YuGothR.ttc";
+        private const string k_englishOSFontPath = "WINDOWS/Fonts/segoeui.ttf";
 
         private string m_koreanOSFontPath;
         private string m_japaneseOSFontPath;
@@ -35,9 +35,9 @@ namespace UnityXOPS
             SpriteFontTexture = ImageLoader.LoadTexture(spriteFontTexturePath);
 
             string[] fontPathList = Font.GetPathsToOSFonts();
-            m_koreanOSFontPath   = fontPathList.FirstOrDefault(path => path.EndsWith(KoreanOSFontPath));
-            m_japaneseOSFontPath = fontPathList.FirstOrDefault(path => path.EndsWith(JapaneseOSFontPath));
-            m_englishOSFontPath  = fontPathList.FirstOrDefault(path => path.EndsWith(EnglishOSFontPath));
+            m_koreanOSFontPath   = fontPathList.FirstOrDefault(path => path.EndsWith(k_koreanOSFontPath));
+            m_japaneseOSFontPath = fontPathList.FirstOrDefault(path => path.EndsWith(k_japaneseOSFontPath));
+            m_englishOSFontPath  = fontPathList.FirstOrDefault(path => path.EndsWith(k_englishOSFontPath));
 
             string selectedPath = Application.systemLanguage switch
             {

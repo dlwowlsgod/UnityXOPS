@@ -10,8 +10,9 @@ namespace UnityXOPSEditor
     [CustomEditor(typeof(MapLoader))]
     public class MapLoaderEditor : Editor
     {
-        private SerializedProperty m_blockRoot, m_nullMaterial, m_transparentMaterial, m_mainMaterial, m_skyMaterial;
-        private SerializedProperty m_blockCount, m_blockMaterials;
+        private SerializedProperty m_blockRoot, m_humanRoot, m_humanPrefab;
+        private SerializedProperty m_blockCount, m_blockMaterials, m_blockColliders;
+        private SerializedProperty m_pointCount, m_humanCount, m_weaponCount, m_objectCount, m_messages;
         private SerializedProperty m_missionName, m_missionFullname, m_missionBD1Path, m_missionPD1Path,
             m_missionAddonObjectPath, m_missionImage0, m_missionImage1, m_skyIndex, m_missionBriefing,
             m_adjustCollision, m_darkScreen;
@@ -25,12 +26,19 @@ namespace UnityXOPSEditor
         private void OnEnable()
         {
             m_blockRoot = serializedObject.FindProperty("blockRoot");
-            m_nullMaterial = serializedObject.FindProperty("nullMaterial");
-            m_transparentMaterial = serializedObject.FindProperty("transparentMaterial");
-            m_mainMaterial = serializedObject.FindProperty("mainMaterial");
-            m_skyMaterial = serializedObject.FindProperty("skyMaterial");
+            m_humanRoot = serializedObject.FindProperty("humanRoot");
+
+            m_humanPrefab = serializedObject.FindProperty("humanPrefab");
+
             m_blockCount = serializedObject.FindProperty("blockCount");
             m_blockMaterials = serializedObject.FindProperty("blockMaterials");
+            m_blockColliders = serializedObject.FindProperty("blockColliders");
+
+            m_pointCount = serializedObject.FindProperty("pointCount");
+            m_humanCount = serializedObject.FindProperty("humanCount");
+            m_weaponCount = serializedObject.FindProperty("weaponCount");
+            m_objectCount = serializedObject.FindProperty("objectCount");
+            m_messages = serializedObject.FindProperty("messages");
 
             m_missionName = serializedObject.FindProperty("missionName");
             m_missionFullname = serializedObject.FindProperty("missionFullname");
@@ -55,15 +63,15 @@ namespace UnityXOPSEditor
             {
                 DrawBlockData();
                 EditorGUILayout.Space();
+                DrawPointData();
+                EditorGUILayout.Space();
                 DrawMissionData();
             }
             else
             {
                 EditorGUILayout.PropertyField(m_blockRoot);
-                EditorGUILayout.PropertyField(m_nullMaterial);
-                EditorGUILayout.PropertyField(m_transparentMaterial);
-                EditorGUILayout.PropertyField(m_mainMaterial);
-                EditorGUILayout.PropertyField(m_skyMaterial);
+                EditorGUILayout.PropertyField(m_humanRoot);
+                EditorGUILayout.PropertyField(m_humanPrefab);
                 serializedObject.ApplyModifiedProperties();
             }
         }
@@ -75,18 +83,27 @@ namespace UnityXOPSEditor
         {
             EditorGUILayout.LabelField("Block Data", new GUIStyle(EditorStyles.boldLabel));
             EditorGUILayout.LabelField($"Blocks: {m_blockCount.intValue}");
-            EditorGUILayout.LabelField($"Block Textures: {m_blockMaterials.arraySize}");
+            EditorGUILayout.PropertyField(m_blockMaterials, new GUIContent("Block Materials"));
+            EditorGUILayout.PropertyField(m_blockColliders, new GUIContent("Block Colliders"));
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawPointData()
+        {
+            EditorGUILayout.LabelField("Point Data", new GUIStyle(EditorStyles.boldLabel));
+            EditorGUILayout.LabelField($"Points: {m_pointCount.intValue}");
+            EditorGUILayout.LabelField($"Humans: {m_humanCount.intValue}");
+            EditorGUILayout.LabelField($"Weapons: {m_weaponCount.intValue}");
+            EditorGUILayout.LabelField($"Objects: {m_objectCount.intValue}");
+            EditorGUILayout.LabelField("Messages:");
             EditorGUI.indentLevel++;
-            for (int i = 0; i < m_blockMaterials.arraySize; i++)
+            for (int i = 0; i < m_messages.arraySize; i++)
             {
-                SerializedProperty materialProp = m_blockMaterials.GetArrayElementAtIndex(i);
-                EditorGUILayout.PropertyField(materialProp, new GUIContent($"[{i}]"));
-            }
-            if (m_blockMaterials.arraySize == 0)
-            {
-                EditorGUILayout.LabelField("No block textures.");
+                SerializedProperty msgProp = m_messages.GetArrayElementAtIndex(i);
+                EditorGUILayout.PropertyField(msgProp, new GUIContent($"[{i}]"));
             }
             EditorGUI.indentLevel--;
+
         }
 
         /// <summary>

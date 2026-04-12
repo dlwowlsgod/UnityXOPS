@@ -17,30 +17,30 @@ namespace UnityXOPS
         [SerializeField]
         private Vector2 labelSize, buttonSize;
 
-        private const string label = "Do you want to quit the game?";
-        private const string quitText = "QUIT";
-        private const string abortText = "ABORT";
+        private const string k_label = "Do you want to quit the game?";
+        private const string k_quitText = "QUIT";
+        private const string k_abortText = "ABORT";
 
         /// <summary>
         /// 종료·취소 버튼 텍스트를 생성하고 클릭 이벤트를 등록한다.
         /// </summary>
         private void Start()
         {
-            Vector2 quitButtonSize = new Vector2(labelSize.x * quitText.Length, labelSize.y + 2);
-            Vector2 abortButtonSize = new Vector2(labelSize.x * abortText.Length, labelSize.y + 2);
+            Vector2 quitButtonSize = new Vector2(labelSize.x * k_quitText.Length, labelSize.y + 2);
+            Vector2 abortButtonSize = new Vector2(labelSize.x * k_abortText.Length, labelSize.y + 2);
 
             var labelShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                labelRoot, label, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
+                labelRoot, k_label, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
                 labelSize, labelSize, shadowColor, TextAnchor.MiddleCenter, 0);
             var labelText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                labelRoot, label, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
+                labelRoot, k_label, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
                 labelSize, labelSize, normalColor, TextAnchor.MiddleCenter, 0);
 
             var quitShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                quitRoot, quitText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
+                quitRoot, k_quitText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
                 quitButtonSize, buttonSize, shadowColor, TextAnchor.MiddleCenter, 0);
             var quitButtonText = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
-                quitRoot, quitText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
+                quitRoot, k_quitText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
                 quitButtonSize, buttonSize, normalColor, TextAnchor.MiddleCenter, 0);
             quitButtonText.NormalColor = normalColor;
             quitButtonText.HoverColor = hoverColor;
@@ -49,10 +49,10 @@ namespace UnityXOPS
             quitButtonText.MovePixelY = -1f;
 
             var abortShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                abortRoot, abortText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
+                abortRoot, k_abortText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
                 abortButtonSize, buttonSize, shadowColor, TextAnchor.MiddleCenter, 0);
             var abortButtonText = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
-                abortRoot, abortText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
+                abortRoot, k_abortText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
                 abortButtonSize, buttonSize, normalColor, TextAnchor.MiddleCenter, 0);
             abortButtonText.NormalColor = normalColor;
             abortButtonText.HoverColor = hoverColor;

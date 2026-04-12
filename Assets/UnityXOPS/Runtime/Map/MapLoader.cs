@@ -3,7 +3,6 @@ using JJLUtility.IO;
 using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
-using UnityEngine.Rendering;
 
 namespace UnityXOPS
 {
@@ -12,39 +11,42 @@ namespace UnityXOPS
     /// </summary>
     public partial class MapLoader : SingletonBehavior<MapLoader>
     {
+        private const int k_maxParameterCount = 20;
+
         [SerializeField]
-        private Transform blockRoot;
+        private Transform blockRoot, humanRoot;
         [SerializeField]
-        private Material nullMaterial, transparentMaterial, mainMaterial, skyMaterial;
-        
+        private GameObject humanPrefab;
 
         [SerializeField]
         private int blockCount;
         [SerializeField]
         private List<Material> blockMaterials;
+        public List<Material> BlockMaterials => blockMaterials;
+        [SerializeField]
+        private List<Block> blockColliders;
 
         [SerializeField]
-        private string missionName;
+        private int pointCount, humanCount, weaponCount, objectCount;
         [SerializeField]
-        private string missionFullname;
+        private List<string> messages;
+        private Dictionary<string, Material> m_humanMaterialCache, m_weaponMaterialCache, m_objectMaterialCache;
+        public Dictionary<string, Material> HumanMaterialCache => m_humanMaterialCache;
+        public Dictionary<string, Material> WeaponMaterialCache => m_weaponMaterialCache;
+        public Dictionary<string, Material> ObjectMaterialCache => m_objectMaterialCache;
+
+
         [SerializeField]
-        private string missionBD1Path;
-        [SerializeField]
-        private string missionPD1Path;
-        [SerializeField]
-        private string missionAddonObjectPath;
-        [SerializeField]
-        private string missionImage0;
-        [SerializeField]
-        private string missionImage1;
+        private string missionName, missionFullname, missionBD1Path, missionPD1Path,
+            missionAddonObjectPath, missionImage0, missionImage1, missionBriefing;
         [SerializeField]
         private int skyIndex;
         [SerializeField]
-        private string missionBriefing;
-        [SerializeField]
-        private bool adjustCollision;
-        [SerializeField]
-        private bool darkScreen;
+        private bool adjustCollision, darkScreen;
+
+        private static int blockLayerMask = 7;
+
+        public static IReadOnlyList<Block> BlockColliders => Instance.blockColliders;
 
         public string MissionName => missionName;
         public string MissionFullname => missionFullname;
@@ -57,6 +59,13 @@ namespace UnityXOPS
         public string MissionBriefing => missionBriefing;
         public bool AdjusterCollision => adjustCollision;
         public bool DarkScreen => darkScreen;
+
+        private List<Dictionary<int, List<RawPointData>>> m_sortedRawPointData;
+
+        private void Start()
+        {
+            blockLayerMask = LayerMask.GetMask("Block");
+        }
 
         /// <summary>
         /// BD1 파일을 파싱해 블록 메시와 머티리얼을 생성하고 씬에 배치한다.
@@ -85,6 +94,7 @@ namespace UnityXOPS
             Instance.blockCount = blockData.rawBlockData.Length;
             blockData.blocks = BuildBlocks(blockData.rawBlockData);
 
+            Instance.blockColliders = new List<Block>();
             Instance.blockMaterials = new List<Material>();
             string bd1Dir = Path.GetDirectoryName(filepath);
             for (int i = 0; i < blockData.texturePaths.Length; i++)
@@ -93,12 +103,12 @@ namespace UnityXOPS
 
                 if (string.IsNullOrEmpty(texturePath))
                 {
-                    Instance.blockMaterials.Add(Instance.nullMaterial);
+                    Instance.blockMaterials.Add(MaterialManager.Instance.MainMaterial);
                     continue;
                 }
 
                 string extension = Path.GetExtension(texturePath).ToLower();
-                Material baseMaterial = Instance.mainMaterial;
+                Material baseMaterial = MaterialManager.Instance.MainMaterial;
 
                 string fullTexturePath = SafePath.Combine(bd1Dir, texturePath);
                 Texture2D blockTexture = ImageLoader.LoadTexture(fullTexturePath);
@@ -137,13 +147,44 @@ namespace UnityXOPS
                     else
                     {
                         //투명벽 처리
-                        materials[j] = Instance.transparentMaterial;
+                        materials[j] = MaterialManager.Instance.TransparentMaterial;
                     }
                 }
                 meshRenderer.sharedMaterials = materials;
 
                 blockObj.transform.localPosition = block.position;
+
+                if (block.collider)
+                {
+                    blockObj.layer = LayerMask.NameToLayer("Block");
+                    MeshCollider mc = blockObj.AddComponent<MeshCollider>();
+                    mc.sharedMesh = block.mesh;
+                    Instance.blockColliders.Add(block);
+                }
             }
+        }
+
+        // CheckALLBlockIntersectRay 대응 — 두꺼운 블록과 레이 교차 여부 반환
+        public static bool RaycastBlock(Vector3 origin, Vector3 direction, float maxDist, out float dist)
+        {
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, maxDist, blockLayerMask))
+            {
+                dist = hit.distance;
+                return true;
+            }
+            dist = 0f;
+            return false;
+        }
+
+        // CheckALLBlockInside 대응 — point가 두꺼운 블록 내부이면 true 반환
+        public static bool IsInsideBlock(Vector3 point)
+        {
+            var colliders = Instance.blockColliders;
+            for (int i = 0; i < colliders.Count; i++)
+            {
+                if (colliders[i].Contains(point)) return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -156,6 +197,94 @@ namespace UnityXOPS
                 Destroy(child.gameObject);
             }
             Instance.blockMaterials.Clear();
+            Instance.blockColliders.Clear();
+        }
+
+        public static void LoadPointData(string filepath)
+        {
+            if (string.IsNullOrEmpty(filepath))
+            {
+                Debugger.LogError("PD1 path is empty.", Instance, nameof(MapLoader));
+                return;
+            }
+
+            if (!File.Exists(filepath))
+            {
+                Debugger.LogError($"PD1 file not exists: {filepath}", Instance, nameof(MapLoader));
+                return;
+            }
+
+            PointData pointData = LoadPD1File(filepath);
+            if (pointData == null)
+            {
+                return;
+            }
+            
+            Instance.pointCount = pointData.rawPointData.Length;
+            Instance.m_humanMaterialCache = new Dictionary<string, Material>();
+            Instance.m_weaponMaterialCache = new Dictionary<string, Material>();
+            Instance.m_objectMaterialCache = new Dictionary<string, Material>();
+
+            // 파라미터 정리
+            Instance.m_sortedRawPointData = new List<Dictionary<int, List<RawPointData>>>();
+            for (int i = 0; i < k_maxParameterCount; i++)
+            {
+                Instance.m_sortedRawPointData.Add(new Dictionary<int, List<RawPointData>>());
+            }
+            for (int i = 0; i < pointData.rawPointData.Length; i++)
+            {
+                var raw = pointData.rawPointData[i];
+                if (raw.param0 >= 0 && raw.param0 < k_maxParameterCount)
+                {
+                    var dict = Instance.m_sortedRawPointData[raw.param0];
+                    if (!dict.ContainsKey(raw.param3))
+                    {
+                        dict[raw.param3] = new List<RawPointData>();
+                    }
+
+                    dict[raw.param3].Add(raw);
+                }
+            }
+
+            foreach (var humanRaw in Instance.m_sortedRawPointData[1].Values)
+            {
+                foreach (var raw in humanRaw)
+                {
+                    var humanObj = Instantiate(Instance.humanPrefab, Instance.humanRoot);
+                    humanObj.transform.SetLocalPositionAndRotation(raw.position, Quaternion.Euler(0, raw.look, 0));
+                    Instance.m_sortedRawPointData[4].TryGetValue(raw.param1, out var list);
+                    var human = humanObj.GetComponent<Human>();
+
+                    if (list.Count <= 0)
+                    {
+                        continue;
+                    }
+
+                    human.CreateHuman(raw, list[^1]);
+                }
+            }
+
+            Instance.pointCount = pointData.rawPointData.Length;
+            if (pointData.msg != null)
+            {
+                Instance.messages = new List<string>(pointData.msg);
+            }
+        }
+
+        public static void UnloadPointData()
+        {
+            Instance.pointCount = 0;
+
+            foreach (Transform child in Instance.humanRoot)
+            {
+                Destroy(child.gameObject);
+            }
+
+            Instance.messages.Clear();  
+            Instance.m_humanMaterialCache.Clear();
+            Instance.m_weaponMaterialCache.Clear();
+            Instance.m_objectMaterialCache.Clear();
+            Instance.m_sortedRawPointData = null; //GC 이슈있을듯. (260409)
         }
 
         /// <summary>
@@ -183,7 +312,7 @@ namespace UnityXOPS
             }
 
             // textureIndex가 유효하고 경로가 비어있지 않으면 텍스처 적용, 아니면 검은색
-            Material skyMaterial = new Material(Instance.skyMaterial);
+            Material skyMaterial = new Material(MaterialManager.Instance.SkyMaterial);
             skyMaterial.name = "SkyMaterial";
 
             if (textureIndex > 0 && textureIndex < skyData.skyTexturePath.Count)

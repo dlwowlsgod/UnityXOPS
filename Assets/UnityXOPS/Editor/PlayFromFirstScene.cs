@@ -9,9 +9,9 @@ namespace UnityXOPSEditor
     [InitializeOnLoad]
     public static class PlayFromFirstScene
     {
-        const string MenuPath = "UnityXOPS/Play From First Scene";
-        const string PrefKey = "UnityXOPS.PlayFromFirstScene";
-        const string PrevScenePrefKey = "UnityXOPS.PlayFromFirstScene.PrevScene";
+        const string k_menuPath = "UnityXOPS/Play From First Scene";
+        const string k_prefKey = "UnityXOPS.PlayFromFirstScene";
+        const string k_prevScenePrefKey = "UnityXOPS.PlayFromFirstScene.PrevScene";
 
         /// <summary>
         /// 에디터 로드 시 플레이모드 상태 변경 콜백을 등록한다.
@@ -21,25 +21,25 @@ namespace UnityXOPSEditor
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
-        static bool IsEnabled => EditorPrefs.GetBool(PrefKey, false);
+        static bool IsEnabled => EditorPrefs.GetBool(k_prefKey, false);
 
         /// <summary>
         /// 메뉴 항목 클릭 시 기능 활성화 여부를 토글한다.
         /// </summary>
-        [MenuItem(MenuPath, priority = 1)]
+        [MenuItem(k_menuPath, priority = 1)]
         static void Toggle()
         {
-            EditorPrefs.SetBool(PrefKey, !IsEnabled);
-            Menu.SetChecked(MenuPath, IsEnabled);
+            EditorPrefs.SetBool(k_prefKey, !IsEnabled);
+            Menu.SetChecked(k_menuPath, IsEnabled);
         }
 
         /// <summary>
         /// 메뉴 항목 렌더링 시 체크 상태를 현재 활성화 여부로 갱신한다.
         /// </summary>
-        [MenuItem(MenuPath, true)]
+        [MenuItem(k_menuPath, true)]
         static bool ToggleValidate()
         {
-            Menu.SetChecked(MenuPath, IsEnabled);
+            Menu.SetChecked(k_menuPath, IsEnabled);
             return true;
         }
 
@@ -63,14 +63,14 @@ namespace UnityXOPSEditor
                 // 이미 0번 씬이면 복원 대상 없음
                 if (currentPath == firstScenePath)
                 {
-                    EditorPrefs.DeleteKey(PrevScenePrefKey);
+                    EditorPrefs.DeleteKey(k_prevScenePrefKey);
                     return;
                 }
 
                 // 현재 씬 기억 후 0번 씬으로 전환
                 if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 {
-                    EditorPrefs.SetString(PrevScenePrefKey, currentPath);
+                    EditorPrefs.SetString(k_prevScenePrefKey, currentPath);
                     EditorSceneManager.OpenScene(firstScenePath);
                 }
                 else
@@ -81,8 +81,8 @@ namespace UnityXOPSEditor
             else if (state == PlayModeStateChange.EnteredEditMode)
             {
                 // 플레이 종료 후 이전 씬 복원
-                string prevPath = EditorPrefs.GetString(PrevScenePrefKey, "");
-                EditorPrefs.DeleteKey(PrevScenePrefKey);
+                string prevPath = EditorPrefs.GetString(k_prevScenePrefKey, "");
+                EditorPrefs.DeleteKey(k_prevScenePrefKey);
 
                 if (!string.IsNullOrEmpty(prevPath))
                     EditorSceneManager.OpenScene(prevPath);

@@ -24,7 +24,9 @@ namespace UnityXOPS
             if (InputManager.Keyboard.escapeKey.wasPressedThisFrame)
             {
                 MapLoader.UnloadBlockData();
+                MapLoader.UnloadPointData();
                 MapLoader.UnloadMissionData();
+                MapLoader.UnloadSkyData();
                 Camera.main.gameObject.SetActive(false);
                 SceneManager.LoadScene(2);
             }

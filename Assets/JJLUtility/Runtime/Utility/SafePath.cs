@@ -35,7 +35,7 @@ namespace JJLUtility
 
             if (!fullCombined.StartsWith(fullRoot, PathComparison))
             {
-                Debugger.LogError($"Traversal directory detected: '{string.Join(", ", paths)}' �� '{fullCombined}' is outside of '{root}'");
+                Debugger.LogError($"Traversal directory detected: '{string.Join(", ", paths)}'\n'{fullCombined}' is outside of '{root}'");
                 return null;
             }
 
