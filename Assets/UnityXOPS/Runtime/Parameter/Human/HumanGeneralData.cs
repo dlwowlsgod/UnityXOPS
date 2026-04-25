@@ -20,8 +20,36 @@ namespace UnityXOPS
         public float controllerRadiusControllerToMap;
         public float controllerRadiusControllerToController;
         public float controllerStepOffset;
-        public float controllerClimbSpeed;
+        public float controllerStepClimbSpeed;
         public float controllerSlopeLimit;
+        public float controllerGroundProbeRadius;
+
+        public float gravityAcceleration;
+        public float fallMinSpeed;
+        public float fallMaxSpeed;
+        public float deadlineY;
+        public float deadBodyFallAngularSpeed;
+        public bool deadBodyCollision;
+
+        public float headHitboxHeight;
+        public float headHitboxRadius;
+        public float bodyHitboxHeight;
+        public float bodyHitboxRadius;
+        public float legHitboxHeight;
+        public float legHitboxRadius;
+
+        public FloatRange weaponPickupVerticalRange;
+        public float weaponPickupRadius;
+
+        public float armAngleNoWeapon;
+        public float armAngleReloading;
+
+        public int headHitReaction;
+        public int bodyHitReaction;
+        public int legHitReaction;
+        public int zombieHitReaction;
+        public int grenadeHitReaction;
+
         public List<HumanAnimation> humanAnimation;
     }
 }

@@ -40,7 +40,7 @@ namespace UnityXOPS
             MapLoader.LoadBlockData(bd1FullPath);
             MapLoader.LoadPointData(pd1FullPath);
             MapLoader.LoadSkyData(demo.skyIndex);
-
+            HumanController.TickEnabled = true;
 
             int addonDataCount = DataManager.Instance.MissionData.addonMissions.Count;
             if (addonDataCount == 0)
@@ -69,7 +69,7 @@ namespace UnityXOPS
         {
             MapLoader.UnloadBlockData();
             MapLoader.UnloadPointData();
-            MapLoader.UnloadBlockData();
+            HumanController.TickEnabled = false;
 
             MapLoader.LoadMissionData(index, mif);
             MapLoader.LoadBlockData(MapLoader.Instance.MissionBD1Path);

@@ -37,6 +37,7 @@ namespace UnityXOPS
             MapLoader.LoadBlockData(openingData.openingBD1Path);
             MapLoader.LoadPointData(openingData.openingPD1Path);
             MapLoader.LoadSkyData(openingData.openingSkyIndex);
+            HumanController.TickEnabled = true;
 
             m_endTime = openingData.openingFadeData.fadeOutEnd + 1.1f;
         }
@@ -54,6 +55,7 @@ namespace UnityXOPS
                 MapLoader.UnloadBlockData();
                 MapLoader.UnloadPointData();
                 MapLoader.UnloadSkyData();
+                HumanController.TickEnabled = false;
                 Camera.main.gameObject.SetActive(false);
                 SceneManager.LoadScene(2);
             }

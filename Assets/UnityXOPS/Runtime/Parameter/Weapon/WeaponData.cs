@@ -23,12 +23,9 @@ namespace UnityXOPS
         public WeaponReloadStyle reloadStyle;
         public float reloadTime;
         public float recoil;
-        public float recoilAimVerticalMin;
-        public float recoilAimVerticalMax;
-        public float recoilAimHorizontalMin;
-        public float recoilAimHorizontalMax;
-        public float errorRangeMin;
-        public float errorRangeMax;
+        public FloatRange recoilAimVertical;
+        public FloatRange recoilAimHorizontal;
+        public FloatRange errorRange;
         public bool scope;
         public int scopeIndex;
         public Vector3 position;

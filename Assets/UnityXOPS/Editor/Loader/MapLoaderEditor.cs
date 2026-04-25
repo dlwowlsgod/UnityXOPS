@@ -10,9 +10,9 @@ namespace UnityXOPSEditor
     [CustomEditor(typeof(MapLoader))]
     public class MapLoaderEditor : Editor
     {
-        private SerializedProperty m_blockRoot, m_humanRoot, m_humanPrefab;
+        private SerializedProperty m_blockRoot, m_humanRoot, m_skyRoot, m_humanPrefab;
         private SerializedProperty m_blockCount, m_blockMaterials, m_blockColliders;
-        private SerializedProperty m_pointCount, m_humanCount, m_weaponCount, m_objectCount, m_messages;
+        private SerializedProperty m_pointCount, m_humanCount, m_weaponCount, m_objectCount, m_messages, m_player;
         private SerializedProperty m_missionName, m_missionFullname, m_missionBD1Path, m_missionPD1Path,
             m_missionAddonObjectPath, m_missionImage0, m_missionImage1, m_skyIndex, m_missionBriefing,
             m_adjustCollision, m_darkScreen;
@@ -27,6 +27,7 @@ namespace UnityXOPSEditor
         {
             m_blockRoot = serializedObject.FindProperty("blockRoot");
             m_humanRoot = serializedObject.FindProperty("humanRoot");
+            m_skyRoot   = serializedObject.FindProperty("skyRoot");
 
             m_humanPrefab = serializedObject.FindProperty("humanPrefab");
 
@@ -39,6 +40,7 @@ namespace UnityXOPSEditor
             m_weaponCount = serializedObject.FindProperty("weaponCount");
             m_objectCount = serializedObject.FindProperty("objectCount");
             m_messages = serializedObject.FindProperty("messages");
+            m_player = serializedObject.FindProperty("player");
 
             m_missionName = serializedObject.FindProperty("missionName");
             m_missionFullname = serializedObject.FindProperty("missionFullname");
@@ -71,6 +73,7 @@ namespace UnityXOPSEditor
             {
                 EditorGUILayout.PropertyField(m_blockRoot);
                 EditorGUILayout.PropertyField(m_humanRoot);
+                EditorGUILayout.PropertyField(m_skyRoot);
                 EditorGUILayout.PropertyField(m_humanPrefab);
                 serializedObject.ApplyModifiedProperties();
             }
@@ -95,6 +98,7 @@ namespace UnityXOPSEditor
             EditorGUILayout.LabelField($"Humans: {m_humanCount.intValue}");
             EditorGUILayout.LabelField($"Weapons: {m_weaponCount.intValue}");
             EditorGUILayout.LabelField($"Objects: {m_objectCount.intValue}");
+            EditorGUILayout.PropertyField(m_player, new GUIContent("Player"));
             EditorGUILayout.LabelField("Messages:");
             EditorGUI.indentLevel++;
             for (int i = 0; i < m_messages.arraySize; i++)

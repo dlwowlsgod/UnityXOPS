@@ -14,7 +14,7 @@ namespace UnityXOPS
         private const int k_maxParameterCount = 20;
 
         [SerializeField]
-        private Transform blockRoot, humanRoot;
+        private Transform blockRoot, humanRoot, skyRoot;
         [SerializeField]
         private GameObject humanPrefab;
 
@@ -34,6 +34,10 @@ namespace UnityXOPS
         public Dictionary<string, Material> HumanMaterialCache => m_humanMaterialCache;
         public Dictionary<string, Material> WeaponMaterialCache => m_weaponMaterialCache;
         public Dictionary<string, Material> ObjectMaterialCache => m_objectMaterialCache;
+
+        [SerializeField]
+        private Human player;
+        public static Human Player => Instance.player;
 
 
         [SerializeField]
@@ -92,7 +96,7 @@ namespace UnityXOPS
             }
 
             Instance.blockCount = blockData.rawBlockData.Length;
-            blockData.blocks = BuildBlocks(blockData.rawBlockData);
+            blockData.blocks = BuildBlocks(blockData.rawBlockData, Instance.darkScreen);
 
             Instance.blockColliders = new List<Block>();
             Instance.blockMaterials = new List<Material>();
@@ -103,12 +107,12 @@ namespace UnityXOPS
 
                 if (string.IsNullOrEmpty(texturePath))
                 {
-                    Instance.blockMaterials.Add(MaterialManager.Instance.MainMaterial);
+                    Instance.blockMaterials.Add(MaterialManager.Instance.BlockMaterial);
                     continue;
                 }
 
                 string extension = Path.GetExtension(texturePath).ToLower();
-                Material baseMaterial = MaterialManager.Instance.MainMaterial;
+                Material baseMaterial = MaterialManager.Instance.BlockMaterial;
 
                 string fullTexturePath = SafePath.Combine(bd1Dir, texturePath);
                 Texture2D blockTexture = ImageLoader.LoadTexture(fullTexturePath);
@@ -196,8 +200,27 @@ namespace UnityXOPS
             {
                 Destroy(child.gameObject);
             }
+            // blockMaterials는 공유 머티리얼(BlockMaterial)과 런타임 복제본이 섞여 있음
+            for (int i = 0; i < Instance.blockMaterials.Count; i++)
+            {
+                DestroyIfRuntimeMaterial(Instance.blockMaterials[i]);
+            }
             Instance.blockMaterials.Clear();
             Instance.blockColliders.Clear();
+        }
+
+        // 공유 머티리얼(MaterialManager 원본)은 건드리지 않고 런타임 생성분만 파괴
+        private static void DestroyIfRuntimeMaterial(Material material)
+        {
+            if (material == null) return;
+            var mm = MaterialManager.Instance;
+            if (material == mm.MainMaterial || material == mm.BlockMaterial ||
+                material == mm.TransparentMaterial || material == mm.EffectMaterial ||
+                material == mm.SkyMaterial)
+            {
+                return;
+            }
+            Destroy(material);
         }
 
         public static void LoadPointData(string filepath)
@@ -221,6 +244,7 @@ namespace UnityXOPS
             }
             
             Instance.pointCount = pointData.rawPointData.Length;
+            Instance.player = null;
             Instance.m_humanMaterialCache = new Dictionary<string, Material>();
             Instance.m_weaponMaterialCache = new Dictionary<string, Material>();
             Instance.m_objectMaterialCache = new Dictionary<string, Material>();
@@ -246,23 +270,29 @@ namespace UnityXOPS
                 }
             }
 
-            foreach (var humanRaw in Instance.m_sortedRawPointData[1].Values)
+            // 원본 LoadPointData는 파일 순서대로 한 번 순회하며 HUMAN/HUMAN2 스폰.
+            // m_sortedRawPointData는 HUMANINFO 등 O(1) 조회용으로 유지하되, 스폰 순서는 파일 순서를 따른다.
+            for (int i = 0; i < pointData.rawPointData.Length; i++)
             {
-                foreach (var raw in humanRaw)
-                {
-                    var humanObj = Instantiate(Instance.humanPrefab, Instance.humanRoot);
-                    humanObj.transform.SetLocalPositionAndRotation(raw.position, Quaternion.Euler(0, raw.look, 0));
-                    Instance.m_sortedRawPointData[4].TryGetValue(raw.param1, out var list);
-                    var human = humanObj.GetComponent<Human>();
+                var raw = pointData.rawPointData[i];
+                if (raw.param0 != 1 && raw.param0 != 6) continue;
 
-                    if (list.Count <= 0)
-                    {
-                        continue;
-                    }
+                Instance.m_sortedRawPointData[4].TryGetValue(raw.param1, out var infoList);
+                if (infoList == null || infoList.Count == 0) continue;
 
-                    human.CreateHuman(raw, list[^1]);
-                }
+                var humanObj = Instantiate(Instance.humanPrefab, Instance.humanRoot);
+                humanObj.transform.SetLocalPositionAndRotation(raw.position, Quaternion.Euler(0, raw.look, 0));
+                var human = humanObj.GetComponent<Human>();
+                // 원본 SearchPointdata는 첫 매치를 반환
+                human.CreateHuman(raw, infoList[0]);
+
+                // AddHumanIndex: p4==0인 HUMAN/HUMAN2는 Player_HumanID를 무조건 덮어씀 → 파일 내 마지막이 승
+                if (raw.param3 == 0) Instance.player = human;
             }
+
+            // fallback: p4==0 포인트가 전혀 없으면 원본 초기값 Player_HumanID=0 → 첫 번째 생성된 human
+            if (Instance.player == null && Instance.humanRoot.childCount > 0)
+                Instance.player = Instance.humanRoot.GetChild(0).GetComponent<Human>();
 
             Instance.pointCount = pointData.rawPointData.Length;
             if (pointData.msg != null)
@@ -274,17 +304,29 @@ namespace UnityXOPS
         public static void UnloadPointData()
         {
             Instance.pointCount = 0;
+            Instance.player = null;
 
             foreach (Transform child in Instance.humanRoot)
             {
                 Destroy(child.gameObject);
             }
 
-            Instance.messages.Clear();  
-            Instance.m_humanMaterialCache.Clear();
-            Instance.m_weaponMaterialCache.Clear();
-            Instance.m_objectMaterialCache.Clear();
+            Instance.messages.Clear();
+            
+            //DestroyMaterialCache(Instance.m_humanMaterialCache);
+            //DestroyMaterialCache(Instance.m_weaponMaterialCache);
+            //DestroyMaterialCache(Instance.m_objectMaterialCache);
             Instance.m_sortedRawPointData = null; //GC 이슈있을듯. (260409)
+        }
+
+        private static void DestroyMaterialCache(Dictionary<string, Material> cache)
+        {
+            if (cache == null) return;
+            foreach (var material in cache.Values)
+            {
+                DestroyIfRuntimeMaterial(material);
+            }
+            cache.Clear();
         }
 
         /// <summary>
@@ -327,8 +369,11 @@ namespace UnityXOPS
                 }
             }
 
+            // Skybox를 MapLoader 하위(skyRoot) 아래에 붙여 씬 전환 시에도 유지.
+            // 쉐이더는 _WorldSpaceCameraPos 기준 렌더라 렌더링은 트랜스폼 무관하지만,
+            // Unity 프러스텀 컬링은 transform 위치를 사용 → skyRoot는 별도 스크립트로 카메라 추적.
             GameObject skyObject = new GameObject("Skybox");
-            skyObject.transform.parent = Camera.main.transform;
+            skyObject.transform.SetParent(Instance.skyRoot, false);
             skyObject.AddComponent<MeshFilter>().sharedMesh = skyMesh;
             skyObject.AddComponent<MeshRenderer>().sharedMaterial = skyMaterial;
         }
@@ -338,9 +383,12 @@ namespace UnityXOPS
         /// </summary>
         public static void UnloadSkyData()
         {
-            var skyObject = Camera.main.transform.Find("Skybox");
+            if (Instance.skyRoot == null) return;
+            var skyObject = Instance.skyRoot.Find("Skybox");
             if (skyObject != null)
             {
+                var renderer = skyObject.GetComponent<MeshRenderer>();
+                if (renderer != null) DestroyIfRuntimeMaterial(renderer.sharedMaterial);
                 Destroy(skyObject.gameObject);
             }
         }
@@ -384,7 +432,7 @@ namespace UnityXOPS
                     Application.streamingAssetsPath, mifLines[7].TrimStart('.').TrimStart('\\').Replace('\\', '/'));
                 if (string.IsNullOrEmpty(mifLines[8]) || mifLines[8] != "!")
                 {
-                    Instance.missionAddonObjectPath = SafePath.Combine(
+                    Instance.missionImage1 = SafePath.Combine(
                         Application.streamingAssetsPath, mifLines[8].TrimStart('.').TrimStart('\\').Replace('\\', '/'));
                 }
                 Instance.missionBriefing = string.Join('\n', mifLines[9..]);

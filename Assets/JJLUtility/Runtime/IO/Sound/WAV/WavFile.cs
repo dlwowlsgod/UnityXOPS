@@ -14,7 +14,7 @@ namespace JJLUtility.IO
         /// </summary>
         /// <param name="filepath">WAV 파일 경로.</param>
         /// <returns>파싱된 AudioClip. 실패 시 null.</returns>
-        private static AudioClip LoadWavFile(string filepath)
+        private static AudioClip LoadWAVFile(string filepath)
         {
             using var reader = new BinaryReader(File.OpenRead(filepath));
 

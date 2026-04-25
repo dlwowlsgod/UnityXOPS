@@ -169,18 +169,67 @@ MonoBehaviour:
       humanArmScale: 0
       humanLegScale: 0
       controllerHeight: 0
+      humanBodyHeight: 0
       humanArmHeight: 0
+      humanLegHeight: 0
       cameraAttachPosition: 0
       controllerRadiusControllerToMap: 0
       controllerRadiusControllerToController: 0
       controllerStepOffset: 0
-      controllerClimbSpeed: 0
+      controllerStepClimbSpeed: 0
       controllerSlopeLimit: 0
+      controllerGroundProbeRadius: 0
+      gravityAcceleration: 0
+      fallMinSpeed: 0
+      fallMaxSpeed: 0
+      deadlineY: 0
+      deadBodyFallAngularSpeed: 0
+      deadBodyCollision: 0
+      headHitboxHeight: 0
+      headHitboxRadius: 0
+      bodyHitboxHeight: 0
+      bodyHitboxRadius: 0
+      legHitboxHeight: 0
+      legHitboxRadius: 0
+      weaponPickupVerticalRange:
+        min: 0
+        max: 0
+      weaponPickupRadius: 0
+      armAngleNoWeapon: 0
+      armAngleReloading: 0
+      headHitReaction: 0
+      bodyHitReaction: 0
+      legHitReaction: 0
+      zombieHitReaction: 0
+      grenadeHitReaction: 0
       humanAnimation: []
     humanData: []
     humanModelData: []
     humanArmModelData: []
     humanLegModelData: []
+    humanTypeData: []
+  weaponParameterData:
+    weaponGeneralData:
+      noneWeaponIndex: 0
+      caseWeaponIndex: 
+      walkAccuracyPenalty: 0
+      forwardAccuracyPenalty: 0
+      backAccuracyPenalty: 0
+      strafeAccuracyPenalty: 0
+      airborneAccuracyPenalty: 0
+      injuryAccuracyPenalty: 0
+      injuryHpThreshold: 0
+      reactionRecoveryPerSecond: 0
+    weaponData: []
+    bulletData: []
+    scopeData: []
+    weaponModelData: []
+  objectParameterData:
+    objectGeneralData:
+      modelScale: 0
+    objectData: []
+    objectModelData: []
+    objectColliderData: []
   skyData:
     skyMeshPath: 
     skyTexturePath: []
@@ -220,6 +269,7 @@ Transform:
   m_Children:
   - {fileID: 1499613604}
   - {fileID: 724448794}
+  - {fileID: 1475170730}
   m_Father: {fileID: 1101759675}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &100955337
@@ -236,6 +286,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blockRoot: {fileID: 1499613604}
   humanRoot: {fileID: 724448794}
+  skyRoot: {fileID: 1475170730}
   humanPrefab: {fileID: 7717408075934764047, guid: 00151dd39f73de442bdc29948f57d530, type: 3}
   blockCount: 0
   blockMaterials: []
@@ -245,6 +296,7 @@ MonoBehaviour:
   weaponCount: 0
   objectCount: 0
   messages: []
+  player: {fileID: 0}
   missionName: 
   missionFullname: 
   missionBD1Path: 
@@ -639,11 +691,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6e2ff36d0721b644806d2bef68a01de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nullMaterial: {fileID: 2100000, guid: cf74391680bdab24aabf6ceb5d9b8421, type: 2}
   mainMaterial: {fileID: 2100000, guid: ab7f36728aab7ea4db08b1f5820d3f16, type: 2}
+  blockMaterial: {fileID: 2100000, guid: 1bc49b1136b777a44a024aa68f203345, type: 2}
   transparentMaterial: {fileID: 2100000, guid: 353379480f8250943866b8b5ba9c03b8, type: 2}
   effectMaterial: {fileID: 2100000, guid: 1ccffb15b4dac4148ac35de14f91922d, type: 2}
   skyMaterial: {fileID: 2100000, guid: 5a6e090f3f9e2234db5d72e166fe56fb, type: 2}
+--- !u!1 &1475170729
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1475170730}
+  - component: {fileID: 1475170731}
+  m_Layer: 0
+  m_Name: SkyRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1475170730
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1475170729}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 100955336}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1475170731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1475170729}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f73d2b6bab196be4ca0af5f79b3b9327, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1499613603
 GameObject:
   m_ObjectHideFlags: 0

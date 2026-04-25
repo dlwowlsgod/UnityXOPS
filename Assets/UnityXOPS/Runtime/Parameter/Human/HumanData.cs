@@ -10,7 +10,7 @@ namespace UnityXOPS
     public class HumanData
     {
         public string name;
-        public int hp;
+        public float hp;
         public int modelIndex;
         public int weaponIndex0;
         public int weaponIndex1;

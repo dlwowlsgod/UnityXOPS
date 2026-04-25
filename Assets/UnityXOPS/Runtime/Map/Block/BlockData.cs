@@ -115,24 +115,72 @@ namespace UnityXOPS
         /// <summary>
         /// 원시 블록 데이터 배열을 Unity Mesh가 포함된 Block 배열로 빌드한다.
         /// </summary>
-        private static Block[] BuildBlocks(RawBlockData[] rawBlocks)
+        /// <param name="darkFlag">true면 다크 모드(미션 screenflag bit1) — 면 명도 오프셋 0.3, false면 0.5.</param>
+        private static Block[] BuildBlocks(RawBlockData[] rawBlocks, bool darkFlag)
         {
             Block[] blocks = new Block[rawBlocks.Length];
             for (int i = 0; i < rawBlocks.Length; i++)
             {
-                blocks[i] = BuildBlock(rawBlocks[i]);
+                blocks[i] = BuildBlock(rawBlocks[i], darkFlag);
                 blocks[i].mesh.name = $"block_{i}";
             }
-                
+
             return blocks;
         }
 
-        private static Block BuildBlock(RawBlockData raw)
+        // 원본 datafile.cpp:181-268 fake lighting 광원 방향.
+        // OpenXOPS: L = (cos(190°), sin(120°), sin(190°)) — 정규화되지 않음(‖L‖≈1.312), 원본 그대로 사용.
+        // BD1 로드 시 정점이 (-xs, ys, -zs)로 X/Z 반전됐으므로 광원도 동일하게 반전.
+        private const float k_lightX =  0.98480775f;  // -cos(190°)
+        private const float k_lightY =  0.86602540f;  //  sin(120°)
+        private const float k_lightZ =  0.17364818f;  // -sin(190°)
+
+        private static Block BuildBlock(RawBlockData raw, bool darkFlag)
         {
             Vector3 center = Vector3.zero;
             for (int i = 0; i < 8; i++) center += raw.vertices[i];
             center /= 8f;
 
+            // --- 면 법선 먼저 계산 (셰이딩 + 충돌 공용) ---
+            // 원본 OpenXOPS의 COLLISION_ADDSIZE는 cbdata.min/max AABB fast-reject에만 쓰이고
+            // polygon_center_x/y/z (= 여기 faceCenters)는 실제 면 중심을 그대로 사용. 확장 금지.
+            Vector3[] faceNormals = new Vector3[6];
+            Vector3[] faceCenters = new Vector3[6];
+            for (int f = 0; f < 6; f++)
+            {
+                int[]   fi = FaceVertexIndices[f];
+                Vector3 v0 = raw.vertices[fi[0]];
+                Vector3 v1 = raw.vertices[fi[1]];
+                Vector3 v2 = raw.vertices[fi[2]];
+                Vector3 v3 = raw.vertices[fi[3]];
+
+                // 원본 datafile.cpp:222-245: 두 삼각형 각각의 법선 계산 후 더 긴 쪽(비퇴화) 선택.
+                // 경사 블록의 면이 비평면 quad여도 유효한 법선을 얻을 수 있다.
+                Vector3 c1 = Vector3.Cross(v3 - v2, v0 - v2);
+                Vector3 c2 = Vector3.Cross(v1 - v0, v2 - v0);
+                Vector3 n  = (c1.sqrMagnitude > c2.sqrMagnitude ? c1 : c2).normalized;
+
+                Vector3 fc = (v0 + v1 + v2 + v3) * 0.25f;
+                // 법선이 중심에서 바깥쪽을 향하도록 보정
+                if (Vector3.Dot(n, fc - center) < 0f) n = -n;
+
+                faceCenters[f] = fc;
+                faceNormals[f] = n;
+            }
+
+            // --- 면별 셰이딩 스칼라: shadow = ‖N + L‖ / 6 + offset (원본 datafile.cpp:253-265) ---
+            float offset = darkFlag ? 0.3f : 0.5f;
+            float[] faceShadows = new float[6];
+            for (int f = 0; f < 6; f++)
+            {
+                Vector3 n = faceNormals[f];
+                float rx = n.x + k_lightX;
+                float ry = n.y + k_lightY;
+                float rz = n.z + k_lightZ;
+                faceShadows[f] = Mathf.Sqrt(rx * rx + ry * ry + rz * rz) / 6f + offset;
+            }
+
+            // --- 메시 빌드 (면당 정점 분리로 flat shading 보장) ---
             var uniqueTextures = new List<int>();
             for (int f = 0; f < 6; f++)
             {
@@ -144,6 +192,7 @@ namespace UnityXOPS
             int subMeshCount = uniqueTextures.Count;
             var allVertices = new List<Vector3>();
             var allUVs = new List<Vector2>();
+            var allColors = new List<Color>();
             var subTriangles = new List<int>[subMeshCount];
             for (int s = 0; s < subMeshCount; s++)
                 subTriangles[s] = new List<int>();
@@ -154,10 +203,13 @@ namespace UnityXOPS
                 int vertexBase = allVertices.Count;
 
                 int[] faceVerts = FaceVertexIndices[f];
+                float s = faceShadows[f];
+                Color faceColor = new Color(s, s, s, 1f);
                 for (int v = 0; v < 4; v++)
                 {
                     allVertices.Add(raw.vertices[faceVerts[v]] - center);
                     allUVs.Add(raw.uvs[f * 4 + (v + 3) % 4]);
+                    allColors.Add(faceColor);
                 }
 
                 subTriangles[subMeshIdx].Add(vertexBase + 0);
@@ -173,6 +225,7 @@ namespace UnityXOPS
                 mesh.indexFormat = IndexFormat.UInt32;
             mesh.SetVertices(allVertices);
             mesh.SetUVs(0, allUVs);
+            mesh.SetColors(allColors);
             mesh.subMeshCount = subMeshCount;
             for (int s = 0; s < subMeshCount; s++)
                 mesh.SetTriangles(subTriangles[s], s);
@@ -180,28 +233,8 @@ namespace UnityXOPS
             mesh.RecalculateBounds();
 
             Vector3[] expanded = ExpandVertices(raw.vertices);
-
-            Vector3[] faceNormals = new Vector3[6];
-            Vector3[] faceCenters = new Vector3[6];
-            for (int f = 0; f < 6; f++)
-            {
-                int[] fi = FaceVertexIndices[f];
-                Vector3 v0 = expanded[fi[0]];
-                Vector3 v1 = expanded[fi[1]];
-                Vector3 v2 = expanded[fi[2]];
-
-                Vector3 fc = (v0 + v1 + v2 + expanded[fi[3]]) * 0.25f;
-                faceCenters[f] = fc;
-
-                Vector3 n = Vector3.Cross(v1 - v0, v2 - v0).normalized;
-                // 법선이 중심에서 바깥쪽을 향하도록 보정
-                if (Vector3.Dot(n, fc - center) < 0f)
-                    n = -n;
-                faceNormals[f] = n;
-            }
-
-            bool isBoardBlock = HasDuplicateExpandedVertices(expanded)
-                || IsCenterVisibleFromAnyFace(center, faceNormals, faceCenters);
+            bool isBoardBlock  = HasDuplicateExpandedVertices(expanded)
+                              || IsCenterVisibleFromAnyFace(center, faceNormals, faceCenters);
 
             return new Block
             {

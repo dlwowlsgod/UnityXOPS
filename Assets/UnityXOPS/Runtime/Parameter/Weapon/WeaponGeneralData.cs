@@ -18,7 +18,6 @@ namespace UnityXOPS
         public int airborneAccuracyPenalty;
         public int injuryAccuracyPenalty;
         public int injuryHpThreshold;
-        public int reactionDecayPerSecond;
-        public float errorAngleDegrees;
+        public float reactionRecoveryPerSecond;
     }
 }

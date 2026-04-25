@@ -10,13 +10,10 @@ namespace UnityXOPS
     [Serializable]
     public class ScopeData
     {
-        public float fovMultiplier;
-        public float errorRangeAdjustMin;
-        public float errorRangeAdjustMax;
-        public float recoilAimVerticalAdjustMin;
-        public float recoilAimVerticalAdjustMax;
-        public float recoilAimHorizontalAdjustMin;
-        public float recoilAimHorizontalAdjustMax;
+        public float fovDegrees;
+        public FloatRange errorRangeAdjust;
+        public FloatRange recoilAimVerticalAdjust;
+        public FloatRange recoilAimHorizontalAdjust;
         public string texturePath;
         public float textureAspect;
         public List<ScopeLine> lines;

@@ -51,7 +51,7 @@ namespace JJLUtility.IO
             switch (extension)
             {
                 case ".wav":
-                    clip = LoadWavFile(filepath);
+                    clip = LoadWAVFile(filepath);
                     break;
 
                 default:

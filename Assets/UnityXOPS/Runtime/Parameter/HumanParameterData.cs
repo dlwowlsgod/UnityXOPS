@@ -14,5 +14,6 @@ namespace UnityXOPS
         public List<HumanModelData> humanModelData;
         public List<HumanArmModelData> humanArmModelData;
         public List<HumanLegModelData> humanLegModelData;
+        public List<HumanTypeData> humanTypeData;
     }
 }

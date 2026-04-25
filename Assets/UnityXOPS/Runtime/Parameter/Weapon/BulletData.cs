@@ -17,9 +17,13 @@ namespace UnityXOPS
         public float gravityScale;
         public bool hasExplosion;
         public float explosionRadius;
-        public float explosionDamageMax;
+        public float humanExplosiveHeadDamageMax;
+        public float humanExplosiveLegDamageMax;
+        public float objectExplosiveDamageMax;
         public float explosionknockbackMax;
         public string explosionSound;
+        public int explosionEffectIndex;
         public List<string> wallHitSounds;
+        public float lifetime;
     }
 }

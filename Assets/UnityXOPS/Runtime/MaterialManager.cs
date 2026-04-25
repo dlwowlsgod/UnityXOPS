@@ -9,8 +9,9 @@ namespace UnityXOPS
     public class MaterialManager : SingletonBehavior<MaterialManager>
     {
         [SerializeField]
-        private Material mainMaterial, transparentMaterial, effectMaterial, skyMaterial;
+        private Material mainMaterial, blockMaterial, transparentMaterial, effectMaterial, skyMaterial;
         public Material MainMaterial => mainMaterial;
+        public Material BlockMaterial => blockMaterial;
         public Material TransparentMaterial => transparentMaterial;
         public Material EffectMaterial => effectMaterial;
         public Material SkyMaterial => skyMaterial;

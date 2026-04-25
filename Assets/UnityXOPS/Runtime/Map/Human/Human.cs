@@ -20,10 +20,21 @@ namespace UnityXOPS
         public bool Alive => alive;
 
         [SerializeField]
+        private Transform cameraRoot;
+        public Transform CameraRoot => cameraRoot;
+
+        [SerializeField]
         private HumanVisual humanVisual;
         public HumanVisual HumanVisual => humanVisual;
 
+        [SerializeField] private HumanHitbox headHitbox;
+        [SerializeField] private HumanHitbox bodyHitbox;
+        [SerializeField] private HumanHitbox legHitbox;
+
         private HumanData m_humanData;
+        private HumanTypeData m_humanTypeData;
+        public HumanTypeData HumanTypeData => m_humanTypeData;
+
         private RawPointData m_humanParam, m_humanDataParam;
 
         /// <summary>
@@ -41,9 +52,23 @@ namespace UnityXOPS
             if (humanIndex >= 0 && humanIndex < humanParamData.humanData.Count)
             {
                 m_humanData = humanParamData.humanData[humanIndex];
+
+                int typeIndex = m_humanData.typeIndex;
+                if (typeIndex >= 0 && typeIndex < humanParamData.humanTypeData.Count)
+                {
+                    m_humanTypeData = humanParamData.humanTypeData[typeIndex];
+                }
             }
 
             humanVisual.CreateHumanVisual(m_humanData);
+
+            var general = humanParamData.humanGeneralData;
+            if (headHitbox != null) headHitbox.ApplySize(general);
+            if (bodyHitbox != null) bodyHitbox.ApplySize(general);
+            if (legHitbox  != null) legHitbox .ApplySize(general);
+
+            float cameraAttachPosition = general.cameraAttachPosition;
+            cameraRoot.localPosition = new Vector3(0, cameraAttachPosition, 0);
 
             hp = m_humanData.hp;
             team = m_humanDataParam.param2;
