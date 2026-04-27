@@ -15,6 +15,10 @@ namespace UnityXOPS
     {
         [SerializeField]
         private Transform bodyRoot, fixedArmRoot, dynamicArmRoot, leftArmRoot, rightArmRoot, legRoot;
+        [SerializeField]
+        private Transform fixedWeaponAttachRoot, dynamicWeaponAttachRoot;
+        public  Transform FixedWeaponAttachRoot   => fixedWeaponAttachRoot;
+        public  Transform DynamicWeaponAttachRoot => dynamicWeaponAttachRoot;
 
         private MeshFilter m_leftArmMeshFilter, m_rightArmMeshFilter, m_legMeshFilter;
         private MeshRenderer m_leftArmMeshRenderer, m_rightArmMeshRenderer, m_legMeshRenderer;
@@ -36,6 +40,14 @@ namespace UnityXOPS
         private string m_legAnimationName;
         private float  m_legRotationX;
         private bool   m_legRotationInitialized;
+
+        // 원본 reaction_y/slowarm — dynamicArmRoot 의 X 축 추가 offset (도).
+        // 두 모드: (1) slowarm 보간 — duration 동안 0 으로 선형 복원 (슬롯 持ち替え/픽업).
+        //         (2) hold 모드 — duration 동안 holdDeg 유지, 종료 시 즉시 0 으로 스냅 (Switch ID/재장전).
+        private float m_armReactionDeg;
+        private float m_armReactionRecoverySpeed;
+        private float m_armReactionHoldTimer;
+        private float m_armPitchDeg;
 
         /// <summary>
         /// 인간 데이터로부터 신체, 팔, 다리 메시와 머티리얼을 로드해 초기화한다.
@@ -166,7 +178,7 @@ namespace UnityXOPS
                     m_rightArmMeshRenderer.sharedMaterial = m_humanMaterials[armTextureIndex];
                 }
 
-                SetArmModel(2, 2, true, true); //임시. 무기 손에 맞게 수정해야 함
+                // 팔 모델은 EquipInitialWeapons 직후 ApplyWeaponVisual 에서 무기에 맞게 결정됨.
             }
 
             //legs
@@ -210,6 +222,41 @@ namespace UnityXOPS
             {
                 SetLegModel(0);
             }
+        }
+
+        /// <summary>
+        /// fixed/dynamic weaponAttachRoot 양쪽의 world scale 을 weaponScale 로 강제한다.
+        /// 부모(fixedArmRoot/dynamicArmRoot) 에 누적된 armScale 영향을 상쇄해 무기가 OpenXOPS 원본 스케일(=weaponScale) 로 보이게 한다.
+        /// </summary>
+        /// <param name="weaponScale">WeaponGeneralData.weaponScale (OpenXOPS → Unity 스케일 비율).</param>
+        public void ApplyWeaponAttachScale(float weaponScale)
+        {
+            ApplyAttachScale(fixedWeaponAttachRoot,   weaponScale);
+            ApplyAttachScale(dynamicWeaponAttachRoot, weaponScale);
+        }
+
+        private static void ApplyAttachScale(Transform target, float weaponScale)
+        {
+            if (target == null) return;
+            Transform parent = target.parent;
+            Vector3   pl     = parent != null ? parent.lossyScale : Vector3.one;
+            target.localScale = new Vector3(weaponScale / pl.x, weaponScale / pl.y, weaponScale / pl.z);
+        }
+
+        /// <summary>
+        /// 활성 weapon 의 WeaponModelData 에서 팔 모델 인덱스/고정 여부를 읽어 SetArmModel 을 호출한다.
+        /// Human.SetSelectWeapon 또는 EquipInitialWeapons 직후 호출됨.
+        /// </summary>
+        /// <param name="active">현재 활성 슬롯의 weapon. WeaponModelData 가 null 이면 폴백 인덱스 적용.</param>
+        public void ApplyWeaponVisual(Weapon active)
+        {
+            if (active == null || active.WeaponModelData == null)
+            {
+                SetArmModel(0, 0, false, false);
+                return;
+            }
+            WeaponModelData m = active.WeaponModelData;
+            SetArmModel(m.leftArmIndex, m.rightArmIndex, m.fixLeftArm, m.fixRightArm);
         }
 
         public void SetArmModel(int leftIndex, int rightIndex, bool fixLeft, bool fixRight)
@@ -269,15 +316,89 @@ namespace UnityXOPS
 
         /// <summary>
         /// 카메라 피치(상하 조준각)를 dynamicArmRoot의 X축 회전으로 반영.
-        /// 원본 OpenXOPS: 무기 소지 상태에서 armmodel_rotation_y = armrotation_y (object.cpp:3450-3455).
+        /// 원본 OpenXOPS: 무기 소지 상태에서 armmodel_rotation_y = armrotation_y + reaction_y (object.cpp:3450-3455).
         /// Human.prefab의 Visual Transform이 Y축 180° 플립(OpenXOPS와 pitch가 180° 틀어진 상태 보정용) 되어 있어
         /// 하위 dynamicArmRoot의 로컬 X축 회전이 월드에서 부호 반전됨 → 카메라 피치와 같은 월드 방향을 얻으려면 부호 반전 필요.
+        /// reaction (슬롯 전환 등) 은 카메라 pitch 와 별개의 offset 이므로 합쳐 적용 — 카메라 방향과 항상 m_armReactionDeg 만큼 차이 유지.
         /// </summary>
         /// <param name="pitchDeg">피치 각도 (도 단위, 위를 볼수록 음수).</param>
         public void SetArmPitch(float pitchDeg)
         {
             if (dynamicArmRoot == null) return;
-            dynamicArmRoot.localRotation = Quaternion.Euler(-pitchDeg, 0f, 0f);
+            m_armPitchDeg = pitchDeg;
+            ApplyArmRotation();
+        }
+
+        private void ApplyArmRotation()
+        {
+            dynamicArmRoot.localRotation = Quaternion.Euler(-m_armPitchDeg + m_armReactionDeg, 0f, 0f);
+        }
+
+        /// <summary>
+        /// slowarm 보간 모드: reaction 을 startDeg 로 즉시 세팅하고 duration 동안 0 으로 선형 복원.
+        /// 슬롯 持ち替え/픽업 시 사용. 원본 OpenXOPS slowarm=true (object.cpp:3413-3418, ±2°/frame).
+        /// </summary>
+        /// <param name="startDeg">시작 offset (도). OpenXOPS 의 ARMRAD_RELOADWEAPON 등.</param>
+        /// <param name="duration">0 으로 복원되는 시간 (초). slotChangeTime 등.</param>
+        public void BeginArmReaction(float startDeg, float duration)
+        {
+            if (duration <= 0f)
+            {
+                m_armReactionDeg           = 0f;
+                m_armReactionRecoverySpeed = 0f;
+                m_armReactionHoldTimer     = 0f;
+                ApplyArmRotation();
+                return;
+            }
+            m_armReactionDeg           = startDeg;
+            m_armReactionRecoverySpeed = Mathf.Abs(startDeg) / duration;
+            m_armReactionHoldTimer     = 0f;
+            ApplyArmRotation();
+        }
+
+        /// <summary>
+        /// hold 락 모드: reaction 을 holdDeg 로 즉시 세팅하고 duration 동안 그 값을 유지.
+        /// 타이머 종료 시 즉시 0 으로 스냅 (보간 없음). Switch ID / 재장전 시 사용.
+        /// 원본 OpenXOPS ChangeWeaponIDCnt > 0 동안 reaction_y = ARMRAD_RELOADWEAPON 강제 (object.cpp:3427-3429).
+        /// </summary>
+        /// <param name="holdDeg">유지할 offset (도).</param>
+        /// <param name="duration">유지 시간 (초). switchTime / reloadTime 등.</param>
+        public void BeginArmReactionHold(float holdDeg, float duration)
+        {
+            if (duration <= 0f)
+            {
+                // duration 이 0 이면 hold 효과 자체 없음. 이전 reaction 상태가 남아 slowarm 으로 fallback 되지 않도록 0 으로 클리어.
+                m_armReactionDeg       = 0f;
+                m_armReactionHoldTimer = 0f;
+                ApplyArmRotation();
+                return;
+            }
+            m_armReactionDeg       = holdDeg;
+            m_armReactionHoldTimer = duration;
+            ApplyArmRotation();
+        }
+
+        /// <summary>
+        /// 매 프레임 호출. hold 타이머 > 0 면 그 값 유지 + 타이머 감소(끝나면 0 스냅).
+        /// 그 외엔 slowarm 선형 복원.
+        /// </summary>
+        public void TickArmReaction(float dt)
+        {
+            if (m_armReactionHoldTimer > 0f)
+            {
+                m_armReactionHoldTimer -= dt;
+                if (m_armReactionHoldTimer <= 0f)
+                {
+                    m_armReactionHoldTimer = 0f;
+                    m_armReactionDeg       = 0f;
+                    ApplyArmRotation();
+                }
+                return;
+            }
+
+            if (m_armReactionDeg == 0f) return;
+            m_armReactionDeg = Mathf.MoveTowards(m_armReactionDeg, 0f, m_armReactionRecoverySpeed * dt);
+            ApplyArmRotation();
         }
 
         public void SetLegModel(int legIndex)

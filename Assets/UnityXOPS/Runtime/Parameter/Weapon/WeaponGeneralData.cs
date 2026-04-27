@@ -19,5 +19,14 @@ namespace UnityXOPS
         public int injuryAccuracyPenalty;
         public int injuryHpThreshold;
         public float reactionRecoveryPerSecond;
+        public float weaponScale;
+
+        public float gravity;
+        public float terminalVelocityY;
+        public float horizontalDampingPerSec;
+        public float horizontalStopThreshold;
+        public float groundCollisionMargin;
+        public float deadlineY;
+        public float dropoffHorizontalSpeed;
     }
 }

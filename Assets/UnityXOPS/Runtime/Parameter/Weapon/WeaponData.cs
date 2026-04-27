@@ -26,6 +26,7 @@ namespace UnityXOPS
         public FloatRange recoilAimVertical;
         public FloatRange recoilAimHorizontal;
         public FloatRange errorRange;
+        public bool crosshair;
         public bool scope;
         public int scopeIndex;
         public Vector3 position;
@@ -36,6 +37,8 @@ namespace UnityXOPS
         public int previousWeaponIndex;
         public int nextWeaponIndex;
         public float switchTime;
+        public float slotChangeTime;
+        public bool fixWeapon;
     }
 
     /// <summary>

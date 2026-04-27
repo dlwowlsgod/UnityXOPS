@@ -69,6 +69,7 @@ namespace UnityXOPS
         {
             MapLoader.UnloadBlockData();
             MapLoader.UnloadPointData();
+            MapLoader.UnloadSkyData();
             HumanController.TickEnabled = false;
 
             MapLoader.LoadMissionData(index, mif);

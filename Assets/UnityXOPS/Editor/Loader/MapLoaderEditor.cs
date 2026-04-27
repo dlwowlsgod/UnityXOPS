@@ -10,7 +10,7 @@ namespace UnityXOPSEditor
     [CustomEditor(typeof(MapLoader))]
     public class MapLoaderEditor : Editor
     {
-        private SerializedProperty m_blockRoot, m_humanRoot, m_skyRoot, m_humanPrefab;
+        private SerializedProperty m_blockRoot, m_humanRoot, m_weaponRoot, m_objectRoot, m_skyRoot, m_humanPrefab, m_weaponPrefab, m_objectPrefab;
         private SerializedProperty m_blockCount, m_blockMaterials, m_blockColliders;
         private SerializedProperty m_pointCount, m_humanCount, m_weaponCount, m_objectCount, m_messages, m_player;
         private SerializedProperty m_missionName, m_missionFullname, m_missionBD1Path, m_missionPD1Path,
@@ -27,9 +27,13 @@ namespace UnityXOPSEditor
         {
             m_blockRoot = serializedObject.FindProperty("blockRoot");
             m_humanRoot = serializedObject.FindProperty("humanRoot");
+            m_weaponRoot = serializedObject.FindProperty("weaponRoot");
+            m_objectRoot = serializedObject.FindProperty("objectRoot");
             m_skyRoot   = serializedObject.FindProperty("skyRoot");
 
             m_humanPrefab = serializedObject.FindProperty("humanPrefab");
+            m_weaponPrefab = serializedObject.FindProperty("weaponPrefab");
+            m_objectPrefab = serializedObject.FindProperty("objectPrefab");
 
             m_blockCount = serializedObject.FindProperty("blockCount");
             m_blockMaterials = serializedObject.FindProperty("blockMaterials");
@@ -73,8 +77,12 @@ namespace UnityXOPSEditor
             {
                 EditorGUILayout.PropertyField(m_blockRoot);
                 EditorGUILayout.PropertyField(m_humanRoot);
+                EditorGUILayout.PropertyField(m_weaponRoot);
+                EditorGUILayout.PropertyField(m_objectRoot);
                 EditorGUILayout.PropertyField(m_skyRoot);
                 EditorGUILayout.PropertyField(m_humanPrefab);
+                EditorGUILayout.PropertyField(m_weaponPrefab);
+                EditorGUILayout.PropertyField(m_objectPrefab);
                 serializedObject.ApplyModifiedProperties();
             }
         }

@@ -14,9 +14,11 @@ namespace UnityXOPS
         private const int k_maxParameterCount = 20;
 
         [SerializeField]
-        private Transform blockRoot, humanRoot, skyRoot;
+        private Transform blockRoot, humanRoot, weaponRoot, objectRoot, skyRoot;
         [SerializeField]
-        private GameObject humanPrefab;
+        private GameObject humanPrefab, weaponPrefab, objectPrefab;
+        public  GameObject WeaponPrefab => weaponPrefab;
+        public  Transform  WeaponRoot   => weaponRoot;
 
         [SerializeField]
         private int blockCount;
@@ -294,6 +296,28 @@ namespace UnityXOPS
             if (Instance.player == null && Instance.humanRoot.childCount > 0)
                 Instance.player = Instance.humanRoot.GetChild(0).GetComponent<Human>();
 
+            // PD1 weapon 포인트(param0=2) 스폰. OpenXOPS objectmanager.cpp:367-413 AddWeaponIndex 대응.
+            // weaponRoot 는 localScale=1 유지 (스케일 박으면 자식 position 도 같이 곱해져 옹기종기 발생).
+            // 스케일은 Weapon.CreateWeapon(dropped:true) 가 자기 localScale 에 weaponScale * size 로 적용한다.
+            Instance.weaponCount = 0;
+            for (int i = 0; i < pointData.rawPointData.Length; i++)
+            {
+                var raw = pointData.rawPointData[i];
+                if (raw.param0 != 2) continue;
+
+                int weaponIndex  = raw.param1;
+                int totalBullets = raw.param2;
+
+                var weaponObj = Instantiate(Instance.weaponPrefab, Instance.weaponRoot);
+                weaponObj.transform.localPosition = raw.position;
+
+                var weapon = weaponObj.GetComponent<Weapon>();
+                weapon.CreateWeapon(weaponIndex, totalBullets, dropped: true);
+                weapon.OnDrop(raw.look, Vector3.zero);
+
+                Instance.weaponCount++;
+            }
+
             Instance.pointCount = pointData.rawPointData.Length;
             if (pointData.msg != null)
             {
@@ -304,9 +328,15 @@ namespace UnityXOPS
         public static void UnloadPointData()
         {
             Instance.pointCount = 0;
+            Instance.weaponCount = 0;
             Instance.player = null;
 
             foreach (Transform child in Instance.humanRoot)
+            {
+                Destroy(child.gameObject);
+            }
+
+            foreach (Transform child in Instance.weaponRoot)
             {
                 Destroy(child.gameObject);
             }
@@ -379,17 +409,16 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// 메인 카메라 하위의 스카이박스 오브젝트를 제거한다.
+        /// 메인 카메라 하위의 스카이박스 오브젝트를 모두 제거한다.
         /// </summary>
         public static void UnloadSkyData()
         {
             if (Instance.skyRoot == null) return;
-            var skyObject = Instance.skyRoot.Find("Skybox");
-            if (skyObject != null)
+            foreach (Transform child in Instance.skyRoot)
             {
-                var renderer = skyObject.GetComponent<MeshRenderer>();
+                var renderer = child.GetComponent<MeshRenderer>();
                 if (renderer != null) DestroyIfRuntimeMaterial(renderer.sharedMaterial);
-                Destroy(skyObject.gameObject);
+                Destroy(child.gameObject);
             }
         }
 

@@ -28,7 +28,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1127164454968132148}
   m_Father: {fileID: 7499450530128172617}
   m_LocalEulerAnglesHint: {x: -70, y: 0, z: 0}
 --- !u!1 &68834698856034628
@@ -65,6 +66,37 @@ Transform:
   - {fileID: 1259161916424238376}
   - {fileID: 2459827355046141409}
   m_Father: {fileID: 379078478504350840}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!1 &775501699010296818
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4219179004041689111}
+  m_Layer: 0
+  m_Name: DynamicWeaponAttachRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4219179004041689111
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 775501699010296818}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1259161916424238376}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1 &916575988679313382
 GameObject:
@@ -238,6 +270,37 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &4152626041915584448
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1127164454968132148}
+  m_Layer: 0
+  m_Name: FixedWeaponAttachRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1127164454968132148
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4152626041915584448}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6711463313947815847}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1 &4433046594099904449
 GameObject:
   m_ObjectHideFlags: 0
@@ -389,6 +452,7 @@ Transform:
   m_Children:
   - {fileID: 4344060370439652016}
   - {fileID: 3245124599900555841}
+  - {fileID: 4219179004041689111}
   m_Father: {fileID: 7499450530128172617}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5267121525956137382
@@ -637,6 +701,8 @@ MonoBehaviour:
   leftArmRoot: {fileID: 4344060370439652016}
   rightArmRoot: {fileID: 3245124599900555841}
   legRoot: {fileID: 2459827355046141409}
+  fixedWeaponAttachRoot: {fileID: 1127164454968132148}
+  dynamicWeaponAttachRoot: {fileID: 4219179004041689111}
 --- !u!114 &2020617017432859416
 MonoBehaviour:
   m_ObjectHideFlags: 0
