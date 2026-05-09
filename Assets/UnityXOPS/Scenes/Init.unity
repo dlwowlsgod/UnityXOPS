@@ -220,6 +220,14 @@ MonoBehaviour:
       injuryAccuracyPenalty: 0
       injuryHpThreshold: 0
       reactionRecoveryPerSecond: 0
+      weaponScale: 0
+      gravity: 0
+      terminalVelocityY: 0
+      horizontalDampingPerSec: 0
+      horizontalStopThreshold: 0
+      groundCollisionMargin: 0
+      deadlineY: 0
+      dropoffHorizontalSpeed: 0
     weaponData: []
     bulletData: []
     scopeData: []
@@ -272,6 +280,7 @@ Transform:
   - {fileID: 351941706}
   - {fileID: 632646079}
   - {fileID: 1475170730}
+  - {fileID: 1513658773}
   m_Father: {fileID: 1101759675}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &100955337
@@ -839,6 +848,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 100955336}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1513658772
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1513658773}
+  - component: {fileID: 1513658774}
+  m_Layer: 0
+  m_Name: BulletManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1513658773
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513658772}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 100955336}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1513658774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513658772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74643a0268247834d8a9680dc8c25de6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bulletPrefab: {fileID: 2575161214163856039, guid: dec6666d62c96fe4684cc3c00e7cad7b, type: 3}
+  poolSize: 160
 --- !u!1 &1573184703
 GameObject:
   m_ObjectHideFlags: 0

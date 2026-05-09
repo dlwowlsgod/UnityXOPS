@@ -63,5 +63,28 @@ namespace UnityXOPS
             capsule.center          = Vector3.zero;
             transform.localPosition = new Vector3(0f, baseY + height * 0.5f, 0f);
         }
+
+        /// <summary>
+        /// 총알 명중 시 호출. HumanTypeData 부위 배율을 적용한 최종 데미지를 Human 에 전달.
+        /// 원본 OpenXOPS HitBulletHuman (objectmanager.cpp:910-1000) 의 부위 배율 단계.
+        /// </summary>
+        public void OnBulletHit(int attacks)
+        {
+            if (human == null || !human.Alive) return;
+
+            float multiplier = 1f;
+            HumanTypeData type = human.HumanTypeData;
+            if (type != null)
+            {
+                multiplier = part switch
+                {
+                    HumanHitPart.Head => type.headDamageMultiplier,
+                    HumanHitPart.Body => type.bodyDamageMultiplier,
+                    HumanHitPart.Leg  => type.legDamageMultiplier,
+                    _                 => 1f,
+                };
+            }
+            human.ApplyDamage(attacks * multiplier);
+        }
     }
 }

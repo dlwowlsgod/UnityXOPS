@@ -32,15 +32,23 @@ namespace UnityXOPS
         private float m_velocityZ;
         public  bool  IsFalling => m_isFalling;
 
+        private float m_fireRateTimer;
+        public  float FireRateTimer => m_fireRateTimer;
+
         /// <summary>
         /// weaponIndex 로 WeaponData/WeaponModelData 를 조회해 무기 데이터/탄약/시각/스케일을 초기화한다.
         /// 인덱스가 유효 범위 밖이면 noneWeaponIndex(맨손 취급) 로 폴백한다 — null 슬롯은 만들지 않는다.
         /// localPosition/localRotation 은 건드리지 않으므로, 부착 시 OnEquip() 을 호출하거나 떨어진 무기 spawner 가 직접 설정해야 한다.
+        ///
+        /// **탄창 처리**: magazine / reserve 두 값을 명시적으로 받는다. 음수면 default (magazine=magazineSize, reserve=0).
+        /// drop/pickup/SwitchID 같은 보존 시나리오에서는 호출자가 옛 값을 그대로 넘겨야 자동 재장전이 일어나지 않는다.
+        /// totalBullets → (magazine, reserve) 분배는 PD1[2] / [7] 같은 spawn 측이 직접 inline 처리.
         /// </summary>
         /// <param name="weaponIndex">WeaponParameterData.weaponData 인덱스.</param>
-        /// <param name="totalBullets">PD1.p3 가 지정한 총탄수(장전탄 포함). 0 미만이면 magazineSize 로 가득 채움.</param>
+        /// <param name="magazine">현재 장전된 탄. 음수면 magazineSize 로 가득.</param>
+        /// <param name="reserve">예비 탄. 음수면 magazineSize × 2 (Initial spawn / PD1 [7] 보급 default).</param>
         /// <param name="dropped">true=맵에 떨어진 모드(부모 weaponRoot, scale 자기 책임), false=Human 부착 모드(부모 weaponAttachRoot 가 weaponScale 강제).</param>
-        public void CreateWeapon(int weaponIndex, int totalBullets = -1, bool dropped = false)
+        public void CreateWeapon(int weaponIndex, int magazine = -1, int reserve = -1, bool dropped = false)
         {
             var wp = DataManager.Instance.WeaponParameterData;
             if (weaponIndex < 0 || weaponIndex >= wp.weaponData.Count)
@@ -57,19 +65,12 @@ namespace UnityXOPS
                 m_weaponModelData = wp.weaponModelData[modelIndex];
             }
 
-            // OpenXOPS object.cpp:2383-2408 RunReload 분배 환산: magazine = min(total, mag), reserve = max(0, total - mag).
             int magazineSize = m_weaponData.magazineSize;
-            if (totalBullets < 0)
-            {
-                m_currentMagazine = magazineSize;
-                m_reserveAmmo     = 0;
-            }
-            else
-            {
-                m_currentMagazine = Mathf.Min(totalBullets, magazineSize);
-                m_reserveAmmo     = Mathf.Max(0, totalBullets - magazineSize);
-            }
-            m_isReloading = false;
+            if (magazine < 0) magazine = magazineSize;
+            if (reserve  < 0) reserve  = magazineSize * 2;
+            m_currentMagazine = Mathf.Clamp(magazine, 0, magazineSize);
+            m_reserveAmmo     = reserve;
+            m_isReloading     = false;
 
             if (m_weaponModelData != null)
             {
@@ -98,6 +99,130 @@ namespace UnityXOPS
         }
 
         /// <summary>
+        /// 발사 — owner 의 시점 위치에서 발사 방향 벡터로 BulletManager 에 발사체 spawn 요청.
+        /// fireRate 쿨다운, 매거진 잔량, 발사자 상태(IsChanging/Alive) 검사 후 실제 발사. 산탄(pelletCount > 1) 은 박스 분포 분산.
+        /// 원본 OpenXOPS ObjectManager::ShotWeapon (objectmanager.cpp:1926-2060) 대응.
+        /// </summary>
+        public void Shoot(Human owner)
+        {
+            if (owner == null || !owner.Alive) return;
+            if (owner.IsChanging)              return;
+            if (m_isFalling)                   return;
+            if (m_fireRateTimer > 0f)          return;
+            if (m_isReloading)                 return;
+            if (m_currentMagazine <= 0)        return;
+            if (m_weaponData.fireRate <= 0f)   return; // noneWeapon 등 발사 불가능 무기
+
+            var wp        = DataManager.Instance.WeaponParameterData;
+            int bulletIdx = m_weaponData.bulletIndex;
+            if (bulletIdx < 0 || bulletIdx >= wp.bulletData.Count) return;
+
+            BulletData bulletData = wp.bulletData[bulletIdx];
+            SpawnBullets(owner, bulletData);
+
+            m_currentMagazine--;
+            m_fireRateTimer = 1f / m_weaponData.fireRate;
+
+            // AutoReload — 매거진 0 도달 시 자동 처리. 원본 OpenXOPS 에는 없는 UnityXOPS 추가 분기.
+            //  - reserve > 0 → 자동 reload (예비에서 매거진 보충, reload 모션 없이 즉시 reloadTime=0 무기 가정).
+            //  - reserve == 0 + discardAfterAutoReloadIfNoAmmo=true → 슬롯에서 무기 제거 (GRENADE).
+            //  - reserve == 0 + discardAfterAutoReloadIfNoAmmo=false → 매거진 0 그대로 유지 (발사 불가, 슬롯 보존).
+            if (m_currentMagazine <= 0 &&
+                m_weaponData.reloadStyle == WeaponReloadStyle.AutoReload)
+            {
+                if      (m_reserveAmmo > 0)                              owner.ReloadCurrentWeapon();
+                else if (m_weaponData.discardAfterAutoReloadIfNoAmmo)    owner.ConsumeCurrentWeapon();
+            }
+        }
+
+        /// <summary>
+        /// 재장전 진입 가드. 통과 시 m_isReloading=true 로 표시. 실제 매거진 보충은 Human 의 카운터가 0 도달 시 RunReload 호출.
+        /// 원본 OpenXOPS weapon::StartReload (object.cpp:2371-2379) — 예비탄 0 차단. UnityXOPS 추가: 매거진 풀 시도 차단 (재장전 의미 없음).
+        /// </summary>
+        public bool StartReload()
+        {
+            if (m_isReloading)                          return false;
+            if (m_isFalling)                            return false;
+            if (m_weaponData.magazineSize <= 0)         return false; // noneWeapon
+            if (m_reserveAmmo <= 0)                     return false; // 예비탄 없음
+            if (m_currentMagazine >= m_weaponData.magazineSize) return false; // 매거진 풀
+
+            m_isReloading = true;
+            return true;
+        }
+
+        /// <summary>
+        /// 매거진 보충 — Human 카운터가 0 도달 시 호출. WeaponReloadStyle 별 분기.
+        /// 원본 OpenXOPS weapon::RunReload (object.cpp:2383-2408) = DiscardAndReload 단일 동작. 나머지는 UnityXOPS 추가.
+        /// ShellByShellReload 는 1차 단순화: RetainAndReload 와 동일 (발 단위 분할/발사 중단은 다음 사이클).
+        /// </summary>
+        public void RunReload()
+        {
+            if (!m_isReloading) return;
+            int magSize = m_weaponData.magazineSize;
+
+            switch (m_weaponData.reloadStyle)
+            {
+                case WeaponReloadStyle.DiscardAndReload:
+                    // 매거진 잔탄 폐기 + 예비에서 풀까지 채움. 원본 OpenXOPS 동작.
+                    int loadD         = Mathf.Min(m_reserveAmmo, magSize);
+                    m_currentMagazine = loadD;
+                    m_reserveAmmo    -= loadD;
+                    break;
+
+                case WeaponReloadStyle.RetainAndReload:
+                case WeaponReloadStyle.AutoReload:
+                case WeaponReloadStyle.ShellByShellReload:
+                    // 잔탄 보존 + 부족분만 채움. AutoReload (GRENADE 등) 도 reserve 정상 차감.
+                    int needed         = magSize - m_currentMagazine;
+                    int loadR          = Mathf.Min(m_reserveAmmo, needed);
+                    m_currentMagazine += loadR;
+                    m_reserveAmmo     -= loadR;
+                    break;
+            }
+
+            m_isReloading = false;
+        }
+
+        /// <summary>
+        /// owner 시점 위치 + yaw/pitch + 산탄 분산 으로 pelletCount 발 BulletManager.Spawn 호출.
+        /// 산탄 분산: 원본 (GetRand(5)*2+5) × 0.15° = 0.75°~1.95° 박스 분포 재현 (objectmanager.cpp:2005-2009).
+        /// </summary>
+        private void SpawnBullets(Human owner, BulletData bulletData)
+        {
+            var humanGen = DataManager.Instance.HumanParameterData.humanGeneralData;
+            Vector3 spawnPos = owner.transform.position + Vector3.up * humanGen.cameraAttachPosition;
+
+            HumanController controller = owner.GetComponent<HumanController>();
+            float yaw   = controller.Yaw;
+            float pitch = controller.Pitch;
+
+            int pellets = Mathf.Max(1, m_weaponData.pelletCount);
+            for (int i = 0; i < pellets; i++)
+            {
+                float dx = 0f, dy = 0f;
+                if (pellets > 1)
+                {
+                    float spreadDeg   = UnityEngine.Random.Range(0.75f, 1.95f);
+                    float spreadAngle = UnityEngine.Random.Range(0f, 360f);
+                    float spreadRad   = spreadAngle * Mathf.Deg2Rad;
+                    dx = Mathf.Cos(spreadRad) * spreadDeg;
+                    dy = Mathf.Sin(spreadRad) * spreadDeg;
+                }
+
+                Quaternion rot      = Quaternion.Euler(pitch + dy, yaw + dx, 0f);
+                Vector3    velocity = rot * Vector3.forward * m_weaponData.bulletSpeed;
+
+                BulletManager.Instance.Spawn(
+                    bulletData, owner, owner.Team,
+                    attacks:     (int)m_weaponData.damage,
+                    penetration: m_weaponData.penetration,
+                    position:    spawnPos,
+                    velocity:    velocity);
+            }
+        }
+
+        /// <summary>
         /// 맵에 떨어진 모드로 배치될 때 호출. Weapon Root 회전을 yaw + Z+90° 모델축 보정으로 설정하고,
         /// visualRoot 의 prefab 기본 Y180° 보정을 identity 로 무효화한다 (떨어진 모드에선 누적 상쇄가 없어 정면 반전 유발).
         /// localPosition 은 spawner 가 사전에 설정해야 한다.
@@ -116,10 +241,12 @@ namespace UnityXOPS
 
         private void Update()
         {
+            float dt = Time.deltaTime;
+            if (m_fireRateTimer > 0f) m_fireRateTimer -= dt;
+
             if (!m_isFalling) return;
 
             var gen = DataManager.Instance.WeaponParameterData.weaponGeneralData;
-            float dt = Time.deltaTime;
 
             // 수평 감쇠 — OpenXOPS object.cpp:2459-2460 (move_x/z *= 0.96 per frame). dt 가변 변환: pow(damping, dt).
             float damping = Mathf.Pow(gen.horizontalDampingPerSec, dt);

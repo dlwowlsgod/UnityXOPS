@@ -51,6 +51,9 @@ namespace UnityXOPS
         private bool adjustCollision, darkScreen;
 
         private static int blockLayerMask = 7;
+        private static int blockLayer     = 0;
+        public static int BlockLayerMask => blockLayerMask;
+        public static int BlockLayer     => blockLayer;
 
         public static IReadOnlyList<Block> BlockColliders => Instance.blockColliders;
 
@@ -71,6 +74,7 @@ namespace UnityXOPS
         private void Start()
         {
             blockLayerMask = LayerMask.GetMask("Block");
+            blockLayer     = LayerMask.NameToLayer("Block");
         }
 
         /// <summary>
@@ -193,6 +197,36 @@ namespace UnityXOPS
             return false;
         }
 
+        // OpenXOPS ObjectManager::SearchHuman (objectmanager.cpp:1763-1780) 대응.
+        // identifier 일치하는 첫 번째 Human 을 반환 — 중복 시 첫 매치만, 미발견 시 null.
+        // 호출 예: 미션 이벤트 (CheckDead/CheckArrival/CheckHaveWeapon), AI 추적 대상 지정.
+        public static Human SearchHuman(int identifier)
+        {
+            Transform root = Instance.humanRoot;
+            if (root == null) return null;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Human human = root.GetChild(i).GetComponent<Human>();
+                if (human != null && human.Identifier == identifier) return human;
+            }
+            return null;
+        }
+
+        // OpenXOPS ObjectManager::SearchSmallobject (objectmanager.cpp:1786-1804) 대응.
+        // identifier 일치하는 첫 번째 SmallObject 를 반환 — 중복 시 첫 매치만, 미발견 시 null.
+        // 호출 예: 미션 이벤트 (CheckBreakSmallObject 의 파괴 조건 판정).
+        public static SmallObject SearchSmallObject(int identifier)
+        {
+            Transform root = Instance.objectRoot;
+            if (root == null) return null;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                SmallObject so = root.GetChild(i).GetComponent<SmallObject>();
+                if (so != null && so.Identifier == identifier) return so;
+            }
+            return null;
+        }
+
         /// <summary>
         /// 씬에 생성된 모든 블록 오브젝트와 머티리얼을 제거한다.
         /// </summary>
@@ -299,7 +333,10 @@ namespace UnityXOPS
             // PD1 weapon 포인트(param0=2) 스폰. OpenXOPS objectmanager.cpp:367-413 AddWeaponIndex 대응.
             // weaponRoot 는 localScale=1 유지 (스케일 박으면 자식 position 도 같이 곱해져 옹기종기 발생).
             // 스케일은 Weapon.CreateWeapon(dropped:true) 가 자기 localScale 에 weaponScale * size 로 적용한다.
+            // PD1 [2] (param0=2): 떨어진 무기 spawn. param2 = 총탄수 → magazine/reserve 분배는 spawn 시점 1회만 일어남.
+            // OpenXOPS object.cpp:2383-2408 RunReload 분배 환산: magazine = min(total, magSize), reserve = max(0, total - magSize).
             Instance.weaponCount = 0;
+            var wp = DataManager.Instance.WeaponParameterData;
             for (int i = 0; i < pointData.rawPointData.Length; i++)
             {
                 var raw = pointData.rawPointData[i];
@@ -308,14 +345,49 @@ namespace UnityXOPS
                 int weaponIndex  = raw.param1;
                 int totalBullets = raw.param2;
 
+                int magazine = -1;
+                int reserve  = -1;
+                if (weaponIndex >= 0 && weaponIndex < wp.weaponData.Count)
+                {
+                    int magSize = wp.weaponData[weaponIndex].magazineSize;
+                    magazine = System.Math.Min(totalBullets, magSize);
+                    reserve  = System.Math.Max(0, totalBullets - magSize);
+                }
+
                 var weaponObj = Instantiate(Instance.weaponPrefab, Instance.weaponRoot);
                 weaponObj.transform.localPosition = raw.position;
 
                 var weapon = weaponObj.GetComponent<Weapon>();
-                weapon.CreateWeapon(weaponIndex, totalBullets, dropped: true);
+                weapon.CreateWeapon(weaponIndex, magazine, reserve, dropped: true);
                 weapon.OnDrop(raw.look, Vector3.zero);
 
                 Instance.weaponCount++;
+            }
+
+            // PD1 small object 포인트(param0=5) 스폰. OpenXOPS objectmanager.cpp:459-484 AddSmallObjectIndex 대응.
+            // param1=ObjectData 인덱스 (범위 초과 시 silently skip), param2=바닥 스냅 플래그 (1이면 SnapToGround), param3=식별 ID (이벤트 시스템용).
+            Instance.objectCount = 0;
+            var op = DataManager.Instance.ObjectParameterData;
+            for (int i = 0; i < pointData.rawPointData.Length; i++)
+            {
+                var raw = pointData.rawPointData[i];
+                if (raw.param0 != 5) continue;
+
+                int objectIndex = raw.param1;
+                if (objectIndex < 0 || objectIndex >= op.objectData.Count) continue;
+
+                var objectObj = Instantiate(Instance.objectPrefab, Instance.objectRoot);
+                objectObj.transform.SetLocalPositionAndRotation(raw.position, Quaternion.Euler(0f, raw.look, 0f));
+
+                var smallObj = objectObj.GetComponent<SmallObject>();
+                smallObj.CreateObject(objectIndex, raw.param3);
+
+                if (raw.param2 != 0)
+                {
+                    smallObj.SnapToGround();
+                }
+
+                Instance.objectCount++;
             }
 
             Instance.pointCount = pointData.rawPointData.Length;
@@ -329,6 +401,7 @@ namespace UnityXOPS
         {
             Instance.pointCount = 0;
             Instance.weaponCount = 0;
+            Instance.objectCount = 0;
             Instance.player = null;
 
             foreach (Transform child in Instance.humanRoot)
@@ -337,6 +410,11 @@ namespace UnityXOPS
             }
 
             foreach (Transform child in Instance.weaponRoot)
+            {
+                Destroy(child.gameObject);
+            }
+
+            foreach (Transform child in Instance.objectRoot)
             {
                 Destroy(child.gameObject);
             }

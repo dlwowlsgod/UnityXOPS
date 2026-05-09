@@ -3,6 +3,21 @@ using UnityEngine;
 namespace UnityXOPS
 {
     /// <summary>
+    /// 사망 상태머신. 원본 OpenXOPS human::deadstate (object.cpp:1208-1389) 정수값과 동일.
+    /// 0 Alive 정상 / 1 Falling 쓰러지기 시작 / 2 HeadStuck 머리 박힘+자유낙하 /
+    /// 3 LegSliding 다리 미끄러뜨리기 / 4 Settling 1프레임 정지 / 5 Done 완전 고정.
+    /// </summary>
+    public enum HumanDeadState
+    {
+        Alive      = 0,
+        Falling    = 1,
+        HeadStuck  = 2,
+        LegSliding = 3,
+        Settling   = 4,
+        Done       = 5,
+    }
+
+    /// <summary>
     /// 게임 맵에 배치된 인간 캐릭터의 데이터와 시각 표현을 관리하는 컴포넌트.
     /// </summary>
     public class Human : MonoBehaviour
@@ -16,8 +31,45 @@ namespace UnityXOPS
         public int Team => team;
 
         [SerializeField]
-        private bool alive;
-        public bool Alive => alive;
+        private HumanDeadState deadState = HumanDeadState.Alive;
+        public HumanDeadState DeadState => deadState;
+        public bool            Alive    => deadState == HumanDeadState.Alive;
+
+        /// <summary>
+        /// 사망 상태를 설정. 전이 로직은 HumanController.Tick에서 호출 예정.
+        /// </summary>
+        public void SetDeadState(HumanDeadState value)
+        {
+            deadState = value;
+        }
+
+        /// <summary>
+        /// 데미지 적용. HP 만 차감. 사망 진입(Falling) + 무기 드롭은 HumanController.EnterDeadState 가 처리한다
+        /// (시체 회전 초기화 m_deadDirection/m_deadAddRy 와 함께 한 곳에서 처리하기 위함).
+        /// HP ≤ 0 인 채 다음 FixedUpdate 까지의 짧은 갭은 Human.Update 의 Alive 게이트로 보호.
+        /// 원본 OpenXOPS human::SubHP (object.cpp:1060-1080) 단순화 버전.
+        /// </summary>
+        public void ApplyDamage(float damage)
+        {
+            if (!Alive || damage <= 0f) return;
+
+            hp -= damage;
+            if (hp < 0f) hp = 0f;
+        }
+
+        // 원본 OpenXOPS human::Hit_rx (object.cpp:1084-1088 SetHitFlag) — 마지막 피격 yaw (월드 deg).
+        // 사망 진입 시 HumanController.EnterDeadState 가 이 값과 본인 Yaw 차이로 앞/뒤 쓰러짐 분기.
+        // Hit_rx 는 클리어 안 됨: 살아있는 동안 여러 번 맞으면 마지막 hit 방향이 사망 시 사용 (원본 동작 그대로).
+        private float m_hitYaw;
+        public  float HitYaw => m_hitYaw;
+
+        /// <summary>
+        /// 마지막 피격 방향 (월드 yaw, deg). Bullet 측이 명중 시 호출. 사망 분기에만 사용, 살아있는 동안의 동작에는 영향 없음.
+        /// </summary>
+        public void SetHitYaw(float yawDeg)
+        {
+            m_hitYaw = yawDeg;
+        }
 
         [SerializeField]
         private Transform cameraRoot;
@@ -37,13 +89,33 @@ namespace UnityXOPS
 
         private RawPointData m_humanParam, m_humanDataParam;
 
+        private int m_identifier;
+        public  int Identifier => m_identifier;
+
         private Weapon[] m_weapons = new Weapon[2];
         private int      m_selectWeapon;
         private float    m_selectWeaponCnt;
         private float    m_reloadingCnt;
+
+        // 사망 시 무기 드롭 속도. 원본 OpenXOPS object.cpp:1232 Dropoff(..., 1.5f) × 0.1 = 0.15 m/s.
+        // DumpWeapon (수동 버리기, dropoffHorizontalSpeed JSON ≈ 1.63 × 0.1) 보다 약간 낮음.
+        private const float k_deathDropHorizontalSpeed = 0.15f;
         public  Weapon   CurrentWeapon => m_weapons[m_selectWeapon];
         public  int      SelectWeapon  => m_selectWeapon;
-        public  bool     IsChanging    => m_selectWeaponCnt > 0f || m_reloadingCnt > 0f;
+
+        // OpenXOPS 컨벤션: 슬롯 0=보조(SUB), 슬롯 1=주(MAIN). EquipInitialWeapons 의 m_selectWeapon=1 초기화 근거.
+        public  Weapon   MainWeapon => m_weapons[1];
+        public  Weapon   SubWeapon  => m_weapons[0];
+
+        // 발사/재장전/전환 가드용. UI 측은 IsSwitchingWeapon / IsReloading 으로 분리해서 표시.
+        public  bool     IsSwitchingWeapon => m_selectWeaponCnt > 0f;
+        public  bool     IsReloading       => m_reloadingCnt > 0f;
+        public  bool     IsChanging        => IsSwitchingWeapon || IsReloading;
+
+        /// <summary>
+        /// 슬롯 인덱스(0/1) 로 무기 인스턴스를 조회. UI HUD 등에서 비활성 슬롯 무기 정보가 필요할 때 사용.
+        /// </summary>
+        public Weapon GetWeapon(int slot) => m_weapons[Mathf.Clamp(slot, 0, 1)];
 
         /// <summary>
         /// 포인트 데이터와 파라미터로부터 인간 캐릭터를 생성 및 초기화한다.
@@ -52,8 +124,9 @@ namespace UnityXOPS
         /// <param name="humanDataParam">인간 파라미터 포인트 데이터.</param>
         public void CreateHuman(RawPointData humanParam, RawPointData humanDataParam)
         {
-            m_humanParam = humanParam;
+            m_humanParam     = humanParam;
             m_humanDataParam = humanDataParam;
+            m_identifier     = humanParam.param3;
 
             var humanParamData = DataManager.Instance.HumanParameterData;
             int humanIndex = m_humanDataParam.param1;
@@ -80,9 +153,9 @@ namespace UnityXOPS
 
             EquipInitialWeapons();
 
-            hp = m_humanData.hp;
+            hp   = m_humanData.hp;
             team = m_humanDataParam.param2;
-            alive = hp > 0;
+            deadState = hp > 0 ? HumanDeadState.Alive : HumanDeadState.Done;
         }
 
         /// <summary>
@@ -111,9 +184,24 @@ namespace UnityXOPS
 
         private void Update()
         {
+            // 사망 시 카운터/팔 reaction/픽업 모두 정지. HP ≤ 0 직후 다음 FixedUpdate 의 EnterDeadState 가
+            // 호출되기 전 짧은 갭 (Update 가 FixedUpdate 보다 먼저 도는 경우) 도 함께 보호.
+            if (!Alive || hp <= 0f) return;
+
             float dt = Time.deltaTime;
             if (m_selectWeaponCnt > 0f) m_selectWeaponCnt -= dt;
-            if (m_reloadingCnt    > 0f) m_reloadingCnt    -= dt;
+
+            // m_reloadingCnt 는 SwitchID(SEMI↔FULL) 와 Reload 둘 다 사용. 0 도달 시 활성 무기가 reloading 중이면 매거진 보충.
+            if (m_reloadingCnt > 0f)
+            {
+                m_reloadingCnt -= dt;
+                if (m_reloadingCnt <= 0f)
+                {
+                    Weapon current = m_weapons[m_selectWeapon];
+                    if (current != null && current.IsReloading) current.RunReload();
+                }
+            }
+
             humanVisual.TickArmReaction(dt);
             TryPickupWeapon();
         }
@@ -151,14 +239,16 @@ namespace UnityXOPS
         /// <summary>
         /// MapLoader.WeaponPrefab 을 Instantiate 하고 Weapon.CreateWeapon 으로 초기화한 뒤
         /// WeaponData.fixWeapon 에 따라 fixed/dynamicWeaponAttachRoot 중 하나로 부모를 설정한다.
+        /// magazine/reserve 모두 음수면 default(가득 + 0예비). drop/pickup/SwitchID 는 옛 값을 그대로 넘겨 보존.
         /// </summary>
         /// <param name="weaponIndex">WeaponParameterData.weaponData 인덱스. 무효면 Weapon 측이 noneWeaponIndex 로 폴백.</param>
-        /// <param name="totalBullets">총탄수(매거진+예비). 0 미만이면 magazineSize 로 가득 채움.</param>
-        private Weapon InstantiateWeapon(int weaponIndex, int totalBullets = -1)
+        /// <param name="magazine">장전된 탄. -1=default(magazineSize).</param>
+        /// <param name="reserve">예비 탄. -1=default(0).</param>
+        private Weapon InstantiateWeapon(int weaponIndex, int magazine = -1, int reserve = -1)
         {
             GameObject instance = Instantiate(MapLoader.Instance.WeaponPrefab);
             Weapon weapon = instance.GetComponent<Weapon>();
-            weapon.CreateWeapon(weaponIndex, totalBullets);
+            weapon.CreateWeapon(weaponIndex, magazine, reserve);
 
             Transform parent = weapon.WeaponData.fixWeapon
                 ? humanVisual.FixedWeaponAttachRoot
@@ -167,6 +257,36 @@ namespace UnityXOPS
 
             weapon.OnEquip();
             return weapon;
+        }
+
+        /// <summary>
+        /// 현재 슬롯 무기를 재장전. WeaponReloadStyle 분기는 Weapon.RunReload 가 처리.
+        /// 가드: Alive / IsChanging / 무기 가드 (StartReload 안). 통과 시 m_reloadingCnt = reloadTime + 팔 hold reaction 시작.
+        /// 원본 OpenXOPS human::ReloadWeapon (object.cpp:743-782) 대응. 사운드 트리거는 별도 사이클.
+        /// </summary>
+        public void ReloadCurrentWeapon()
+        {
+            if (!Alive)         return;
+            if (IsChanging)     return;
+
+            Weapon current = m_weapons[m_selectWeapon];
+            if (current == null)        return;
+            if (!current.StartReload()) return;
+
+            float duration = current.WeaponData.reloadTime;
+            float holdDeg  = DataManager.Instance.HumanParameterData.humanGeneralData.armAngleReloading;
+
+            // reloadTime <= 0 (예: GRENADE 같은 즉시 reload 무기): m_reloadingCnt 카운트다운이 발생하지 않으므로
+            // RunReload 를 즉시 호출해 매거진 보충. m_reloadingCnt 는 0 유지 (IsChanging 안 됨, 다음 발사 즉시 가능).
+            if (duration <= 0f)
+            {
+                current.RunReload();
+                humanVisual.BeginArmReactionHold(holdDeg, 0f);
+                return;
+            }
+
+            m_reloadingCnt = duration;
+            humanVisual.BeginArmReactionHold(holdDeg, duration);
         }
 
         /// <summary>
@@ -201,18 +321,88 @@ namespace UnityXOPS
             Weapon current = m_weapons[m_selectWeapon];
             if (current == null || targetIndex == current.WeaponIndex) return;
 
-            int totalBullets = current.CurrentMagazine + current.ReserveAmmo;
+            int oldMag     = current.CurrentMagazine;
+            int oldReserve = current.ReserveAmmo;
             Destroy(current.gameObject);
 
-            Weapon w = InstantiateWeapon(targetIndex, totalBullets);
+            Weapon w = InstantiateWeapon(targetIndex, oldMag, oldReserve);
             m_weapons[m_selectWeapon] = w;
             w.gameObject.SetActive(true);
             humanVisual.ApplyWeaponVisual(w);
 
-            float duration = w.WeaponData.switchTime;
-            float holdDeg  = DataManager.Instance.HumanParameterData.humanGeneralData.armAngleReloading;
-            m_reloadingCnt = duration;
+            float duration    = w.WeaponData.switchTime;
+            float holdDeg     = DataManager.Instance.HumanParameterData.humanGeneralData.armAngleReloading;
+            m_selectWeaponCnt = duration;
             humanVisual.BeginArmReactionHold(holdDeg, duration);
+        }
+
+        /// <summary>
+        /// 사망 시 두 슬롯의 무기를 모두 무작위 방향으로 흩뿌리고 슬롯을 noneWeapon 으로 교체한다.
+        /// 원본 OpenXOPS object.cpp:1228-1237 (CheckAndProcessDead 사망 진입 루프) + weapon::Dropoff 대응.
+        /// 무작위 yaw: 0~350° 10° 단위 (원본 DegreeToRadian(10)*GetRand(36)). speed = k_deathDropHorizontalSpeed (1.5 × 0.1).
+        /// noneWeaponIndex 슬롯은 건너뛴다. IsChanging 락은 무시 (사망은 즉시 처리).
+        /// </summary>
+        public void DropAllWeaponsOnDeath()
+        {
+            var weaponParam = DataManager.Instance.WeaponParameterData;
+            int noneIdx     = weaponParam.weaponGeneralData.noneWeaponIndex;
+
+            for (int i = 0; i < m_weapons.Length; i++)
+            {
+                Weapon current = m_weapons[i];
+                if (current == null || current.WeaponIndex == noneIdx) continue;
+
+                int idx     = current.WeaponIndex;
+                int mag     = current.CurrentMagazine;
+                int reserve = current.ReserveAmmo;
+                Destroy(current.gameObject);
+
+                // 슬롯에 noneWeapon 부착. 활성 슬롯만 SetActive(true).
+                Weapon empty = InstantiateWeapon(noneIdx);
+                m_weapons[i] = empty;
+                empty.gameObject.SetActive(i == m_selectWeapon);
+
+                // 0~350° 10° 단위 무작위 yaw
+                float   yawDeg   = UnityEngine.Random.Range(0, 36) * 10f;
+                float   yawRad   = yawDeg * Mathf.Deg2Rad;
+                Vector3 horizDir = new Vector3(Mathf.Sin(yawRad), 0f, Mathf.Cos(yawRad));
+                Vector3 spawnPos = transform.position + horizDir * 0.5f + Vector3.up * 1.6f;
+
+                GameObject droppedObj = Instantiate(MapLoader.Instance.WeaponPrefab, MapLoader.Instance.WeaponRoot);
+                droppedObj.transform.position = spawnPos;
+                Weapon dropped = droppedObj.GetComponent<Weapon>();
+                dropped.CreateWeapon(idx, mag, reserve, dropped: true);
+                // 모델 yaw: 던진 방향 + 180° (원본 rotation_x + π).
+                float weaponYaw = yawDeg + 180f;
+                dropped.OnDrop(weaponYaw, horizDir * k_deathDropHorizontalSpeed);
+            }
+
+            // 무기 카운터 리셋 (원본 selectweaponcnt/weaponshotcnt/weaponreloadcnt = 0).
+            m_selectWeaponCnt = 0f;
+            m_reloadingCnt    = 0f;
+
+            // 활성 슬롯 noneWeapon 으로 팔 visual 갱신.
+            humanVisual.ApplyWeaponVisual(m_weapons[m_selectWeapon]);
+        }
+
+        /// <summary>
+        /// 현재 슬롯 무기를 슬롯에서 제거 (떨어진 무기 spawn 없이 noneWeapon 으로 교체).
+        /// AutoReload 무기가 매거진 0 + 예비 0 도달 시 호출 — 무기 자체가 소진. 락/reaction 없음.
+        /// </summary>
+        public void ConsumeCurrentWeapon()
+        {
+            var weaponParam = DataManager.Instance.WeaponParameterData;
+            int noneIdx     = weaponParam.weaponGeneralData.noneWeaponIndex;
+
+            Weapon current = m_weapons[m_selectWeapon];
+            if (current == null || current.WeaponIndex == noneIdx) return;
+
+            Destroy(current.gameObject);
+
+            Weapon empty = InstantiateWeapon(noneIdx);
+            m_weapons[m_selectWeapon] = empty;
+            empty.gameObject.SetActive(true);
+            humanVisual.ApplyWeaponVisual(empty);
         }
 
         /// <summary>
@@ -229,8 +419,9 @@ namespace UnityXOPS
             Weapon current  = m_weapons[m_selectWeapon];
             if (current == null || current.WeaponIndex == noneIdx) return;
 
-            int idx          = current.WeaponIndex;
-            int totalBullets = current.CurrentMagazine + current.ReserveAmmo;
+            int idx     = current.WeaponIndex;
+            int mag     = current.CurrentMagazine;
+            int reserve = current.ReserveAmmo;
             Destroy(current.gameObject);
 
             // 슬롯에 noneWeapon 즉시 부착.
@@ -247,7 +438,7 @@ namespace UnityXOPS
             GameObject droppedObj = Instantiate(MapLoader.Instance.WeaponPrefab, MapLoader.Instance.WeaponRoot);
             droppedObj.transform.position = spawnPos;
             Weapon dropped = droppedObj.GetComponent<Weapon>();
-            dropped.CreateWeapon(idx, totalBullets, dropped: true);
+            dropped.CreateWeapon(idx, mag, reserve, dropped: true);
             // 모델 yaw: 사람 yaw + 180° (OpenXOPS rotation_x + π — 무기가 사람 반대 방향 향함).
             float weaponYaw = transform.eulerAngles.y + 180f;
             dropped.OnDrop(weaponYaw, forward * gen.dropoffHorizontalSpeed);
@@ -303,14 +494,15 @@ namespace UnityXOPS
         /// </summary>
         private void PickupDroppedWeapon(Weapon dropped)
         {
-            int idx          = dropped.WeaponIndex;
-            int totalBullets = dropped.CurrentMagazine + dropped.ReserveAmmo;
+            int idx     = dropped.WeaponIndex;
+            int mag     = dropped.CurrentMagazine;
+            int reserve = dropped.ReserveAmmo;
             Destroy(dropped.gameObject);
 
             Weapon old = m_weapons[m_selectWeapon];
             if (old != null) Destroy(old.gameObject);
 
-            Weapon w = InstantiateWeapon(idx, totalBullets);
+            Weapon w = InstantiateWeapon(idx, mag, reserve);
             m_weapons[m_selectWeapon] = w;
             w.gameObject.SetActive(true);
 

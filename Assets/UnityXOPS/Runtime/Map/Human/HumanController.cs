@@ -46,6 +46,15 @@ namespace UnityXOPS
         // 경사 미끄러짐 예측 시간 (원본: move*3f @ 33fps = 90ms)
         private const float k_slidePredictionTime = 0.09f;
 
+        // 사망 상태머신 상수 (원본 33.33fps 기준 → 시간 기반 변환).
+        // OpenXOPS HUMAN_DEADADDRY = 0.75°/frame²: 매 프레임 회전속도가 0.75°씩 증가.
+        // 시간 단위 변환: 0.75 × 33.33² ≈ 833 deg/s² 각가속도.
+        private const float k_deadFps                 = 33.3333f;
+        private const float k_deadRotationAccel       = 0.75f * k_deadFps * k_deadFps;
+        private const float k_deadFlatLayPitch        = 90f;   // 평지 누움 각 (원본 deadstate 1→3 진입 후 이 각에서 안착)
+        private const float k_deadFreeFallEntryPitch  = 135f;  // 머리가 빈 공간 → HeadStuck (자유낙하) 진입각 (원본 ±135°)
+        private const float k_deadPopupHeight         = 0.1f;  // 사망 진입 시 시체 함몰 방지 (원본 pos_y += 1.0f × 0.1)
+
         private Human       m_human;
         private HumanVisual m_humanVisual;
 
@@ -56,6 +65,12 @@ namespace UnityXOPS
         private HumanMoveFlag m_moveFlag;
         private HumanMoveFlag m_moveFlagLt;
         private int           m_moveYUpper;
+
+        // 사망 상태머신 누적값
+        private float m_deadAddRy;         // 사망 회전 각속도 (deg/s), 부호 있음. Falling/LegSliding 단계 누적
+        private float m_deadPitchAngle;    // 사망 회전 각도 (deg), 부호 있음. +면 앞으로 엎어짐, -면 뒤로 자빠짐
+        private float m_deadDirection;     // +1 (앞으로 엎어짐) / -1 (뒤로 자빠짐). 사망 진입 시 1회 결정 후 고정
+        private int   m_settlingFrames;    // Settling 단계 FixedUpdate 카운터
 
         public float         Yaw          => m_rotationX;
         public float         Pitch        => m_armRotationY;
@@ -88,12 +103,43 @@ namespace UnityXOPS
             m_armRotationY += deltaPitch;
         }
 
+        /// <summary>
+        /// 외부 (Bullet 등) 가 호출하는 knockback. 원본 OpenXOPS human::AddPosOrder (object.cpp:1025-1030) 대응.
+        /// (yaw, pitch) 방향으로 speed (m/s) 만큼 m_moveVelocity 에 가산. 다음 Tick 에서 attenuation 으로 자동 감쇠.
+        /// </summary>
+        /// <param name="yawDeg">Unity 월드 yaw (Y축 회전, deg). 0=+Z, 90=+X.</param>
+        /// <param name="pitchDeg">pitch (X축 회전, deg). 0=수평, 음수=위로.</param>
+        /// <param name="speedMps">초기 속도 (m/s). 원본 1.0 unit/frame ≈ 3.333 m/s.</param>
+        public void AddKnockback(float yawDeg, float pitchDeg, float speedMps)
+        {
+            Vector3 dir = Quaternion.Euler(pitchDeg, yawDeg, 0f) * Vector3.forward;
+            m_moveVelocity += dir * speedMps;
+        }
+
+        /// <summary>
+        /// 폭발 등 임의 월드 방향으로 knockback. dir 은 정규화돼 있어야 함.
+        /// </summary>
+        public void AddKnockbackVector(Vector3 worldDir, float speedMps)
+        {
+            m_moveVelocity += worldDir * speedMps;
+        }
+
         private void FixedUpdate()
         {
             if (!TickEnabled) return;
-            if (!m_human.Alive) return;
+
+            // 사망 시 입력 플래그를 모두 클리어 (Jump 같은 잔여 입력이 step climb 등에 영향 주는 것 방지).
+            // Tick 자체는 계속 돌려야 중력/지면/deadlineY 클램프가 시체에 적용됨.
+            if (!m_human.Alive)
+            {
+                m_moveFlag   = HumanMoveFlag.None;
+                m_moveFlagLt = HumanMoveFlag.None;
+            }
 
             Tick();
+
+            // 사망 상태머신 진행 (alive면 즉시 return). 회전/Settling/Done 전이는 Tick 이후에 처리.
+            TickDeadState();
 
             m_moveFlagLt = m_moveFlag;
             m_moveFlag   = HumanMoveFlag.None;
@@ -259,6 +305,7 @@ namespace UnityXOPS
 
             // 6. 3 서브스텝 낙하 및 접지 체크
             bool fallFlag = false;
+            bool isAlive  = m_human.Alive;
             for (int ycnt = 0; ycnt < 3; ycnt++)
             {
                 float ang = Mathf.Atan2(m_moveVelocity.z, m_moveVelocity.x);
@@ -266,24 +313,35 @@ namespace UnityXOPS
                 // 낙하
                 pos.y += m_moveVelocity.y * dt * (1f / 3f);
 
-                // 플레이어 8점 접지 체크 (NPC 분기는 추후)
                 float gy = pos.y + k_groundHeight;
 
-                // 4방향 R1: 모두 블록 내부면 접지
-                int cnt = 0;
-                if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang)*k_groundR1,                   gy, pos.z + Mathf.Sin(ang)*k_groundR1)) cnt++;
-                if (AnyBlockContains(blocks, pos.x - Mathf.Cos(ang)*k_groundR1,                   gy, pos.z - Mathf.Sin(ang)*k_groundR1)) cnt++;
-                if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang + Mathf.PI*0.5f)*k_groundR1,   gy, pos.z + Mathf.Sin(ang + Mathf.PI*0.5f)*k_groundR1)) cnt++;
-                if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang - Mathf.PI*0.5f)*k_groundR1,   gy, pos.z + Mathf.Sin(ang - Mathf.PI*0.5f)*k_groundR1)) cnt++;
-                if (cnt == 4) { fallFlag = true; break; }
+                if (isAlive)
+                {
+                    // Alive: 플레이어 8점 접지 체크 (NPC 분기는 추후). 4 R1 또는 4 R2 모두 블록 내부면 접지.
+                    int cnt = 0;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang)*k_groundR1,                   gy, pos.z + Mathf.Sin(ang)*k_groundR1)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x - Mathf.Cos(ang)*k_groundR1,                   gy, pos.z - Mathf.Sin(ang)*k_groundR1)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang + Mathf.PI*0.5f)*k_groundR1,   gy, pos.z + Mathf.Sin(ang + Mathf.PI*0.5f)*k_groundR1)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang - Mathf.PI*0.5f)*k_groundR1,   gy, pos.z + Mathf.Sin(ang - Mathf.PI*0.5f)*k_groundR1)) cnt++;
+                    if (cnt == 4) { fallFlag = true; break; }
 
-                // 4방향 R2
-                cnt = 0;
-                if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang)*k_groundR2,                   gy, pos.z + Mathf.Sin(ang)*k_groundR2)) cnt++;
-                if (AnyBlockContains(blocks, pos.x - Mathf.Cos(ang)*k_groundR2,                   gy, pos.z - Mathf.Sin(ang)*k_groundR2)) cnt++;
-                if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang + Mathf.PI*0.5f)*k_groundR2,   gy, pos.z + Mathf.Sin(ang + Mathf.PI*0.5f)*k_groundR2)) cnt++;
-                if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang - Mathf.PI*0.5f)*k_groundR2,   gy, pos.z + Mathf.Sin(ang - Mathf.PI*0.5f)*k_groundR2)) cnt++;
-                if (cnt == 4) { fallFlag = true; break; }
+                    cnt = 0;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang)*k_groundR2,                   gy, pos.z + Mathf.Sin(ang)*k_groundR2)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x - Mathf.Cos(ang)*k_groundR2,                   gy, pos.z - Mathf.Sin(ang)*k_groundR2)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang + Mathf.PI*0.5f)*k_groundR2,   gy, pos.z + Mathf.Sin(ang + Mathf.PI*0.5f)*k_groundR2)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang - Mathf.PI*0.5f)*k_groundR2,   gy, pos.z + Mathf.Sin(ang - Mathf.PI*0.5f)*k_groundR2)) cnt++;
+                    if (cnt == 4) { fallFlag = true; break; }
+                }
+                else
+                {
+                    // 시체: 단일 발 점 체크 (원본 OpenXOPS deadstate 2 object.cpp:1320-1326 대응).
+                    // 절벽 모서리에서 8점이 모두 인사이드라 부유하던 문제 해소.
+                    if (AnyBlockContains(blocks, pos.x, gy, pos.z))
+                    {
+                        fallFlag = true;
+                        break;
+                    }
+                }
 
                 // 중력 1 서브스텝분
                 m_moveVelocity.y -= gen.gravityAcceleration * dt * (1f / 3f);
@@ -343,7 +401,212 @@ namespace UnityXOPS
                 }
             }
 
+            // deadlineY 클램프: 원본 OpenXOPS object.cpp:2083-2088 hp=0 즉사 + 위치 클램프(주석처리)에 대응.
+            // 클램프 + 사망 진입 트리거를 함께 적용. Alive가 이미 false면 트리거 없이 클램프만.
+            bool clamped = false;
+            if (pos.y < gen.deadlineY)
+            {
+                pos.y = gen.deadlineY;
+                m_moveVelocity.y = 0f;
+                clamped = true;
+            }
+
+            // 사망 진입 조건: Alive 상태에서 HP ≤ 0 또는 deadlineY 도달.
+            if (m_human.Alive && (m_human.HP <= 0f || clamped))
+                EnterDeadState(ref pos);
+
             transform.position = pos;
+        }
+
+        /// <summary>
+        /// Alive → Falling 사망 진입. 회전 누적값 초기화 + 시체 함몰 방지 popup + 두 슬롯 무기 흩뿌리기.
+        /// 스코프 해제 / AI 정지 등은 추후 단계.
+        /// </summary>
+        private void EnterDeadState(ref Vector3 pos)
+        {
+            m_human.SetDeadState(HumanDeadState.Falling);
+
+            // 원본 object.cpp:1213-1222 — Hit_rx 와 본인 yaw 차이로 앞/뒤 분기.
+            // |Δyaw| < 90° (등 뒤에서 맞음) → 앞으로 엎어짐 (+pitch),
+            // 그 외 (앞/옆에서 맞음) → 뒤로 자빠짐 (-pitch). 정확히 ±90° 는 else (뒤로) 분기.
+            float deltaYaw  = Mathf.DeltaAngle(m_human.HitYaw, m_rotationX);
+            m_deadDirection = (Mathf.Abs(deltaYaw) < 90f) ? +1f : -1f;
+
+            m_deadAddRy      = 0f;
+            m_deadPitchAngle = 0f;
+            m_settlingFrames = 0;
+            pos.y           += k_deadPopupHeight;
+
+            // 원본 OpenXOPS object.cpp:1228-1237 사망 진입 루프 — noneWeapon 이외 슬롯의 무기를 무작위로 흩뿌림.
+            m_human.DropAllWeaponsOnDeath();
+        }
+
+        /// <summary>
+        /// 사망 상태머신 진행. Alive면 no-op. 원본 OpenXOPS object.cpp:1265-1377 deadstate 1/2/3 대응.
+        /// Falling: 회전 누적 → 머리 위치 예측해서 평지 안착(Settling) / 절벽 추락(HeadStuck) 분기.
+        /// HeadStuck: 회전 정지, alive Tick의 fall section이 중력+단일 발 점 체크로 자유낙하 처리.
+        /// LegSliding: 골격만 (즉시 Settling 폴백, 추후 분기).
+        /// </summary>
+        private void TickDeadState()
+        {
+            if (m_human.Alive) return;
+
+            float            dt        = Time.fixedDeltaTime;
+            HumanGeneralData gen       = DataManager.Instance.HumanParameterData.humanGeneralData;
+            float            deadlineY = gen.deadlineY;
+            Vector3          curPos    = transform.position;
+
+            switch (m_human.DeadState)
+            {
+                case HumanDeadState.Falling:
+                {
+                    // m_deadDirection 부호에 따라 회전 방향이 결정되므로 검사는 abs 비교.
+                    // (A) deadlineY 근처(원본 +10.0 → +1.0 Unity)에서 이미 90° 이상이면 즉시 Settling.
+                    //     원본 OpenXOPS object.cpp:1273-1279 — 공중/경계 사망은 HeadStuck 거치지 않고 평지 누움.
+                    if (curPos.y <= deadlineY + 1.0f && Mathf.Abs(m_deadPitchAngle) >= k_deadFlatLayPitch)
+                    {
+                        m_deadPitchAngle = k_deadFlatLayPitch * m_deadDirection;
+                        m_deadAddRy      = 0f;
+                        m_human.SetDeadState(HumanDeadState.Settling);
+                        break;
+                    }
+
+                    // 1. 현재 pitch가 이미 135° 이상이면 HeadStuck (이전 프레임 누적).
+                    if (Mathf.Abs(m_deadPitchAngle) >= k_deadFreeFallEntryPitch)
+                    {
+                        m_human.SetDeadState(HumanDeadState.HeadStuck);
+                        m_moveVelocity.y = 0f;
+                        break;
+                    }
+
+                    // 2. 가속 후 다음 프레임 pitch 예측 (원본은 add_ry += DEADADDRY 후 ry+add_ry 사용).
+                    //    부호는 m_deadDirection 으로 결정. 가속도 자체에 부호 곱.
+                    m_deadAddRy += k_deadRotationAccel * dt * m_deadDirection;
+                    float thisDeltaPitch = m_deadAddRy * dt;
+                    float predictedPitch = m_deadPitchAngle + thisDeltaPitch;
+
+                    // (B) deadlineY 이하(원본 object.cpp:1289-1291)에서는 머리 충돌 체크 없이 회전만 누적.
+                    //     아래 (A) 분기가 다음 프레임에 90° 이상에서 잡아주므로 HeadStuck/LegSliding 진입 차단.
+                    if (curPos.y <= deadlineY)
+                    {
+                        m_deadPitchAngle = predictedPitch;
+                        break;
+                    }
+
+                    // 3. 예측 pitch 절대값이 135° 이상이면 HeadStuck (이번 프레임에 한계 도달).
+                    if (Mathf.Abs(predictedPitch) >= k_deadFreeFallEntryPitch)
+                    {
+                        m_deadPitchAngle = predictedPitch;
+                        m_human.SetDeadState(HumanDeadState.HeadStuck);
+                        m_moveVelocity.y = 0f;
+                        break;
+                    }
+
+                    // 4. 예측 pitch에서 머리 위치 충돌 체크. 박혔으면 회전 미커밋 + 분기 전이.
+                    if (IsHeadInsideBlock(predictedPitch))
+                    {
+                        if (Mathf.Abs(predictedPitch) > k_deadFlatLayPitch)
+                        {
+                            // 지면 박힘 (90° 통과) → Settling 직행, 90° 클램프 (부호 보존)
+                            m_deadPitchAngle = k_deadFlatLayPitch * m_deadDirection;
+                            m_deadAddRy      = 0f;
+                            m_human.SetDeadState(HumanDeadState.Settling);
+                        }
+                        else
+                        {
+                            // 벽 박힘 (90° 미만) → LegSliding 진입. 현재 각도 보존, m_deadAddRy 유지.
+                            m_human.SetDeadState(HumanDeadState.LegSliding);
+                        }
+                        break;
+                    }
+
+                    // 5. 안전 → 회전 커밋
+                    m_deadPitchAngle = predictedPitch;
+                    break;
+                }
+
+                case HumanDeadState.HeadStuck:
+                    // 원본 OpenXOPS object.cpp:1310-1313: HeadStuck 도중에도 deadlineY 도달 시 즉시 Settling.
+                    if (curPos.y <= deadlineY)
+                    {
+                        m_human.SetDeadState(HumanDeadState.Settling);
+                        break;
+                    }
+
+                    // 회전 멈춤. 중력은 alive Tick의 fall section에서 적용. 단일 발 점 grounded → velocity.y = 0.
+                    // velocity.y == 0 이면 발이 닿았다는 신호 → Settling.
+                    if (m_moveVelocity.y == 0f)
+                        m_human.SetDeadState(HumanDeadState.Settling);
+                    break;
+
+                case HumanDeadState.LegSliding:
+                {
+                    // 원본 OpenXOPS deadstate 3 (object.cpp:1334-1377) 포팅.
+                    // 회전을 계속 진행하면서 발을 -forward 방향으로 sin(thisDelta)*H 만큼 슬라이드 →
+                    // 머리가 벽 안으로 더 들어가지 않게 발 위치 자체를 backwards로 빼냄.
+                    if (Mathf.Abs(m_deadPitchAngle) >= k_deadFlatLayPitch)
+                    {
+                        m_deadPitchAngle = k_deadFlatLayPitch * m_deadDirection;
+                        m_deadAddRy      = 0f;
+                        m_human.SetDeadState(HumanDeadState.Settling);
+                        break;
+                    }
+
+                    m_deadAddRy += k_deadRotationAccel * dt * m_deadDirection;
+                    float thisDeltaPitch    = m_deadAddRy * dt;
+                    float thisDeltaRad      = thisDeltaPitch * Mathf.Deg2Rad;
+                    float predictedPitch    = m_deadPitchAngle + thisDeltaPitch;
+                    float predictedPitchRad = predictedPitch * Mathf.Deg2Rad;
+
+                    float H = gen.controllerHeight;
+
+                    // Body fall direction (forward) / slide direction (-forward = back).
+                    Quaternion yawQ     = Quaternion.Euler(0, m_rotationX, 0);
+                    Vector3    slideDir = yawQ * Vector3.back;
+
+                    // 이번 프레임 슬라이드 (원본 pos -= sin(add_ry)*H 와 동일 패턴).
+                    Vector3 thisFrameSlide = slideDir * (Mathf.Sin(thisDeltaRad) * H);
+                    Vector3 nextPos        = transform.position + thisFrameSlide;
+
+                    // 슬라이드 후 발/머리 예측. body local up 이 pitch 회전 후 (0, cos, sin)Z.
+                    Vector3 nextHeadOffset = yawQ * new Vector3(0f, H * Mathf.Cos(predictedPitchRad), H * Mathf.Sin(predictedPitchRad));
+                    Vector3 nextFootCheck  = nextPos + Vector3.up * 0.1f;
+                    Vector3 nextHeadCheck  = nextPos + nextHeadOffset;
+
+                    // 발 또는 머리가 블록 안 → state 4 (Settling) 정지.
+                    IReadOnlyList<Block> blocks = MapLoader.BlockColliders;
+                    bool blocked = false;
+                    for (int i = 0; i < blocks.Count; i++)
+                    {
+                        if (blocks[i].Contains(nextFootCheck) || blocks[i].Contains(nextHeadCheck))
+                        {
+                            blocked = true;
+                            break;
+                        }
+                    }
+
+                    if (blocked)
+                    {
+                        m_deadAddRy = 0f;
+                        m_human.SetDeadState(HumanDeadState.Settling);
+                        break;
+                    }
+
+                    // 슬라이드 + 회전 커밋
+                    transform.position += thisFrameSlide;
+                    m_deadPitchAngle    = predictedPitch;
+                    break;
+                }
+
+                case HumanDeadState.Settling:
+                    m_settlingFrames++;
+                    if (m_settlingFrames >= 1)
+                        m_human.SetDeadState(HumanDeadState.Done);
+                    break;
+
+                case HumanDeadState.Done:
+                    break;
+            }
         }
 
         /// <summary>
@@ -419,6 +682,28 @@ namespace UnityXOPS
             return false;
         }
 
+        /// <summary>
+        /// 사망 회전 pitchDeg에서 머리가 블록 내부에 있는지 검사. 원본 OpenXOPS deadstate 1 머리 위치 예측 (object.cpp:1294-1296) 대응.
+        /// 평지 위 사망 → 90° 통과 시 머리가 지면 블록 안 → 안착 트리거.
+        /// 절벽 끝 사망 → 머리가 빈 공간 유지 → 135°까지 회전 후 자유낙하 진입.
+        /// 벽 앞 사망 → 회전 도중 머리가 벽 안 → LegSliding 진입.
+        /// </summary>
+        private bool IsHeadInsideBlock(float pitchDeg)
+        {
+            HumanGeneralData gen = DataManager.Instance.HumanParameterData.humanGeneralData;
+            Quaternion deathRot  = Quaternion.Euler(0, m_rotationX, 0)
+                                 * Quaternion.Euler(pitchDeg, 0, 0);
+            Vector3 headOffset   = deathRot * new Vector3(0f, gen.controllerHeight, 0f);
+            Vector3 headPos      = transform.position + headOffset;
+
+            IReadOnlyList<Block> blocks = MapLoader.BlockColliders;
+            for (int i = 0; i < blocks.Count; i++)
+            {
+                if (blocks[i].Contains(headPos)) return true;
+            }
+            return false;
+        }
+
         private void ApplyAcceleration(HumanTypeData type, float dt)
         {
             HumanMoveFlag moveMask = m_moveFlag & (
@@ -471,8 +756,11 @@ namespace UnityXOPS
 
         private void LateUpdate()
         {
+            // body yaw × death pitch 합성. Alive 시 m_deadPitchAngle = 0 이므로 기존 동작과 동일.
+            transform.rotation = Quaternion.Euler(0, m_rotationX, 0)
+                               * Quaternion.Euler(m_deadPitchAngle, 0, 0);
+
             if (!m_human.Alive) return;
-            transform.rotation = Quaternion.Euler(0, m_rotationX, 0);
 
             if (m_humanVisual != null)
                 m_humanVisual.SetArmPitch(m_armRotationY);

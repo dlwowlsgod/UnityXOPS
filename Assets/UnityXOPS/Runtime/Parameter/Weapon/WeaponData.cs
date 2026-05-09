@@ -39,6 +39,7 @@ namespace UnityXOPS
         public float switchTime;
         public float slotChangeTime;
         public bool fixWeapon;
+        public bool discardAfterAutoReloadIfNoAmmo;
     }
 
     /// <summary>

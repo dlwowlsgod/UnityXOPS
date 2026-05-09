@@ -24,11 +24,23 @@ namespace UnityXOPS
         private const float k_thirdPersonSphereRadius   = 0.10f;
         private const float k_thirdPersonShoulderOffset = 0.40f;  // UnityXOPS 추가: over-the-shoulder 가로 오프셋
 
+        // OpenXOPS gamemain.cpp:2633-2647 사망 카메라 상수 (원본 33.33fps 기준 → 시간 기반 변환).
+        private const float k_deathCamFps             = 33.3333f;
+        private const float k_deathCamYawRate         = 1f * k_deathCamFps; // 1°/frame × 33.33fps = 33.33 deg/s orbit yaw
+        private const float k_deathCamPitchTarget     = 89f;     // 원본 -89° down → Unity는 +X 회전이 down
+        private const float k_deathCamPitchBlendBase  = 0.95f;   // 매 프레임 95% 유지 → 시간 기반 1 - 0.95^(dt × 33.33)
+        private const float k_deathCamRadius          = 0.312f;  // 원본 r = 3.12 × 0.1
+        private const float k_deathCamHeight          = 3.33f;   // 원본 33.3 × 0.1
+
         private Human           m_player;
         private HumanController m_controller;
 
         private float m_yaw;
         private float m_pitch;
+
+        private float m_deathCamYaw;
+        private float m_deathCamPitch;
+        private bool  m_deathCamInitialized;
 
         public ViewMode ViewMode => viewMode;
         public bool     FirstPerson => viewMode == ViewMode.FirstPerson;
@@ -40,20 +52,6 @@ namespace UnityXOPS
         {
             viewMode = value;
             ApplyViewpoint();
-        }
-
-        /// <summary>
-        /// 1인칭 → 3인칭 우 → 3인칭 좌 → 1인칭 순서로 사이클 (F1 키 기본).
-        /// </summary>
-        public void CycleViewMode()
-        {
-            ViewMode next = viewMode switch
-            {
-                ViewMode.FirstPerson      => ViewMode.ThirdPersonRight,
-                ViewMode.ThirdPersonRight => ViewMode.ThirdPersonLeft,
-                _                         => ViewMode.FirstPerson,
-            };
-            SetViewMode(next);
         }
 
         private void ApplyViewpoint()
@@ -83,6 +81,10 @@ namespace UnityXOPS
         {
             if (!TryAcquirePlayer()) return;
 
+            // 사망 시 모든 입력 무시 (이동/회전/무기 전환/시점 사이클).
+            // 카메라는 LateUpdate가 별도 분기로 ApplyDeathCamera 처리.
+            if (!m_player.Alive) return;
+
             var input = InputManager.Instance;
 
             Vector2 look = input.Look.ReadValue<Vector2>();
@@ -107,15 +109,37 @@ namespace UnityXOPS
             if (input.Drop    .WasPressedThisFrame()) m_player.DropCurrentWeapon();
             if (input.Previous.WasPressedThisFrame()) m_player.SwitchWeaponPrevious();
             if (input.Next    .WasPressedThisFrame()) m_player.SwitchWeaponNext();
+            if (input.Reload  .WasPressedThisFrame()) m_player.ReloadCurrentWeapon();
 
-            // F1: 1인칭 → 3인칭 우 → 3인칭 좌 → 1인칭 사이클
-            if (InputManager.Keyboard.f1Key.wasPressedThisFrame)
-                CycleViewMode();
+            // 발사 — burstMode 에 따라 입력 폴링 방식 분기. FullAuto = 누르고 있으면 연사, 그 외 = 1회 입력당 1발.
+            // Weapon.Shoot 자체가 fireRate 쿨다운으로 연사 속도 제한.
+            Weapon currentWeapon = m_player.CurrentWeapon;
+            if (currentWeapon != null && currentWeapon.WeaponData != null)
+            {
+                bool fire = currentWeapon.WeaponData.burstMode == WeaponBurstMode.FullAuto
+                          ? input.Fire.IsPressed()
+                          : input.Fire.WasPressedThisFrame();
+                if (fire) currentWeapon.Shoot(m_player);
+            }
         }
 
         private void LateUpdate()
         {
             if (m_player == null || playerCamera == null) return;
+
+            if (!m_player.Alive)
+            {
+                ApplyDeathCamera();
+                return;
+            }
+
+            // 부활 시 사망 카메라 종료 후처리: viewMode에 맞춰 body 가시성 복원.
+            if (m_deathCamInitialized)
+            {
+                HumanVisual visual = m_player.HumanVisual;
+                if (visual != null) visual.SetBodyVisible(viewMode != ViewMode.FirstPerson);
+                m_deathCamInitialized = false;
+            }
 
             if (viewMode == ViewMode.FirstPerson)
             {
@@ -124,6 +148,44 @@ namespace UnityXOPS
             }
 
             ApplyThirdPersonCamera();
+        }
+
+        /// <summary>
+        /// OpenXOPS gamemain.cpp:2633-2647 사망 카메라 포팅.
+        /// 플레이어 위쪽 일정 높이에서 일정 반경으로 orbit yaw 회전, pitch는 89° (정수 down)로 지수 보간.
+        /// 첫 프레임은 현재 view yaw/pitch에서 시작해 매끄럽게 전환.
+        /// </summary>
+        private void ApplyDeathCamera()
+        {
+            if (!m_deathCamInitialized)
+            {
+                m_deathCamYaw         = m_yaw;
+                m_deathCamPitch       = m_pitch;
+                m_deathCamInitialized = true;
+
+                // 사망 카메라는 3인칭 뷰이므로 1인칭이었더라도 body/leg를 강제 표시.
+                HumanVisual visual = m_player.HumanVisual;
+                if (visual != null) visual.SetBodyVisible(true);
+            }
+
+            float dt = Time.deltaTime;
+
+            m_deathCamYaw  += k_deathCamYawRate * dt;
+            float blend     = 1f - Mathf.Pow(k_deathCamPitchBlendBase, dt * k_deathCamFps);
+            m_deathCamPitch = Mathf.Lerp(m_deathCamPitch, k_deathCamPitchTarget, blend);
+
+            Vector3 playerPos = m_player.transform.position;
+            float   yawRad    = m_deathCamYaw * Mathf.Deg2Rad;
+
+            // Unity yaw 0 = +Z, yaw 90 = +X 이므로 X = sin, Z = cos 으로 orbit.
+            Vector3 cameraPos = new Vector3(
+                playerPos.x + Mathf.Sin(yawRad) * k_deathCamRadius,
+                playerPos.y + k_deathCamHeight,
+                playerPos.z + Mathf.Cos(yawRad) * k_deathCamRadius
+            );
+
+            playerCamera.transform.position = cameraPos;
+            playerCamera.transform.rotation = Quaternion.Euler(m_deathCamPitch, m_deathCamYaw, 0f);
         }
 
         /// <summary>

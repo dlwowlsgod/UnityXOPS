@@ -7,9 +7,12 @@ namespace UnityXOPS
 {
     /// <summary>
     /// 메인게임 씬을 관리하고 ESC 입력 시 메인메뉴로 복귀하는 컨트롤러.
+    /// InputManager가 관리하지 않는 글로벌 키(시점 전환 등)도 여기서 처리한다.
     /// </summary>
     public class MaingameScene : MonoBehaviour
     {
+        [SerializeField] private PlayerController playerController;
+
         private void Start()
         {
             InputManager.MouseCursorMode(true, true, true);
@@ -29,10 +32,27 @@ namespace UnityXOPS
                 SceneManager.LoadScene(2);
             }
 
+            UpdateViewModeInput();
+
             if (InputManager.Keyboard.f12Key.wasPressedThisFrame)
             {
 
             }
+        }
+
+        /// <summary>
+        /// F1 = 1인칭, F2 = 3인칭(좌), F3 = 3인칭(우). 사망 중에는 입력 무시 (사망 카메라 유지).
+        /// </summary>
+        private void UpdateViewModeInput()
+        {
+            if (playerController == null) return;
+
+            Human player = MapLoader.Player;
+            if (player == null || !player.Alive) return;
+
+            if      (InputManager.Keyboard.f2Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.FirstPerson);
+            else if (InputManager.Keyboard.f1Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.ThirdPersonLeft);
+            else if (InputManager.Keyboard.f3Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.ThirdPersonRight);
         }
 
         /// <summary>
