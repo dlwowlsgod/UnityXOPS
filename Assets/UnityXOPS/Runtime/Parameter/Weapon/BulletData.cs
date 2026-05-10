@@ -1,3 +1,4 @@
+using UnityEngine;
 using System.Collections.Generic;
 using System;
 
@@ -27,7 +28,10 @@ namespace UnityXOPS
         public string           name;
         public string           texturePath;
         public string           modelPath;
-        public float            modelScale;
+        public Vector3          modelPosition;
+        public Vector3          modelRotation;
+        public Vector3          modelScale;
+        public float            bulletBoundAdjust;
         public bool             useGravity;
         public float            gravityScale;
         public ExplosionTrigger explosionTrigger;

@@ -5,71 +5,102 @@ namespace UnityXOPS
 {
     public class MaingameUIDynamicLayout : MonoBehaviour
     {
-        [SerializeField] private RectTransform state, hp, ammo, weaponName;
+        [SerializeField] private RectTransform state, hp, ammo, weaponName, reload, change;
         [SerializeField] private GameObject normalUI, simpleUI;
 
         private Human m_player;
         private XOPSSpriteText m_stateText, m_hpText, m_ammoText, m_weaponNameText;
-        private RectTransform m_hpTextRectTransform, m_weaponNameTextRectTransform;
 
-        private Color32 m_stateColor;
+        private float  m_lastHP          = float.NaN;
+        private int    m_lastMagazine    = -1;
+        private int    m_lastReserveAmmo = -1;
+        private string m_lastWeaponName;
+
         private void Start()
         {
             m_player = MapLoader.Player;
             Vector2 stateFontSize = new Vector2(18f, 24f);
             Vector2 oneZero = new Vector2(1f, 0f);
+            Vector2 center = new Vector2(0.5f, 0.5f);
 
-            m_stateColor = SetStateColor(m_player.HP);
+            Color32 stateColor = SetStateColor(m_player.HP);
             m_stateText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                state, "STATE", Vector2.zero, Vector2.zero, new Vector2(23, 45), new Vector2(23 * 5, 45), stateFontSize, m_stateColor, TextAnchor.UpperLeft, 0f);
-            
+                state, "STATE", Vector2.zero, Vector2.zero, new Vector2(23, 45), new Vector2(23 * 5, 24), stateFontSize, stateColor, TextAnchor.UpperLeft, 0f);
+
             var hpPos = SetHPPosition(m_player.HP);
-            var hpSize = new Vector2(hpPos.x * 5, hpPos.y);
+            var hpSize = new Vector2(hpPos.x * 5, 24f);
             m_hpText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                hp, SetHPText(m_player.HP), Vector2.zero, Vector2.zero, hpPos, hpSize, stateFontSize, m_stateColor, TextAnchor.UpperLeft, 0f);
-            m_hpTextRectTransform = m_hpText.GetComponent<RectTransform>();
+                hp, SetHPText(m_player.HP), Vector2.zero, Vector2.zero, hpPos, hpSize, stateFontSize, stateColor, TextAnchor.UpperLeft, 0f);
 
             Vector2 ammoFontSize = new Vector2(23f, 24f);
             string currentAmmo = m_player.CurrentWeapon.CurrentMagazine.ToString();
             string reserveAmmo = m_player.CurrentWeapon.ReserveAmmo > 999 ? "999+" : m_player.CurrentWeapon.ReserveAmmo.ToString();
-            string finalAmmo = $"»{currentAmmo} º{reserveAmmo}";
+            string finalAmmo = $"\u00BB{currentAmmo} \u00BA{reserveAmmo}";
             m_ammoText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                ammo, finalAmmo, Vector2.zero, Vector2.zero, new Vector2(25, 96), new Vector2(25 * finalAmmo.Length, 45), ammoFontSize, Color.white, TextAnchor.UpperLeft, 0f);
+                ammo, finalAmmo, Vector2.zero, Vector2.zero, new Vector2(25, 96), new Vector2(25 * finalAmmo.Length, 24), ammoFontSize, Color.white, TextAnchor.UpperLeft, 0f);
 
             string weaponNameString = m_player.CurrentWeapon.WeaponData.name;
             Vector2 weaponNameFontSize = SetWeaponNameFontSize(weaponNameString, 14, new Vector2(16f, 20f));
-            float scaledHeightPosition = 95 - (20 - weaponNameFontSize.y) / 2; // Adjust Y position based on font size
             m_weaponNameText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                weaponName, weaponNameString, oneZero, oneZero, new Vector2(-250, scaledHeightPosition), new Vector2(25 * weaponNameString.Length, 98), weaponNameFontSize, Color.white, TextAnchor.UpperLeft, 0f);
-            m_weaponNameTextRectTransform = m_weaponNameText.GetComponent<RectTransform>();
+                weaponName, weaponNameString, oneZero, oneZero, new Vector2(-250, 85), new Vector2(25 * weaponNameString.Length, 98), weaponNameFontSize, Color.white, TextAnchor.MiddleLeft, 0f);
+
+
+            Vector2 reloadChargeFontSize = new Vector2(32f, 34f);
+            FontManager.CreateSpriteText<XOPSSpriteText>(
+                reload, "RELOADING", center, center, new Vector2(3, -63), new Vector2(0, 0), reloadChargeFontSize, new Color(0.2f, 0.2f, 0.2f, 1.0f), TextAnchor.MiddleCenter, 0f);
+            FontManager.CreateSpriteText<XOPSSpriteText>(
+                reload, "RELOADING", center, center, new Vector2(0, -60), new Vector2(0, 0), reloadChargeFontSize, Color.white, TextAnchor.MiddleCenter, 0f);
+            FontManager.CreateSpriteText<XOPSSpriteText>(
+                change, "CHANGING", center, center, new Vector2(3, -63), new Vector2(0, 0), reloadChargeFontSize, new Color(0.2f, 0.2f, 0.2f, 1.0f), TextAnchor.MiddleCenter, 0f);
+            FontManager.CreateSpriteText<XOPSSpriteText>(
+                change, "CHANGING", center, center, new Vector2(0, -60), new Vector2(0, 0), reloadChargeFontSize, Color.white, TextAnchor.MiddleCenter, 0f);
+
+            m_lastHP          = m_player.HP;
+            m_lastMagazine    = m_player.CurrentWeapon.CurrentMagazine;
+            m_lastReserveAmmo = m_player.CurrentWeapon.ReserveAmmo;
+            m_lastWeaponName  = m_player.CurrentWeapon.WeaponData.name;
         }
 
         private void Update()
         {
             if (normalUI.activeSelf)
             {
-                m_stateColor = SetStateColor(m_player.HP);
-                m_stateText.FontColor = m_stateColor;
-                
-                m_hpText.FontColor = m_stateColor;
-                m_hpText.Text = SetHPText(m_player.HP);
-                
-                var hpPos = SetHPPosition(m_player.HP);
-                var hpSize = new Vector2(hpPos.x * 5, hpPos.y);
-                m_hpTextRectTransform.anchoredPosition = hpPos;
-                m_hpTextRectTransform.sizeDelta = hpSize;
+                float hp = m_player.HP;
+                if (hp != m_lastHP)
+                {
+                    Color32 stateColor    = SetStateColor(hp);
+                    m_stateText.FontColor = stateColor;
+                    m_hpText.FontColor    = stateColor;
+                    m_hpText.Text         = SetHPText(hp);
 
-                string currentAmmo = m_player.CurrentWeapon.CurrentMagazine.ToString();
-                string reserveAmmo = m_player.CurrentWeapon.ReserveAmmo > 999 ? "999+" : m_player.CurrentWeapon.ReserveAmmo.ToString();
-                m_ammoText.Text = $"»{currentAmmo} º{reserveAmmo}";
-                
-                string weaponNameString = m_player.CurrentWeapon.WeaponData.name;
-                Vector2 weaponNameFontSize = SetWeaponNameFontSize(weaponNameString, 14, new Vector2(16f, 20f));
-                float scaledHeightPosition = 95 - (20 - weaponNameFontSize.y) / 2; // Adjust Y position based on font size
-                m_weaponNameText.Text = weaponNameString;
-                m_weaponNameTextRectTransform.anchoredPosition = new Vector2(-250, scaledHeightPosition);
-                m_weaponNameTextRectTransform.sizeDelta = new Vector2(25 * weaponNameString.Length, 98);
+                    Vector2 hpPos = SetHPPosition(hp);
+                    m_hpText.rectTransform.anchoredPosition = hpPos;
+                    m_hpText.rectTransform.sizeDelta        = new Vector2(hpPos.x * 5, hpPos.y);
+                    m_lastHP = hp;
+                }
+
+                Weapon w   = m_player.CurrentWeapon;
+                int    mag = w.CurrentMagazine;
+                int    res = w.ReserveAmmo;
+                if (mag != m_lastMagazine || res != m_lastReserveAmmo)
+                {
+                    string reserveStr = res > 999 ? "999+" : res.ToString();
+                    m_ammoText.Text   = $"\u00BB{mag} \u00BA{reserveStr}";
+                    m_lastMagazine    = mag;
+                    m_lastReserveAmmo = res;
+                }
+
+                string name = w.WeaponData.name;
+                if (name != m_lastWeaponName)
+                {
+                    m_weaponNameText.Text                    = name;
+                    m_weaponNameText.rectTransform.sizeDelta = new Vector2(25 * name.Length, 98);
+                    m_lastWeaponName = name;
+                }
             }
+
+            reload.gameObject.SetActive(m_player.IsReloading);
+            change.gameObject.SetActive(m_player.IsSwitchingWeapon);
         }
 
         private Color32 SetStateColor(float hp)
@@ -113,7 +144,7 @@ namespace UnityXOPS
             }
 
             float ratio = name.Length / (float)limit;
-            return baseFontSize / ratio;
+            return new Vector2(baseFontSize.x / ratio, baseFontSize.y);
         }
     }
 }

@@ -57,13 +57,18 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// BulletManager 가 Spawn 직전에 호출. Bullet prefab 의 visual GameObject 의 메시/머티리얼/스케일을 BulletData 에 맞게 교체.
+        /// BulletManager 가 Spawn 직전에 호출. Bullet prefab 의 visual GameObject 의 메시/머티리얼/transform 을 BulletData 에 맞게 교체.
         /// </summary>
-        public void ApplyVisual(Mesh mesh, Material material, float scale)
+        public void ApplyVisual(Mesh mesh, Material material, Vector3 position, Vector3 rotation, Vector3 scale)
         {
             if (m_visualMeshFilter   != null) m_visualMeshFilter.sharedMesh       = mesh;
             if (m_visualMeshRenderer != null) m_visualMeshRenderer.sharedMaterial = material;
-            if (visual               != null) visual.transform.localScale         = Vector3.one * scale;
+            if (visual               != null)
+            {
+                visual.transform.localPosition = position;
+                visual.transform.localRotation = Quaternion.Euler(rotation);
+                visual.transform.localScale    = scale;
+            }
         }
 
         /// <summary>

@@ -13,10 +13,11 @@ namespace UnityXOPS
         public string name;
         public List<string> textures;
         public List<ModelData> modelData;
-        public string muzzleFlashTexture;
+        public int muzzleFlashEffectIndex;
         public Vector3 muzzleFlashOffset;
         public float muzzleFlashSize;
-        public string shellTexture;
+        public int gunfireSmokeEffectIndex;
+        public int shellEffectIndex;
         public Vector3 shellEjectOffset;
         public Vector3 shellEjectDirection;
         public float shellEjectSpeed;

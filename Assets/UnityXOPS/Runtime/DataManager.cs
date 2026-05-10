@@ -23,6 +23,10 @@ namespace UnityXOPS
         public ObjectParameterData ObjectParameterData => objectParameterData;
 
         [SerializeField]
+        private EffectParameterData effectParameterData;
+        public EffectParameterData EffectParameterData => effectParameterData;
+
+        [SerializeField]
         private SkyData skyData;
         public SkyData SkyData => skyData;
 
@@ -33,6 +37,7 @@ namespace UnityXOPS
         private const string k_humanParameterDataPath = "unitydata/human_parameter_data.json";
         private const string k_weaponParameterDataPath = "unitydata/weapon_parameter_data.json";
         private const string k_objectParameterDataPath = "unitydata/object_parameter_data.json";
+        private const string k_effectParameterDataPath = "unitydata/effect_parameter_data.json";
         private const string k_skyDataPath = "unitydata/sky_data.json";
         private const string k_missionDataPath = "unitydata/mission_data.json";
 
@@ -44,6 +49,7 @@ namespace UnityXOPS
             LoadHumanParameterData();
             LoadWeaponParameterData();
             LoadObjectParameterData();
+            LoadEffectParameterData();
             LoadSkyData();
             LoadMissionData();
         }
@@ -67,6 +73,13 @@ namespace UnityXOPS
             string fullPath = Path.Combine(Application.streamingAssetsPath, k_objectParameterDataPath);
             string json = File.ReadAllText(fullPath);
             objectParameterData = JsonUtility.FromJson<ObjectParameterData>(json);
+        }
+
+        private void LoadEffectParameterData()
+        {
+            string fullPath = Path.Combine(Application.streamingAssetsPath, k_effectParameterDataPath);
+            string json = File.ReadAllText(fullPath);
+            effectParameterData = JsonUtility.FromJson<EffectParameterData>(json);
         }
 
         /// <summary>

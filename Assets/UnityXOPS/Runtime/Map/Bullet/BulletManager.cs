@@ -70,7 +70,7 @@ namespace UnityXOPS
             Material material = GetBulletMaterial(data.texturePath);
 
             slot.gameObject.SetActive(true);
-            slot.ApplyVisual(mesh, material, data.modelScale);
+            slot.ApplyVisual(mesh, material, data.modelPosition, data.modelRotation, data.modelScale);
             slot.Spawn(data, owner, team, attacks, penetration, position, velocity);
             return slot;
         }

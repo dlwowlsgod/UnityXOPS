@@ -187,6 +187,7 @@ namespace UnityXOPS
         /// <summary>
         /// owner 시점 위치 + yaw/pitch + 산탄 분산 으로 pelletCount 발 BulletManager.Spawn 호출.
         /// 산탄 분산: 원본 (GetRand(5)*2+5) × 0.15° = 0.75°~1.95° 박스 분포 재현 (objectmanager.cpp:2005-2009).
+        /// 발사 위치/방향: 사람 머리(owner.position + cameraAttachPosition) + yaw/pitch — 1인칭/3인칭/AI 모두 동일 (원본 OpenXOPS objectmanager.cpp:2026 그대로).
         /// </summary>
         private void SpawnBullets(Human owner, BulletData bulletData)
         {
