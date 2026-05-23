@@ -66,6 +66,10 @@ namespace UnityXOPS
         private HumanMoveFlag m_moveFlagLt;
         private int           m_moveYUpper;
 
+        // 접지 여부 — 원본 OpenXOPS move_y_flag 의 반전 (접지=true). 정확도 airborne 페널티에 사용.
+        // 스폰 직후 첫 FixedUpdate 전까지는 접지로 간주 (대부분 지면에서 시작).
+        private bool          m_grounded = true;
+
         // 사망 상태머신 누적값
         private float m_deadAddRy;         // 사망 회전 각속도 (deg/s), 부호 있음. Falling/LegSliding 단계 누적
         private float m_deadPitchAngle;    // 사망 회전 각도 (deg), 부호 있음. +면 앞으로 엎어짐, -면 뒤로 자빠짐
@@ -77,6 +81,7 @@ namespace UnityXOPS
         public Vector3       MoveVelocity => m_moveVelocity;
         public HumanMoveFlag MoveFlag     => m_moveFlag;
         public HumanMoveFlag MoveFlagLt   => m_moveFlagLt;
+        public bool          Grounded     => m_grounded;
 
         private void Awake()
         {
@@ -347,6 +352,9 @@ namespace UnityXOPS
                 m_moveVelocity.y -= gen.gravityAcceleration * dt * (1f / 3f);
                 if (m_moveVelocity.y < gen.fallMaxSpeed) m_moveVelocity.y = gen.fallMaxSpeed;
             }
+
+            // 접지 상태 갱신 — fallFlag=true 는 발밑 블록 감지(접지)를 의미. 정확도 airborne 페널티에 사용.
+            m_grounded = fallFlag;
 
             // 7. 접지 처리 및 경사 미끄러짐
             if (fallFlag)

@@ -20,8 +20,10 @@ namespace UnityXOPS
 
         // 수류탄 마찰 — OpenXOPS object.cpp:3010-3026 (× 0.98 / frame, 33.333 fps). dt 가변 변환: 0.98^33.333 ≈ 0.5169.
         private const float k_grenadeFrictionPerSec = 0.5169f;
-        // 반사 시 추가 감쇠 — 원본 0.7 base + 각도 보정 (0.2546 × -cos⊥), 1차에선 평균 0.85 고정.
-        private const float k_reflectAcceleration   = 0.85f;
+        // 수류탄 반사 감속 = -Angle×0.2546 + 0.7 (원본 object.cpp:3000). Angle = asin(v̂·n)×-1 ∈ [0, π/2].
+        // 정면 충돌(π/2) → 0.3 강한 감속, 스치는 충돌(0) → 0.7. 0.2546 은 원본 매직넘버.
+        private const float k_reflectAngleCoef = 0.2546f;
+        private const float k_reflectBaseCoef  = 0.7f;
         // 명중 후 hit point 직전 epsilon — 면 안쪽 박힘 방지.
         private const float k_hitEpsilon            = 0.001f;
 
@@ -40,7 +42,8 @@ namespace UnityXOPS
         private float          m_lifetimeTimer;
         private float          m_armingTimer;
         private bool           m_active;
-        private HashSet<Human> m_hitHumans = new HashSet<Human>();
+        private HashSet<Human>       m_hitHumans  = new HashSet<Human>();
+        private HashSet<SmallObject> m_hitObjects = new HashSet<SmallObject>();
 
         private MeshFilter     m_visualMeshFilter;
         private MeshRenderer   m_visualMeshRenderer;
@@ -88,6 +91,7 @@ namespace UnityXOPS
             m_armingTimer   = data.armingDelay;
             m_active        = true;
             m_hitHumans.Clear();
+            m_hitObjects.Clear();
 
             transform.position = position;
             transform.rotation = velocity.sqrMagnitude > 0f
@@ -156,8 +160,11 @@ namespace UnityXOPS
                     return;
                 }
 
-                // 일반 수류탄 — 반사 (원본 ProcessObject return 1).
-                m_velocity = Vector3.Reflect(m_velocity, blockHit.normal) * k_reflectAcceleration;
+                // 일반 수류탄 — 반사 + 입사각 기반 감속 (원본 grenade::ProcessObject object.cpp:2987-3005).
+                float dot   = Mathf.Clamp(Vector3.Dot(dir, blockHit.normal), -1f, 1f);
+                float angle = -Mathf.Asin(dot);                          // 원본 Collision::AngleVector (collision.cpp:883)
+                float accel = -angle * k_reflectAngleCoef + k_reflectBaseCoef;
+                m_velocity = Vector3.Reflect(m_velocity, blockHit.normal) * accel;
                 transform.position = blockHit.point + blockHit.normal * k_hitEpsilon;
                 return;
             }
@@ -197,6 +204,13 @@ namespace UnityXOPS
                     }
                     // 관통 — 이번 hit 처리 후 다음 hit 으로 진행
                     continue;
+                }
+
+                ObjectCollider objCollider = hit.collider.GetComponentInParent<ObjectCollider>();
+                if (objCollider != null && objCollider.Owner != null)
+                {
+                    HandleObjectHit(objCollider.Owner);
+                    continue; // 소품은 총알을 막지 않음 — 데미지 + attacks 감쇠 후 관통 (원본 objectmanager.cpp:835-839)
                 }
 
                 if (hit.collider.gameObject.layer == MapLoader.BlockLayer)
@@ -281,6 +295,19 @@ namespace UnityXOPS
         }
 
         /// <summary>
+        /// 소품(SmallObject) 총알 피격. 원본 objectmanager.cpp:835-839 — 데미지 = floor(attacks×0.25), 통과 후 잔여 attacks ×0.7.
+        /// 소품은 총알을 멈추지 않고 관통시키며, 같은 소품은 1발당 1회만 처리.
+        /// </summary>
+        private void HandleObjectHit(SmallObject obj)
+        {
+            if (obj == null || obj.IsDestroyed) return;
+            if (!m_hitObjects.Add(obj))         return; // 같은 소품 중복 hit 차단
+
+            obj.HitBullet(Mathf.FloorToInt(m_attacks * 0.25f));
+            m_attacks = Mathf.FloorToInt(m_attacks * 0.7f);
+        }
+
+        /// <summary>
         /// 폭발 데미지 — explosionRadius 내 모든 사람에게 거리 기반 선형감쇠. owner 자폭 포함.
         /// 머리/다리 별도 raycast 차폐 검사 (원본 OpenXOPS objectmanager.cpp:1039-1230 GrenadeExplosion).
         /// 1차 사이클: 이펙트/사운드/소품 데미지/knockback 미구현.
@@ -341,6 +368,24 @@ namespace UnityXOPS
 
                     hb.Human.ApplyDamage(total);
                 }
+
+                // 소품(SmallObject) 폭발 피격 — 단일 중심점 거리 감쇠 + 벽 차폐 (원본 objectmanager.cpp:1171-1211, damage = 80 - r).
+                // 사람용 ComputeExplosionDamage 재사용: objectExplosiveDamageMax × (1 - d/radius) = 원본과 수학적 동일. 머리/다리 구분·넉백 없음.
+                float objDmgMax = m_bulletData.objectExplosiveDamageMax;
+                if (objDmgMax > 0f)
+                {
+                    HashSet<SmallObject> processedObj = new HashSet<SmallObject>();
+                    for (int i = 0; i < cols.Length; i++)
+                    {
+                        ObjectCollider oc = cols[i].GetComponentInParent<ObjectCollider>();
+                        if (oc == null || oc.Owner == null) continue;
+                        if (oc.Owner.IsDestroyed)           continue;
+                        if (!processedObj.Add(oc.Owner))    continue;
+
+                        float objDmg = ComputeExplosionDamage(origin, oc.Owner.transform.position, radius, objDmgMax);
+                        if (objDmg > 0f) oc.Owner.HitGrenadeExplosion(objDmg);
+                    }
+                }
             }
 
             Recycle();
@@ -365,6 +410,7 @@ namespace UnityXOPS
         {
             m_active = false;
             m_hitHumans.Clear();
+            m_hitObjects.Clear();
             gameObject.SetActive(false);
         }
     }

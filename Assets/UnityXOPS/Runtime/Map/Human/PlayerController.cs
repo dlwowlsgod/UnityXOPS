@@ -38,6 +38,10 @@ namespace UnityXOPS
         private float m_yaw;
         private float m_pitch;
 
+        // 씬 전환 입력 누수 방지 — 조작권 획득 후 Fire 를 한 번 떼야 발사 허용.
+        // 브리핑을 닫은 좌클릭(BriefingScene 의 leftButton)이 Maingame 첫 프레임 Fire 로 새는 것 차단.
+        private bool m_fireReady;
+
         private float m_deathCamYaw;
         private float m_deathCamPitch;
         private bool  m_deathCamInitialized;
@@ -113,14 +117,22 @@ namespace UnityXOPS
 
             // 발사 — burstMode 에 따라 입력 폴링 방식 분기. FullAuto = 누르고 있으면 연사, 그 외 = 1회 입력당 1발.
             // Weapon.Shoot 자체가 fireRate 쿨다운으로 연사 속도 제한.
+            // Fire 를 떼면 발사 무장. 조작권 획득 직후엔 비무장(m_fireReady=false)이라, 브리핑에서 넘어온 눌림은 무시되고 한 번 뗀 뒤부터 발사된다.
+            if (!input.Fire.IsPressed()) m_fireReady = true;
+
             Weapon currentWeapon = m_player.CurrentWeapon;
-            if (currentWeapon != null && currentWeapon.WeaponData != null)
+            if (m_fireReady && currentWeapon != null && currentWeapon.WeaponData != null)
             {
                 bool fire = currentWeapon.WeaponData.burstMode == WeaponBurstMode.FullAuto
                           ? input.Fire.IsPressed()
                           : input.Fire.WasPressedThisFrame();
                 if (fire) currentWeapon.Shoot(m_player);
             }
+
+            // 발사 시 무기가 컨트롤러 시점각에 누적한 에임 킥을 마우스 누적값으로 되읽어 영구 반영.
+            // 원본 OpenXOPS gamemain.cpp:2240-2245 — ShotWeapon 후 GetRxRy 역동기화. 킥이 없으면 무변화(no-op).
+            m_yaw   = m_controller.Yaw;
+            m_pitch = Mathf.Clamp(m_controller.Pitch, -pitchLimit, pitchLimit);
         }
 
         private void LateUpdate()
@@ -233,6 +245,7 @@ namespace UnityXOPS
                 m_controller = player.GetComponent<HumanController>();
                 m_yaw        = player.transform.eulerAngles.y;
                 m_pitch      = 0f;
+                m_fireReady  = false; // 조작권 획득 시 비무장 — Fire 를 한 번 떼야 발사 (씬 전환 클릭 누수 차단)
                 m_controller.SetYawPitch(m_yaw, m_pitch);
 
                 ApplyViewpoint();

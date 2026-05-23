@@ -42,11 +42,13 @@ namespace UnityXOPS
         private bool   m_legRotationInitialized;
 
         // 원본 reaction_y/slowarm — dynamicArmRoot 의 X 축 추가 offset (도).
-        // 두 모드: (1) slowarm 보간 — duration 동안 0 으로 선형 복원 (슬롯 持ち替え/픽업).
-        //         (2) hold 모드 — duration 동안 holdDeg 유지, 종료 시 즉시 0 으로 스냅 (Switch ID/재장전).
+        // 세 모드: (1) slowarm 보간 — duration 동안 0 으로 선형 복원 (슬롯 持ち替え/픽업).
+        //         (2) hold 모드 — duration 동안 holdDeg 유지, 종료 시 지수 감쇠로 부드럽게 복구 (Switch ID/재장전).
+        //         (3) 발사 반동 — 즉시 세팅 후 지수 감쇠 (BeginArmShotReaction).
         private float m_armReactionDeg;
         private float m_armReactionRecoverySpeed;
         private float m_armReactionHoldTimer;
+        private bool  m_armReactionExponential;
         private float m_armPitchDeg;
 
         /// <summary>
@@ -342,6 +344,7 @@ namespace UnityXOPS
         /// <param name="duration">0 으로 복원되는 시간 (초). slotChangeTime 등.</param>
         public void BeginArmReaction(float startDeg, float duration)
         {
+            m_armReactionExponential = false;
             if (duration <= 0f)
             {
                 m_armReactionDeg           = 0f;
@@ -358,13 +361,14 @@ namespace UnityXOPS
 
         /// <summary>
         /// hold 락 모드: reaction 을 holdDeg 로 즉시 세팅하고 duration 동안 그 값을 유지.
-        /// 타이머 종료 시 즉시 0 으로 스냅 (보간 없음). Switch ID / 재장전 시 사용.
-        /// 원본 OpenXOPS ChangeWeaponIDCnt > 0 동안 reaction_y = ARMRAD_RELOADWEAPON 강제 (object.cpp:3427-3429).
+        /// 타이머 종료 시 지수 감쇠로 부드럽게 0 복구 (TickArmReaction 이 exponential 모드로 전환). Switch ID / 재장전 시 사용.
+        /// 원본 OpenXOPS: ReloadCnt/ChangeWeaponIDCnt > 0 동안 reaction_y = ARMRAD_RELOADWEAPON 강제(object.cpp:3422-3429), 0 도달 후 slowarm=false 지수 감쇠(:3401-3411).
         /// </summary>
         /// <param name="holdDeg">유지할 offset (도).</param>
         /// <param name="duration">유지 시간 (초). switchTime / reloadTime 등.</param>
         public void BeginArmReactionHold(float holdDeg, float duration)
         {
+            m_armReactionExponential = false;
             if (duration <= 0f)
             {
                 // duration 이 0 이면 hold 효과 자체 없음. 이전 reaction 상태가 남아 slowarm 으로 fallback 되지 않도록 0 으로 클리어.
@@ -379,8 +383,22 @@ namespace UnityXOPS
         }
 
         /// <summary>
+        /// 발사 반동 모드: reaction 을 startDeg 로 즉시 세팅하고 매 프레임 ×0.5 (33.33fps 기준) 지수 감쇠.
+        /// 원본 OpenXOPS slowarm=false 경로 — MotionCtrl::ShotWeapon 이 reaction_y 세팅 후 ProcessObject 가 reaction_y *= 0.5 (object.cpp:3358, 3403-3410).
+        /// 발사 시 총이 위로 까딱했다가 빠르게 복원. 진행 중이던 slowarm/hold 상태를 덮어씀.
+        /// </summary>
+        /// <param name="startDeg">발사 순간 offset (도). 0.5° × reaction. 양수 = 위로 킥.</param>
+        public void BeginArmShotReaction(float startDeg)
+        {
+            m_armReactionExponential = true;
+            m_armReactionDeg         = startDeg;
+            m_armReactionHoldTimer   = 0f;
+            ApplyArmRotation();
+        }
+
+        /// <summary>
         /// 매 프레임 호출. hold 타이머 > 0 면 그 값 유지 + 타이머 감소(끝나면 0 스냅).
-        /// 그 외엔 slowarm 선형 복원.
+        /// 발사 반동(지수)이면 ×0.5 감쇠, 그 외엔 slowarm 선형 복원.
         /// </summary>
         public void TickArmReaction(float dt)
         {
@@ -389,14 +407,25 @@ namespace UnityXOPS
                 m_armReactionHoldTimer -= dt;
                 if (m_armReactionHoldTimer <= 0f)
                 {
-                    m_armReactionHoldTimer = 0f;
-                    m_armReactionDeg       = 0f;
-                    ApplyArmRotation();
+                    // 홀드 종료 → 즉시 스냅이 아니라 지수 감쇠로 부드럽게 복구.
+                    // 원본 OpenXOPS: ReloadCnt/ChangeWeaponIDCnt=0 후 slowarm=false 분기의 reaction_y *= 0.5 (object.cpp:3401-3411).
+                    m_armReactionHoldTimer   = 0f;
+                    m_armReactionExponential = true;
                 }
                 return;
             }
 
             if (m_armReactionDeg == 0f) return;
+
+            if (m_armReactionExponential)
+            {
+                // 원본 reaction_y *= 0.5f / frame @ 33.33fps. 0.01° 미만이면 0 으로 스냅 (object.cpp:3404-3409).
+                m_armReactionDeg *= Mathf.Pow(0.5f, dt * 33.3333f);
+                if (Mathf.Abs(m_armReactionDeg) < 0.01f) m_armReactionDeg = 0f;
+                ApplyArmRotation();
+                return;
+            }
+
             m_armReactionDeg = Mathf.MoveTowards(m_armReactionDeg, 0f, m_armReactionRecoverySpeed * dt);
             ApplyArmRotation();
         }

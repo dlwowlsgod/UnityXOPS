@@ -32,6 +32,19 @@ namespace UnityXOPS
         public  bool  IsDestroyed  => m_isDestroyed;
         public  int   Identifier   => m_identifier;
 
+        // 파괴 점프 — 원본 smallobject::Destruction/ProcessObject (object.cpp:2684-2751) 의 프레임 기반 물리를 시간 기반으로 변환.
+        // 원본: move_rx=jump×0.04243(수평/frame), pos_y+=jump_cnt×0.1(수직, jump_cnt 매 프레임 -1 → 등가속 낙하), 34프레임(~1.02s) 후 소멸. 바운스/맵충돌 없음.
+        // 좌표 ×0.1, 33.333fps 환산: 수평/초기상승 = ×0.1×33.333, 중력 = ×0.1×33.333².
+        private const float k_destroyFps          = 33.3333f;
+        private const float k_destroyHorizPerJump = 0.04243f * 0.1f * k_destroyFps;             // jump 당 수평 속도 (m/s)
+        private const float k_destroyVertPerJump  = 0.1f     * 0.1f * k_destroyFps;             // jump 당 초기 상승 속도 (m/s)
+        private const float k_destroyGravity      = 0.1f     * 0.1f * k_destroyFps * k_destroyFps; // 중력 (m/s²)
+        private const float k_destroyLifetime     = 34f / k_destroyFps;                         // 소멸 시간 (원본 cnt > 33)
+
+        private Vector3 m_destroyVelocity;
+        private Vector3 m_destroyAngularVel;  // (x, y) deg/s
+        private float   m_destroyTimer;
+
         /// <summary>
         /// objectIndex 로 ObjectData/ObjectModelData/ObjectColliderData 를 조회해 Visual/Collider 컴포넌트를 빌드하고 HP 를 초기화한다.
         /// modelScale 은 Visual root 에만 적용 — Collider 는 OpenXOPS decide 원본 단위와 일치하도록 그대로 둔다.
@@ -74,7 +87,7 @@ namespace UnityXOPS
             }
             if (m_objectColliderData != null)
             {
-                objectCollider.CreateObjectCollider(m_objectColliderData);
+                objectCollider.CreateObjectCollider(m_objectColliderData, this);
             }
         }
 
@@ -163,21 +176,76 @@ namespace UnityXOPS
 
         /// <summary>
         /// 총탄 피격 진입점. OpenXOPS object.cpp:2663-2669 미러.
-        /// 호출자가 attacks * 0.25f (objectmanager.cpp:835) 등 데미지 보정 후 전달해야 한다.
-        /// hp 가 0 이하가 되면 m_isDestroyed=true 로 표시만 함 — 회전·점프 애니메이션과 비활성화는 추후 구현.
+        /// 호출자가 floor(attacks × 0.25) (objectmanager.cpp:835) 등 데미지 보정 후 전달해야 한다.
         /// </summary>
         /// <param name="attacks">감산할 데미지.</param>
-        public void HitBullet(float attacks)
+        public void HitBullet(float attacks) => TakeDamage(attacks);
+
+        /// <summary>
+        /// 수류탄 폭발 피격 진입점. OpenXOPS object.cpp:2674-2680 미러.
+        /// 호출자(Bullet.Explode)가 거리 감쇠 + 벽 차폐를 적용한 데미지를 전달한다.
+        /// </summary>
+        /// <param name="damage">감산할 데미지.</param>
+        public void HitGrenadeExplosion(float damage) => TakeDamage(damage);
+
+        /// <summary>
+        /// hp 차감 후 0 이하면 파괴(점프) 진입. 원본 object.cpp:2663-2680 의 공통 패턴 (hp -= attacks; if(hp<=0) Destruction()).
+        /// </summary>
+        private void TakeDamage(float amount)
         {
             if (m_isDestroyed) return;
 
-            m_hp -= attacks;
+            m_hp -= amount;
             if (m_hp <= 0f)
             {
-                m_hp          = 0f;
-                m_isDestroyed = true;
-                // TODO: Destruction 진입 — jump_cnt/move_rx/add_rx,ry 초기화 + ProcessObject 시작.
+                m_hp = 0f;
+                StartDestruction();
             }
+        }
+
+        /// <summary>
+        /// 파괴 진입 — 원본 smallobject::Destruction (object.cpp:2684-2710). jump 값으로 무작위 방향 점프 + 회전 시작.
+        /// 방향 0~350°(10° 단위), 수평속도 jump×0.04243, 초기 상승속도 jump×0.1(/frame), 회전 0~19°/frame.
+        /// </summary>
+        private void StartDestruction()
+        {
+            m_isDestroyed = true;
+
+            int jump = m_objectData != null ? m_objectData.jump : 0;
+
+            float dirRad = UnityEngine.Random.Range(0, 36) * 10f * Mathf.Deg2Rad;  // 원본 10° × GetRand(36)
+            float horiz  = jump * k_destroyHorizPerJump;
+            float vert   = jump * k_destroyVertPerJump;
+
+            // 원본: pos_x += cos(jump_rx)*move_rx, pos_z += sin(jump_rx)*move_rx
+            m_destroyVelocity = new Vector3(Mathf.Cos(dirRad) * horiz, vert, Mathf.Sin(dirRad) * horiz);
+
+            // 원본 add_rx/add_ry = 1° × GetRand(20) (per frame) → deg/s
+            m_destroyAngularVel = new Vector3(
+                UnityEngine.Random.Range(0, 20) * k_destroyFps,
+                UnityEngine.Random.Range(0, 20) * k_destroyFps,
+                0f);
+
+            m_destroyTimer = k_destroyLifetime;
+        }
+
+        /// <summary>
+        /// 파괴 점프 물리 진행 — 원본 smallobject::ProcessObject (object.cpp:2713-2751) 의 시간 기반 변환.
+        /// 등가속 포물선 + 회전 누적, 맵 충돌/바운스 없음, 수명 종료 시 비활성화 (원본 EnableFlag=false).
+        /// </summary>
+        private void Update()
+        {
+            if (!m_isDestroyed) return;
+
+            float dt = Time.deltaTime;
+
+            m_destroyVelocity.y -= k_destroyGravity * dt;
+            transform.position  += m_destroyVelocity * dt;
+            transform.Rotate(m_destroyAngularVel.x * dt, m_destroyAngularVel.y * dt, 0f, Space.Self);
+
+            m_destroyTimer -= dt;
+            if (m_destroyTimer <= 0f)
+                gameObject.SetActive(false);
         }
     }
 }

@@ -1,3 +1,5 @@
+using JJLUtility;
+using JJLUtility.IO;
 using UnityEngine;
 
 namespace UnityXOPS
@@ -8,6 +10,9 @@ namespace UnityXOPS
     /// </summary>
     public class Weapon : MonoBehaviour
     {
+        // ErrorRange 정수 1 단위 = 0.15°. 원본 OpenXOPS objectmanager.cpp:1980 DegreeToRadian(0.15f).
+        private const float k_errorRangeUnitDeg = 0.15f;
+
         [SerializeField]
         private WeaponVisual weaponVisual;
         public WeaponVisual WeaponVisual => weaponVisual;
@@ -34,6 +39,9 @@ namespace UnityXOPS
 
         private float m_fireRateTimer;
         public  float FireRateTimer => m_fireRateTimer;
+
+        // 격발음 clip (캐싱). soundVolume 0 무기(NONE/GRENADE/CASE)는 null.
+        private AudioClip m_fireSound;
 
         /// <summary>
         /// weaponIndex 로 WeaponData/WeaponModelData 를 조회해 무기 데이터/탄약/시각/스케일을 초기화한다.
@@ -64,6 +72,11 @@ namespace UnityXOPS
             {
                 m_weaponModelData = wp.weaponModelData[modelIndex];
             }
+
+            // 격발음 clip 로드 (SoundLoader 가 경로 단위 캐싱). soundVolume 0 무기는 무음 → 로드 스킵.
+            m_fireSound = (m_weaponData.soundVolume > 0f && !string.IsNullOrEmpty(m_weaponData.soundPath))
+                ? SoundLoader.LoadAudio(SafePath.Combine(Application.streamingAssetsPath, m_weaponData.soundPath))
+                : null;
 
             int magazineSize = m_weaponData.magazineSize;
             if (magazine < 0) magazine = magazineSize;
@@ -119,6 +132,25 @@ namespace UnityXOPS
 
             BulletData bulletData = wp.bulletData[bulletIdx];
             SpawnBullets(owner, bulletData);
+
+            // 이번 발사 분 반동을 누적 — 다음 발사부터 조준 오차에 반영 (원본 human::ShotWeapon object.cpp:707).
+            owner.AddShotReaction(m_weaponData.recoil);
+
+            // 팔/총 모델 시각 반동 — 발사 시 위로 까딱→자동 복원 (정확도와 별개, 무기별 데이터값).
+            // 원본 MotionCtrl::ShotWeapon (object.cpp:3341-3362) 의 reaction_y 를 per-weapon 데이터로 일반화.
+            if (owner.HumanVisual != null)
+                owner.HumanVisual.BeginArmShotReaction(m_weaponData.armReactionAngle);
+
+            // 비조준 에임 킥 — 실제 시점이 움직임 (영구 누적, 자동 복원 없음). 원본 human::ShotWeapon (object.cpp:710-726) WeaponRecoil_Scope* 의 비조준 분기.
+            // recoilAimHorizontal=좌우(대칭), recoilAimVertical=상하(양수 저장=위로 → Unity 적용 시 부호 반전). 스코프 무기의 조준 시 추가 킥(ScopeData.*Adjust)은 ADS 미구현이라 보류.
+            float yawKick   = UnityEngine.Random.Range(m_weaponData.recoilAimHorizontal.min, m_weaponData.recoilAimHorizontal.max);
+            float pitchKick = UnityEngine.Random.Range(m_weaponData.recoilAimVertical.min,   m_weaponData.recoilAimVertical.max);
+            if (yawKick != 0f || pitchKick != 0f)
+                owner.AddViewRecoil(yawKick, -pitchKick);
+
+            // 격발음 — 무기 위치를 음원으로 3D 재생 (원본 objectmanager.cpp:2051). soundVolume 0 무기는 m_fireSound=null.
+            if (m_fireSound != null)
+                SoundManager.Instance.PlayAt(m_fireSound, transform.position, m_weaponData.soundVolume);
 
             m_currentMagazine--;
             m_fireRateTimer = 1f / m_weaponData.fireRate;
@@ -185,9 +217,11 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// owner 시점 위치 + yaw/pitch + 산탄 분산 으로 pelletCount 발 BulletManager.Spawn 호출.
-        /// 산탄 분산: 원본 (GetRand(5)*2+5) × 0.15° = 0.75°~1.95° 박스 분포 재현 (objectmanager.cpp:2005-2009).
-        /// 발사 위치/방향: 사람 머리(owner.position + cameraAttachPosition) + yaw/pitch — 1인칭/3인칭/AI 모두 동일 (원본 OpenXOPS objectmanager.cpp:2026 그대로).
+        /// owner 시점 위치 + yaw/pitch + 조준 오차로 pelletCount 발 BulletManager.Spawn 호출.
+        /// 원본 OpenXOPS ObjectManager::ShotWeapon (objectmanager.cpp:1966-2026) 의 탄도 오차 로직 재현:
+        ///  1. 실효 오차 = max(owner.GunsightErrorRange(상태+반동), errorRange.min). pitch/yaw 각각 독립 box 분포 × 0.15° — 펠릿 루프 밖 1회 계산해 모든 펠릿이 공유.
+        ///  2. 산탄(pelletCount>1) 은 펠릿마다 폴라 추가 확산 (방향 0~350° 10°단위, 반경 {5,7,9,11,13}) × 0.15° (objectmanager.cpp:2005-2009).
+        /// 발사 위치: 사람 머리(owner.position + cameraAttachPosition) — 1인칭/3인칭/AI 모두 동일 (objectmanager.cpp:2026 그대로).
         /// </summary>
         private void SpawnBullets(Human owner, BulletData bulletData)
         {
@@ -198,20 +232,33 @@ namespace UnityXOPS
             float yaw   = controller.Yaw;
             float pitch = controller.Pitch;
 
+            // 기본 탄도 오차 (모든 펠릿 공유). 실효 오차값에 errorRange.min 하한 적용.
+            // ignoreAimError(수류탄 등 투척 발사체) 면 조준 오차를 전혀 적용 안 하고 시점 그대로 발사 — 원본 grenade 투척 (objectmanager.cpp:1972, rx/ry 직접 사용, ErrorRange 미적용).
+            float effError     = m_weaponData.ignoreAimError
+                               ? 0f
+                               : Mathf.Max(owner.GunsightErrorRange, m_weaponData.errorRange.min);
+            float basePitchErr = 0f;
+            float baseYawErr   = 0f;
+            if (effError > 0f)
+            {
+                basePitchErr = UnityEngine.Random.Range(-effError, effError) * k_errorRangeUnitDeg;
+                baseYawErr   = UnityEngine.Random.Range(-effError, effError) * k_errorRangeUnitDeg;
+            }
+
             int pellets = Mathf.Max(1, m_weaponData.pelletCount);
             for (int i = 0; i < pellets; i++)
             {
-                float dx = 0f, dy = 0f;
+                float pitchErr = basePitchErr;
+                float yawErr   = baseYawErr;
                 if (pellets > 1)
                 {
-                    float spreadDeg   = UnityEngine.Random.Range(0.75f, 1.95f);
-                    float spreadAngle = UnityEngine.Random.Range(0f, 360f);
-                    float spreadRad   = spreadAngle * Mathf.Deg2Rad;
-                    dx = Mathf.Cos(spreadRad) * spreadDeg;
-                    dy = Mathf.Sin(spreadRad) * spreadDeg;
+                    float a   = UnityEngine.Random.Range(0, 36) * 10f * Mathf.Deg2Rad;  // 방향 0~350°, 10° 단위
+                    float len = UnityEngine.Random.Range(0, 5) * 2 + 5;                 // 반경 {5,7,9,11,13}
+                    pitchErr += Mathf.Cos(a) * len * k_errorRangeUnitDeg;
+                    yawErr   += Mathf.Sin(a) * len * k_errorRangeUnitDeg;
                 }
 
-                Quaternion rot      = Quaternion.Euler(pitch + dy, yaw + dx, 0f);
+                Quaternion rot      = Quaternion.Euler(pitch + pitchErr, yaw + yawErr, 0f);
                 Vector3    velocity = rot * Vector3.forward * m_weaponData.bulletSpeed;
 
                 BulletManager.Instance.Spawn(

@@ -87,6 +87,12 @@ namespace UnityXOPS
         private HumanTypeData m_humanTypeData;
         public HumanTypeData HumanTypeData => m_humanTypeData;
 
+        private HumanController m_controller;
+
+        // 조준 오차 중 연사 반동 누적분. 원본 OpenXOPS human::ReactionGunsightErrorRange (object.cpp).
+        // 발사 시 WeaponData.recoil 가산, 매 프레임 회복(감소) + 현재 무기 errorRange.max 클램프.
+        private float m_reactionErrorRange;
+
         private RawPointData m_humanParam, m_humanDataParam;
 
         private int m_identifier;
@@ -127,6 +133,7 @@ namespace UnityXOPS
             m_humanParam     = humanParam;
             m_humanDataParam = humanDataParam;
             m_identifier     = humanParam.param3;
+            m_controller     = GetComponent<HumanController>();
 
             var humanParamData = DataManager.Instance.HumanParameterData;
             int humanIndex = m_humanDataParam.param1;
@@ -191,6 +198,8 @@ namespace UnityXOPS
             float dt = Time.deltaTime;
             if (m_selectWeaponCnt > 0f) m_selectWeaponCnt -= dt;
 
+            TickReactionRecovery(dt);
+
             // m_reloadingCnt 는 SwitchID(SEMI↔FULL) 와 Reload 둘 다 사용. 0 도달 시 활성 무기가 reloading 중이면 매거진 보충.
             if (m_reloadingCnt > 0f)
             {
@@ -204,6 +213,74 @@ namespace UnityXOPS
 
             humanVisual.TickArmReaction(dt);
             TryPickupWeapon();
+        }
+
+        /// <summary>
+        /// 발사 시점의 실효 조준 오차 (단위: ErrorRange 정수 스케일). 상태 오차 + 반동 누적분의 합.
+        /// Weapon.SpawnBullets 가 errorRange.min 하한을 적용한 뒤 0.15° 단위로 환산해 탄도에 더한다.
+        /// 원본 OpenXOPS human::GetGunsightErrorRange (object.cpp:2113-2116).
+        /// </summary>
+        public float GunsightErrorRange => StateErrorRange() + m_reactionErrorRange;
+
+        /// <summary>
+        /// 이동/점프/저체력 상태에 따른 조준 오차. 원본 OpenXOPS human::GunsightErrorRange (object.cpp:1130-1152).
+        /// 이동 페널티는 대입(=)이라 마지막으로 평가된 조건이 우선 — Walk→Forward→Back→Strafe→airborne 순서. 저체력만 가산(+=).
+        /// </summary>
+        private float StateErrorRange()
+        {
+            var wgen = DataManager.Instance.WeaponParameterData.weaponGeneralData;
+            int state = 0;
+
+            HumanMoveFlag flag = m_controller != null ? m_controller.MoveFlagLt : HumanMoveFlag.None;
+            if ((flag & HumanMoveFlag.Walk)    != 0)                                 state = wgen.walkAccuracyPenalty;
+            if ((flag & HumanMoveFlag.Forward) != 0)                                 state = wgen.forwardAccuracyPenalty;
+            if ((flag & HumanMoveFlag.Back)    != 0)                                 state = wgen.backAccuracyPenalty;
+            if ((flag & (HumanMoveFlag.Left | HumanMoveFlag.Right)) != 0)            state = wgen.strafeAccuracyPenalty;
+            if (m_controller != null && !m_controller.Grounded)                      state = wgen.airborneAccuracyPenalty;
+
+            if (hp < wgen.injuryHpThreshold) state += wgen.injuryAccuracyPenalty;
+
+            return state;
+        }
+
+        /// <summary>
+        /// 발사 후 반동 누적. 원본 OpenXOPS human::ShotWeapon (object.cpp:707) ReactionGunsightErrorRange += reaction.
+        /// 상한 클램프는 TickReactionRecovery 가 매 프레임 처리하므로 여기선 가산만.
+        /// </summary>
+        public void AddShotReaction(float recoil)
+        {
+            m_reactionErrorRange += recoil;
+        }
+
+        /// <summary>
+        /// 발사 시 에임 킥(실제 시점 이동) 을 컨트롤러 시점각에 누적. 플레이어는 PlayerController 가 다음 프레임 마우스 누적값으로 되읽어 영구 반영(자동 복원 없음).
+        /// 원본 OpenXOPS human::ShotWeapon 의 rotation_x/armrotation_y 가산 (object.cpp:725-726). AI 는 매 틱 재조준으로 덮어써짐.
+        /// </summary>
+        /// <param name="yawDeg">좌우 킥 (deg). 대칭 분포.</param>
+        /// <param name="pitchDeg">상하 킥 (deg). Unity 부호: 음수 = 위로.</param>
+        public void AddViewRecoil(float yawDeg, float pitchDeg)
+        {
+            if (m_controller != null) m_controller.AddYawPitch(yawDeg, pitchDeg);
+        }
+
+        /// <summary>
+        /// 반동 누적분 회복 — 매 프레임 reactionRecoveryPerSecond 만큼 감소, [0, 현재 무기 errorRange.max] 클램프.
+        /// 원본 OpenXOPS object.cpp:1153-1157 (프레임당 -1, 33.333fps).
+        /// </summary>
+        private void TickReactionRecovery(float dt)
+        {
+            if (m_reactionErrorRange <= 0f) { m_reactionErrorRange = 0f; return; }
+
+            var wgen = DataManager.Instance.WeaponParameterData.weaponGeneralData;
+            m_reactionErrorRange -= wgen.reactionRecoveryPerSecond * dt;
+            if (m_reactionErrorRange < 0f) m_reactionErrorRange = 0f;
+
+            Weapon current = m_weapons[m_selectWeapon];
+            if (current != null)
+            {
+                float maxErr = current.WeaponData.errorRange.max;
+                if (m_reactionErrorRange > maxErr) m_reactionErrorRange = maxErr;
+            }
         }
 
         /// <summary>
@@ -280,8 +357,10 @@ namespace UnityXOPS
             // RunReload 를 즉시 호출해 매거진 보충. m_reloadingCnt 는 0 유지 (IsChanging 안 됨, 다음 발사 즉시 가능).
             if (duration <= 0f)
             {
+                // 즉시 재장전(예: GRENADE, reloadTime 0) — 원본 OpenXOPS 처럼 팔 reaction 을 건드리지 않는다.
+                // (ReloadCnt 가 0 이라 ProcessObject 가 reaction_y 를 오버라이드하지 않는 거동.)
+                // 발사 직후 자동 재장전 경로에서 방금 세팅한 발사 스윙(BeginArmShotReaction)이 와이프되지 않도록 함.
                 current.RunReload();
-                humanVisual.BeginArmReactionHold(holdDeg, 0f);
                 return;
             }
 
