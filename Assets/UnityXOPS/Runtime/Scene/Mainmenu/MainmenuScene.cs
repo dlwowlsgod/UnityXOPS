@@ -67,6 +67,9 @@ namespace UnityXOPS
         /// <param name="mif">true이면 애드온 미션, false이면 공식 미션.</param>
         public void Load(int index, bool mif)
         {
+            BulletManager.Instance.ClearPool();
+            SoundManager.Instance.ClearPool();
+            EffectManager.Instance.ClearPool();
             MapLoader.UnloadBlockData();
             MapLoader.UnloadPointData();
             MapLoader.UnloadSkyData();

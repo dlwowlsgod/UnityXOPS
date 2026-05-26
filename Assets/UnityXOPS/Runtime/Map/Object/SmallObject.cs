@@ -1,4 +1,6 @@
 using UnityEngine;
+using JJLUtility;
+using JJLUtility.IO;
 
 namespace UnityXOPS
 {
@@ -195,12 +197,26 @@ namespace UnityXOPS
         {
             if (m_isDestroyed) return;
 
+            PlayHitSound(); // 원본: 명중 시 항상 1회 (파괴 여부·데미지량 무관)
+
             m_hp -= amount;
             if (m_hp <= 0f)
             {
                 m_hp = 0f;
                 StartDestruction();
             }
+        }
+
+        /// <summary>
+        /// 피격음 재생 — 원본 objectmanager.cpp:1024/1201 HitSmallObject. 종류별 soundPath/soundVolume (원본 can/dan/무음 룩업을 경로로 펼침).
+        /// 총알 명중·수류탄 폭발 공통, 명중마다 1회. 원본은 착탄점/소물 위치로 구분하지만 소물 크기 내 차이라 자기 위치로 통일.
+        /// </summary>
+        private void PlayHitSound()
+        {
+            if (m_objectData == null || string.IsNullOrEmpty(m_objectData.soundPath)) return;
+
+            AudioClip clip = SoundLoader.LoadAudio(SafePath.Combine(Application.streamingAssetsPath, m_objectData.soundPath));
+            SoundManager.Instance.PlayAt(clip, transform.position, m_objectData.soundVolume);
         }
 
         /// <summary>

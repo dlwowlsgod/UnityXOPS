@@ -11,7 +11,7 @@ namespace UnityXOPS
     public class Weapon : MonoBehaviour
     {
         // ErrorRange 정수 1 단위 = 0.15°. 원본 OpenXOPS objectmanager.cpp:1980 DegreeToRadian(0.15f).
-        private const float k_errorRangeUnitDeg = 0.15f;
+        public const float ErrorRangeUnitDegrees = 0.15f;
 
         [SerializeField]
         private WeaponVisual weaponVisual;
@@ -152,6 +152,9 @@ namespace UnityXOPS
             if (m_fireSound != null)
                 SoundManager.Instance.PlayAt(m_fireSound, transform.position, m_weaponData.soundVolume);
 
+            // 발사 이펙트 — 머즐플래시 + 총구연기 + 탄피 (원본 ShotWeaponEffect/ShotWeaponYakkyou objectmanager.cpp:2065,2119).
+            PlayFireEffects();
+
             m_currentMagazine--;
             m_fireRateTimer = 1f / m_weaponData.fireRate;
 
@@ -223,6 +226,50 @@ namespace UnityXOPS
         ///  2. 산탄(pelletCount>1) 은 펠릿마다 폴라 추가 확산 (방향 0~350° 10°단위, 반경 {5,7,9,11,13}) × 0.15° (objectmanager.cpp:2005-2009).
         /// 발사 위치: 사람 머리(owner.position + cameraAttachPosition) — 1인칭/3인칭/AI 모두 동일 (objectmanager.cpp:2026 그대로).
         /// </summary>
+        /// <summary>
+        /// 이 무기로 owner 가 지금 발사할 때의 실효 조준 오차 (ErrorRange 정수 단위). 상태+반동 오차(owner.GunsightErrorRange)에
+        /// errorRange.min 하한을 적용하고, ignoreAimError(투척) 면 0. 탄도(SpawnBullets)와 크로스헤어 UI 가 공유하는 단일 소스.
+        /// </summary>
+        public float GetEffectiveErrorRange(Human owner)
+        {
+            if (m_weaponData == null || owner == null) return 0f;
+            if (m_weaponData.ignoreAimError)           return 0f;
+            return Mathf.Max(owner.GunsightErrorRange, m_weaponData.errorRange.min);
+        }
+
+        /// <summary>
+        /// 발사 시 머즐플래시·총구연기·탄피 이펙트를 무기 attach-root 기준으로 재생.
+        /// 머즐/탄피 offset 은 WeaponData.position 과 동일한 attach-root 로컬 프레임 → TransformPoint 로 yaw/pitch/scale 자동 반영.
+        /// muzzleFlashSize/shellSize 는 per-weapon 크기(소음기 분기 포함 이미 baked). 총구연기는 별도 크기 필드가 없어 muzzleFlashSize 를 재사용.
+        /// size 0 무기(GRENADE/NONE/CASE)는 스킵 — 발사 이펙트 없음.
+        /// </summary>
+        private void PlayFireEffects()
+        {
+            if (m_weaponModelData == null) return;
+
+            Transform attach = transform.parent; // 장착 시 fixed/dynamicWeaponAttachRoot
+            if (attach == null) return;
+
+            EffectManager em = EffectManager.Instance;
+
+            float mfSize = m_weaponModelData.muzzleFlashSize;
+            if (mfSize > 0f)
+            {
+                Vector3 muzzle = attach.TransformPoint(m_weaponModelData.muzzleFlashOffset);
+                em.Play(m_weaponModelData.muzzleFlashEffectIndex,  muzzle, attach.rotation, mfSize, Vector3.zero);
+                em.Play(m_weaponModelData.gunfireSmokeEffectIndex, muzzle, attach.rotation, mfSize, Vector3.zero);
+            }
+
+            float shSize = m_weaponModelData.shellSize;
+            if (shSize > 0f)
+            {
+                Vector3 shellPos = attach.TransformPoint(m_weaponModelData.shellEjectOffset);
+                Vector3 shellVel = attach.TransformDirection(m_weaponModelData.shellEjectDirection.normalized)
+                                 * m_weaponModelData.shellEjectSpeed;
+                em.Play(m_weaponModelData.shellEffectIndex, shellPos, attach.rotation, shSize, shellVel);
+            }
+        }
+
         private void SpawnBullets(Human owner, BulletData bulletData)
         {
             var humanGen = DataManager.Instance.HumanParameterData.humanGeneralData;
@@ -232,17 +279,14 @@ namespace UnityXOPS
             float yaw   = controller.Yaw;
             float pitch = controller.Pitch;
 
-            // 기본 탄도 오차 (모든 펠릿 공유). 실효 오차값에 errorRange.min 하한 적용.
-            // ignoreAimError(수류탄 등 투척 발사체) 면 조준 오차를 전혀 적용 안 하고 시점 그대로 발사 — 원본 grenade 투척 (objectmanager.cpp:1972, rx/ry 직접 사용, ErrorRange 미적용).
-            float effError     = m_weaponData.ignoreAimError
-                               ? 0f
-                               : Mathf.Max(owner.GunsightErrorRange, m_weaponData.errorRange.min);
+            // 기본 탄도 오차 (모든 펠릿 공유). 실효 오차 공식은 GetEffectiveErrorRange 단일 소스 (크로스헤어와 공유).
+            float effError     = GetEffectiveErrorRange(owner);
             float basePitchErr = 0f;
             float baseYawErr   = 0f;
             if (effError > 0f)
             {
-                basePitchErr = UnityEngine.Random.Range(-effError, effError) * k_errorRangeUnitDeg;
-                baseYawErr   = UnityEngine.Random.Range(-effError, effError) * k_errorRangeUnitDeg;
+                basePitchErr = UnityEngine.Random.Range(-effError, effError) * ErrorRangeUnitDegrees;
+                baseYawErr   = UnityEngine.Random.Range(-effError, effError) * ErrorRangeUnitDegrees;
             }
 
             int pellets = Mathf.Max(1, m_weaponData.pelletCount);
@@ -254,8 +298,8 @@ namespace UnityXOPS
                 {
                     float a   = UnityEngine.Random.Range(0, 36) * 10f * Mathf.Deg2Rad;  // 방향 0~350°, 10° 단위
                     float len = UnityEngine.Random.Range(0, 5) * 2 + 5;                 // 반경 {5,7,9,11,13}
-                    pitchErr += Mathf.Cos(a) * len * k_errorRangeUnitDeg;
-                    yawErr   += Mathf.Sin(a) * len * k_errorRangeUnitDeg;
+                    pitchErr += Mathf.Cos(a) * len * ErrorRangeUnitDegrees;
+                    yawErr   += Mathf.Sin(a) * len * ErrorRangeUnitDegrees;
                 }
 
                 Quaternion rot      = Quaternion.Euler(pitch + pitchErr, yaw + yawErr, 0f);

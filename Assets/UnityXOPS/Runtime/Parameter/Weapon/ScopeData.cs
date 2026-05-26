@@ -16,6 +16,9 @@ namespace UnityXOPS
         public FloatRange recoilAimHorizontalAdjust;
         public string texturePath;
         public float textureAspect;
+        // true 면 스코프 사용 중 WeaponData.crosshair 가 true 여도 동적 크로스헤어를 숨긴다 (스코프 자체 레티클로 대체).
+        // 원본 OpenXOPS ScopeGunsight != 0 (간이/정밀) 에 대응 — 크로스헤어는 ScopeGunsight==0(비스코프)에서만 표시 (gamemain.cpp:3175).
+        public bool hideCrosshair;
         public List<ScopeLine> lines;
     }
 

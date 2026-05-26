@@ -172,6 +172,8 @@ namespace UnityXOPS
                     Instance.blockColliders.Add(block);
                 }
             }
+
+            Physics.SyncTransforms();
         }
 
         // CheckALLBlockIntersectRay 대응 — 두꺼운 블록과 레이 교차 여부 반환

@@ -43,7 +43,11 @@ namespace UnityXOPS
         public float            explosionknockbackMax;
         public string           explosionSound;
         public int              explosionEffectIndex;
+        public int              wallHitEffectIndex;
+        public int              humanHitEffectIndex;
+        public int              objectHitEffectIndex;
         public List<string>     wallHitSounds;
+        public string           humanHitSound;
         public float            lifetime;
     }
 }

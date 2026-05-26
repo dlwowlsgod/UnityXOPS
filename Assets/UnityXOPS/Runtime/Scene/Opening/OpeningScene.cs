@@ -52,6 +52,9 @@ namespace UnityXOPS
             
             if (t > m_endTime || pressed)
             {
+                BulletManager.Instance.ClearPool();
+                SoundManager.Instance.ClearPool();
+                EffectManager.Instance.ClearPool();
                 MapLoader.UnloadBlockData();
                 MapLoader.UnloadPointData();
                 MapLoader.UnloadSkyData();

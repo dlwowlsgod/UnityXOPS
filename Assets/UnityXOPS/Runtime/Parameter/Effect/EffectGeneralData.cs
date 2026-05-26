@@ -12,5 +12,7 @@ namespace UnityXOPS
     public class EffectGeneralData
     {
         public List<string> texturePaths;
+        // CollideMap 혈흔 입자가 Block 에 닿을 때 생성할 벽 데칼 이펙트 인덱스 (원본 AddMapEffect 의 하드코딩 대응). 보통 WallBlood.
+        public int wallBloodEffectIndex;
     }
 }

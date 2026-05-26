@@ -253,6 +253,17 @@ namespace UnityXOPS
         }
 
         /// <summary>
+        /// 피격 시 조준 반동 오차를 부위별 값으로 덮어쓴다(원본 = 대입). 다음 프레임부터 TickReactionRecovery 가 회복·클램프.
+        /// 원본 OpenXOPS HitBulletHead/Up/Leg·HitGrenadeExplosion (object.cpp:1039/1049/1059/1079) ReactionGunsightErrorRange = 15/12/8/10.
+        /// </summary>
+        public void SetHitReaction(float value)
+        {
+            // 원본의 경우 무조건 대입 -> 살짝 이상함
+            // Max 함수를 써서 정확도 에러가 "피격 시 에임 흐트러짐" 보다 더 높을 때 정확도가 더 낮은 수치로 보정.
+            m_reactionErrorRange = Mathf.Max(m_reactionErrorRange, value);
+        }
+
+        /// <summary>
         /// 발사 시 에임 킥(실제 시점 이동) 을 컨트롤러 시점각에 누적. 플레이어는 PlayerController 가 다음 프레임 마우스 누적값으로 되읽어 영구 반영(자동 복원 없음).
         /// 원본 OpenXOPS human::ShotWeapon 의 rotation_x/armrotation_y 가산 (object.cpp:725-726). AI 는 매 틱 재조준으로 덮어써짐.
         /// </summary>

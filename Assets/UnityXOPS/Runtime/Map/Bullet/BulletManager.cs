@@ -93,7 +93,7 @@ namespace UnityXOPS
             if (m_pool == null) return;
             for (int i = 0; i < m_pool.Length; i++)
             {
-                if (m_pool[i].IsActive) m_pool[i].gameObject.SetActive(false);
+                if (m_pool[i].IsActive) m_pool[i].Deactivate();
             }
         }
 

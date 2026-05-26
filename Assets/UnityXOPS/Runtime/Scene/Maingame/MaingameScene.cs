@@ -23,6 +23,9 @@ namespace UnityXOPS
         {
             if (InputManager.Keyboard.escapeKey.wasPressedThisFrame)
             {
+                BulletManager.Instance.ClearPool();
+                SoundManager.Instance.ClearPool();
+                EffectManager.Instance.ClearPool();
                 MapLoader.UnloadBlockData();
                 MapLoader.UnloadPointData();
                 MapLoader.UnloadSkyData();

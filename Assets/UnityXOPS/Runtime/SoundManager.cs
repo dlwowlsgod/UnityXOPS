@@ -15,7 +15,9 @@ namespace UnityXOPS
         private const float k_maxDistance = 33.5f;
         // 이 거리 내는 풀볼륨 — 플레이어 무기(카메라 근처)가 풀볼륨으로 들리도록 보장 (원본 플레이어 2D 풀볼륨 대응).
         private const float k_minDistance = 1.0f;
-        private const int   k_poolSize    = 24;
+
+        // 사전할당 AudioSource 풀 크기 (BulletManager.poolSize 패턴). 원본 OpenXOPS MAX_SOUNDLISTS 100 참고 — 동시 재생이 이를 넘으면 가장 오래된 소스를 재활용.
+        [SerializeField] private int poolSize = 64;
 
         private AudioSource[] m_pool;
         private int           m_next;
@@ -24,8 +26,8 @@ namespace UnityXOPS
         {
             base.Awake();
 
-            m_pool = new AudioSource[k_poolSize];
-            for (int i = 0; i < k_poolSize; i++)
+            m_pool = new AudioSource[poolSize];
+            for (int i = 0; i < poolSize; i++)
             {
                 var obj = new GameObject($"SfxSource_{i}");
                 obj.transform.SetParent(transform, false);
@@ -57,6 +59,21 @@ namespace UnityXOPS
             src.clip             = clip;
             src.volume           = Mathf.Clamp01(volume);
             src.Play();
+        }
+
+        /// <summary>
+        /// 재생 중인 모든 소스를 즉시 정지하고 clip 참조를 해제. 맵/미션 전환 시 호출 (이전 미션의 효과음이 다음 씬으로 새지 않도록).
+        /// BulletManager.ClearPool 과 동일 역할.
+        /// </summary>
+        public void ClearPool()
+        {
+            if (m_pool == null) return;
+            for (int i = 0; i < m_pool.Length; i++)
+            {
+                m_pool[i].Stop();
+                m_pool[i].clip = null;
+            }
+            m_next = 0;
         }
 
         private AudioSource GetSource()

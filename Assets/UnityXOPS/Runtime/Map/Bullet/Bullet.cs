@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using JJLUtility;
+using JJLUtility.IO;
 
 namespace UnityXOPS
 {
@@ -32,6 +34,20 @@ namespace UnityXOPS
         private const float k_bulletKnockbackSpeedMps = 3.333f;
         // BulletData.explosionknockbackMax 의 단위 변환 (m/frame → m/s).
         private const float k_frameToSecond = 33.3333f;
+
+        // 수류탄 폭발 사람 판정점 Y (원본 objectmanager.cpp:1076,1088 — HUMAN 좌표 +2.0=발, HUMAN_HEIGHT-2.0=18.0=머리. ×0.1 Unity).
+        // 발 점을 지면에서 0.2 띄우는 게 핵심: 지면 정착 수류탄→발 차폐 레이가 바닥을 스쳐 막히면서 발 데미지가 통째로 0이 되는 버그 방지.
+        private const float k_grenadeLegPointY  = 0.2f;
+        private const float k_grenadeHeadPointY = 1.8f;
+
+        // 수류탄 바운드음 속도 게이트 — 원본 objectmanager.cpp:2889 (반사 직전 speed > 3.4 units/frame 일 때만 재생).
+        // 3.4 × 0.1 m/unit × 33.333 fps = 11.333 m/s. 약하게 굴러가는 튕김은 무음.
+        private const float k_grenadeBoundSoundMinSpeed = 11.333f;
+        // 효과음 볼륨 — 원본 볼륨 상수(폭발 120, 바운드/착탄 95~100)를 최댓값(폭발)으로 정규화한 상대값. 거리 감쇠는 SoundManager 3D 선형 rolloff 가 처리.
+        private const float k_explosionVolume = 1.0f;
+        private const float k_wallHitVolume   = 0.8f;
+        // 사람 피격음 볼륨 — 원본 MAX_SOUNDHITHUMAN 75 / 폭발(120) 정규화. 부위·사망 무관 단일 hit2.wav (원본 soundmanager.cpp:605-612).
+        private const float k_humanHitVolume  = 0.625f;
 
         private BulletData     m_bulletData;
         private Human          m_owner;
@@ -166,6 +182,9 @@ namespace UnityXOPS
                 float accel = -angle * k_reflectAngleCoef + k_reflectBaseCoef;
                 m_velocity = Vector3.Reflect(m_velocity, blockHit.normal) * accel;
                 transform.position = blockHit.point + blockHit.normal * k_hitEpsilon;
+
+                // 바운드음 — 반사 직전 속도가 게이트를 넘을 때만 (원본 objectmanager.cpp:2889).
+                if (speed > k_grenadeBoundSoundMinSpeed) PlayWallHitSound(blockHit.point);
                 return;
             }
 
@@ -209,7 +228,7 @@ namespace UnityXOPS
                 ObjectCollider objCollider = hit.collider.GetComponentInParent<ObjectCollider>();
                 if (objCollider != null && objCollider.Owner != null)
                 {
-                    HandleObjectHit(objCollider.Owner);
+                    HandleObjectHit(objCollider.Owner, hit.point);
                     continue; // 소품은 총알을 막지 않음 — 데미지 + attacks 감쇠 후 관통 (원본 objectmanager.cpp:835-839)
                 }
 
@@ -256,6 +275,8 @@ namespace UnityXOPS
 
             hitbox.OnBulletHit(m_attacks);
             m_hitHumans.Add(human);
+            PlayHumanHitSound(hit.point); // 원본 objectmanager.cpp:971 HitHuman — 부위·사망 무관 탄착점에서 1회
+            EffectManager.Instance.Play(m_bulletData.humanHitEffectIndex, hit.point); // 혈흔 (원본 objectmanager.cpp:968 SetHumanBlood)
 
             float atten = hitbox.Part switch
             {
@@ -290,6 +311,8 @@ namespace UnityXOPS
 
             // 일반 탄 — 면 직전에 박혀 정지. 1차에선 Block 관통(원본 L865-878) 미구현.
             transform.position = hit.point - dir * k_hitEpsilon;
+            PlayWallHitSound(hit.point); // 원본 objectmanager.cpp:897 HitMap
+            EffectManager.Instance.Play(m_bulletData.wallHitEffectIndex, hit.point);
             Recycle();
             return true;
         }
@@ -298,13 +321,14 @@ namespace UnityXOPS
         /// 소품(SmallObject) 총알 피격. 원본 objectmanager.cpp:835-839 — 데미지 = floor(attacks×0.25), 통과 후 잔여 attacks ×0.7.
         /// 소품은 총알을 멈추지 않고 관통시키며, 같은 소품은 1발당 1회만 처리.
         /// </summary>
-        private void HandleObjectHit(SmallObject obj)
+        private void HandleObjectHit(SmallObject obj, Vector3 hitPoint)
         {
             if (obj == null || obj.IsDestroyed) return;
             if (!m_hitObjects.Add(obj))         return; // 같은 소품 중복 hit 차단
 
             obj.HitBullet(Mathf.FloorToInt(m_attacks * 0.25f));
             m_attacks = Mathf.FloorToInt(m_attacks * 0.7f);
+            EffectManager.Instance.Play(m_bulletData.objectHitEffectIndex, hitPoint);
         }
 
         /// <summary>
@@ -314,6 +338,9 @@ namespace UnityXOPS
         /// </summary>
         private void Explode()
         {
+            PlayExplosionSound(transform.position); // 원본 objectmanager.cpp:1227 GrenadeExplosion, 폭발 1회
+            EffectManager.Instance.Play(m_bulletData.explosionEffectIndex, transform.position);
+
             float radius = m_bulletData.explosionRadius;
             if (radius > 0f)
             {
@@ -321,9 +348,6 @@ namespace UnityXOPS
                 float   headDmgMax = m_bulletData.humanExplosiveHeadDamageMax;
                 float   legDmgMax  = m_bulletData.humanExplosiveLegDamageMax;
                 float   knockMax   = m_bulletData.explosionknockbackMax * k_frameToSecond;
-
-                var general = DataManager.Instance.HumanParameterData.humanGeneralData;
-                float headOffsetY = general.legHitboxHeight + general.bodyHitboxHeight;
 
                 Collider[] cols = Physics.OverlapSphere(origin, radius);
                 HashSet<Human> processed = new HashSet<Human>();
@@ -336,8 +360,8 @@ namespace UnityXOPS
                     if (!hb.Human.Alive)         continue;
 
                     Vector3 humanPos = hb.Human.transform.position;
-                    float legDmg  = ComputeExplosionDamage(origin, humanPos,                              radius, legDmgMax);
-                    float headDmg = ComputeExplosionDamage(origin, humanPos + Vector3.up * headOffsetY,   radius, headDmgMax);
+                    float legDmg  = ComputeExplosionDamage(origin, humanPos + Vector3.up * k_grenadeLegPointY,  radius, legDmgMax);
+                    float headDmg = ComputeExplosionDamage(origin, humanPos + Vector3.up * k_grenadeHeadPointY, radius, headDmgMax);
 
                     float total = legDmg + headDmg;
                     if (total <= 0f) continue;
@@ -367,6 +391,7 @@ namespace UnityXOPS
                     }
 
                     hb.Human.ApplyDamage(total);
+                    hb.Human.SetHitReaction(DataManager.Instance.WeaponParameterData.weaponGeneralData.hitReactionExplosion); // 원본 object.cpp:1079 HitGrenadeExplosion =10
                 }
 
                 // 소품(SmallObject) 폭발 피격 — 단일 중심점 거리 감쇠 + 벽 차폐 (원본 objectmanager.cpp:1171-1211, damage = 80 - r).
@@ -403,8 +428,48 @@ namespace UnityXOPS
             {
                 return 0f;
             }
-            return maxDamage * (1f - dist / radius);
+            // 원본 objectmanager.cpp:1081 — 감쇠항만 정수 절단: damage = max - (int)(max/maxdist × r). 음수는 0 (가산 안 함).
+            float damage = maxDamage - Mathf.Floor(maxDamage / radius * dist);
+            return damage > 0f ? damage : 0f;
         }
+
+        /// <summary>
+        /// 벽 충돌음 재생. wallHitSounds 에서 균등 랜덤 선택 — 원본 hit1.wav 2/3 · hit3.wav 1/3 (objectmanager.cpp:594) 은
+        /// 리스트에 hit1 을 두 번 넣어 가중치로 재현. 수류탄은 [cco.wav] 단일이라 바운드음으로 동작.
+        /// </summary>
+        private void PlayWallHitSound(Vector3 position)
+        {
+            List<string> sounds = m_bulletData.wallHitSounds;
+            if (sounds == null || sounds.Count == 0) return;
+
+            string path = sounds[Random.Range(0, sounds.Count)];
+            if (string.IsNullOrEmpty(path)) return;
+
+            AudioClip clip = SoundLoader.LoadAudio(SafePath.Combine(Application.streamingAssetsPath, path));
+            SoundManager.Instance.PlayAt(clip, position, k_wallHitVolume);
+        }
+
+        private void PlayHumanHitSound(Vector3 position)
+        {
+            if (string.IsNullOrEmpty(m_bulletData.humanHitSound)) return;
+
+            AudioClip clip = SoundLoader.LoadAudio(SafePath.Combine(Application.streamingAssetsPath, m_bulletData.humanHitSound));
+            SoundManager.Instance.PlayAt(clip, position, k_humanHitVolume);
+        }
+
+        private void PlayExplosionSound(Vector3 position)
+        {
+            if (string.IsNullOrEmpty(m_bulletData.explosionSound)) return;
+
+            AudioClip clip = SoundLoader.LoadAudio(SafePath.Combine(Application.streamingAssetsPath, m_bulletData.explosionSound));
+            SoundManager.Instance.PlayAt(clip, position, k_explosionVolume);
+        }
+
+        /// <summary>
+        /// 외부(BulletManager.ClearPool)에서 강제 회수. m_active 를 내려 다음 Tick 에서 처리되지 않게 한다.
+        /// gameObject.SetActive(false) 만으로는 BulletManager.Update 가 IsActive(=m_active) 로 Tick 여부를 판단하므로 비행이 멈추지 않는다.
+        /// </summary>
+        public void Deactivate() => Recycle();
 
         private void Recycle()
         {
