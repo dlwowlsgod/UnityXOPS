@@ -25,17 +25,12 @@ namespace UnityXOPS
         private List<GameObject> m_scopeReticles;   // scopeData 인덱스별 레티클 컨테이너 (시작 시 1회 빌드).
 
         private Human m_player;
-        private bool  m_scoping;
 
         private Camera m_camera;
         private float  m_baseFov;
         private bool   m_baseFovCaptured;
 
         public bool HasPlayer => m_player != null;
-
-        // 스코프 사용 중 여부 + 현재 적용 스코프 데이터. 마우스 감도·정확도 보정 등 게임플레이가 읽어가는 단일 소스.
-        public bool      IsScoping   => m_scoping;
-        public ScopeData ActiveScope => m_scoping ? CurrentScope() : null;
 
         // 현재 무기가 크로스헤어 표시 무기인지 (WeaponData.crosshair). 죽었거나 무기 없으면 false.
         public bool ShowCrosshair
@@ -72,16 +67,15 @@ namespace UnityXOPS
             // 스폰/리스폰/사망으로 Player 가 교체·소멸될 수 있어 매 프레임 재취득.
             m_player = MapLoader.Player;
 
-            // 스코프 토글 — 조준경 무기 + 생존 + 비전환(재장전/무기교체) 일 때만. 그 외 상태가 되면 자동 해제 (원본 SetDisableScope 트리거).
-            if (!ScopeAllowed())
-                m_scoping = false;
-            else if (InputManager.Instance.Zoom.WasPressedThisFrame())
-                m_scoping = !m_scoping;
+            // 스코프 토글 입력 → Human 에 위임 (상태·자동해제는 Human 이 관리, 원본 ChangeScopeMode).
+            if (m_player != null && InputManager.Instance.Zoom.WasPressedThisFrame())
+                m_player.ToggleScope();
 
             ApplyScope();
 
             // 크로스헤어 표시: 무기 crosshair 가 켜져 있고, (스코프 미사용 || 그 스코프가 크로스헤어를 숨기지 않음).
-            bool showCross = ShowCrosshair && !(m_scoping && CurrentScopeHidesCrosshair());
+            ScopeData activeScope = m_player != null ? m_player.ActiveScope : null;
+            bool showCross = ShowCrosshair && !(activeScope != null && activeScope.hideCrosshair);
             crosshairRoot.gameObject.SetActive(showCross);
             if (!showCross) return;
 
@@ -94,16 +88,17 @@ namespace UnityXOPS
         // 스코프 오버레이 텍스처/표시 + 카메라 FOV + 레티클(인덱스 일치분만)을 현재 스코프 상태에 맞춰 적용.
         private void ApplyScope()
         {
-            ScopeData scope = ActiveScope;
+            bool      scoping = m_player != null && m_player.IsScoping;
+            ScopeData scope   = scoping ? m_player.ActiveScope : null;
 
             if (scopeImage != null)
             {
-                if (m_scoping && scope != null && !string.IsNullOrEmpty(scope.texturePath))
+                if (scoping && scope != null && !string.IsNullOrEmpty(scope.texturePath))
                 {
                     Texture2D tex = ImageLoader.LoadTexture(SafePath.Combine(Application.streamingAssetsPath, scope.texturePath));
                     if (tex != null) scopeImage.texture = tex;
                 }
-                scopeRoot.gameObject.SetActive(m_scoping && scope != null);
+                scopeRoot.gameObject.SetActive(scoping && scope != null);
 
                 float aspect = Screen.width / (float)Screen.height;
                 
@@ -128,7 +123,7 @@ namespace UnityXOPS
             }
 
             // 레티클 — 스코프 중일 때 현재 무기 scopeIndex 와 일치하는 것만 활성, 나머지는 끔.
-            int activeIdx = (m_scoping && scope != null) ? m_player.CurrentWeapon.WeaponData.scopeIndex : -1;
+            int activeIdx = (scoping && scope != null) ? m_player.CurrentWeapon.WeaponData.scopeIndex : -1;
             if (m_scopeReticles != null)
             {
                 for (int i = 0; i < m_scopeReticles.Count; i++)
@@ -139,13 +134,13 @@ namespace UnityXOPS
             if (m_camera == null) m_camera = Camera.main;
             if (m_camera != null)
             {
-                if (!m_baseFovCaptured && !m_scoping)
+                if (!m_baseFovCaptured && !scoping)
                 {
                     m_baseFov         = m_camera.fieldOfView;
                     m_baseFovCaptured = true;
                 }
 
-                if (m_scoping && scope != null)        m_camera.fieldOfView = scope.fovDegrees;
+                if (scoping && scope != null)          m_camera.fieldOfView = scope.fovDegrees;
                 else if (m_baseFovCaptured)            m_camera.fieldOfView = m_baseFov;
             }
         }
@@ -202,29 +197,6 @@ namespace UnityXOPS
             img.texture       = Texture2D.whiteTexture;
             img.color         = line.color;
             img.raycastTarget = false;
-        }
-
-        // 현재 무기의 스코프 데이터. 스코프 무기가 아니거나 인덱스가 잘못되면 null.
-        private ScopeData CurrentScope()
-        {
-            if (m_player == null) return null;
-            Weapon w = m_player.CurrentWeapon;
-            if (w == null || w.WeaponData == null || !w.WeaponData.scope) return null;
-
-            var list = DataManager.Instance.WeaponParameterData.scopeData;
-            int idx  = w.WeaponData.scopeIndex;
-            if (list == null || idx < 0 || idx >= list.Count) return null;
-            return list[idx];
-        }
-
-        // 스코프 켜기/유지 허용 조건. 사망·무기교체·재장전·스코프없음이면 해제 (원본: 무기교체/재장전/사망 시 SetDisableScope).
-        private bool ScopeAllowed()
-            => m_player != null && m_player.Alive && !m_player.IsChanging && CurrentScope() != null;
-
-        private bool CurrentScopeHidesCrosshair()
-        {
-            ScopeData s = CurrentScope();
-            return s != null && s.hideCrosshair;
         }
     }
 }

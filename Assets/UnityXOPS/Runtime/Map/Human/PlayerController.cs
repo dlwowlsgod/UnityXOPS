@@ -16,6 +16,10 @@ namespace UnityXOPS
         [SerializeField] private float     pitchLimit               = 70f;
         [SerializeField] private ViewMode  viewMode                 = ViewMode.FirstPerson;
         [SerializeField] private LayerMask thirdPersonCollisionMask = ~0;
+        [SerializeField] private LayerMask aimMask                  = ~0;   // 조준 표적점 ray 대상 (블록/사람/소품). 자기 자신 hitbox 는 코드에서 제외.
+
+        // 카메라 중앙 ray 가 아무것도 안 맞을 때 쓰는 먼 표적 거리.
+        private const float k_aimRayMaxDist = 1000f;
 
         // OpenXOPS gamemain.cpp:2651-2678 외부 3인칭 공식 상수 (원본 × 0.1)
         private const float k_thirdPersonPivotBack      = 0.30f;  // 원본 3.0f
@@ -35,6 +39,11 @@ namespace UnityXOPS
         private Human           m_player;
         private HumanController m_controller;
 
+        // 사용자가 고른 시점(F1/F2/F3). 스코프 조준 중에는 viewMode 가 1인칭으로 강제되지만 이 값은 유지 → 해제 시 복원.
+        private ViewMode m_desiredViewMode;
+
+        private void Start() => m_desiredViewMode = viewMode;
+
         private float m_yaw;
         private float m_pitch;
 
@@ -50,11 +59,22 @@ namespace UnityXOPS
         public bool     FirstPerson => viewMode == ViewMode.FirstPerson;
 
         /// <summary>
-        /// 시점을 직접 설정. Body/Leg 가시성과 카메라 부모를 즉시 반영.
+        /// 사용자 시점 선택(F1/F2/F3). 스코프 조준 중이면 1인칭이 유지되고 이 선택은 해제 후 복원된다.
         /// </summary>
         public void SetViewMode(ViewMode value)
         {
-            viewMode = value;
+            m_desiredViewMode = value;
+            ResolveViewMode();
+        }
+
+        /// <summary>
+        /// 실제 적용 시점 결정 — 스코프 조준 중이면 1인칭 강제, 아니면 사용자 선택(m_desiredViewMode). 변경 시에만 ApplyViewpoint.
+        /// </summary>
+        private void ResolveViewMode()
+        {
+            ViewMode target = (m_player != null && m_player.IsScoping) ? ViewMode.FirstPerson : m_desiredViewMode;
+            if (target == viewMode) return;
+            viewMode = target;
             ApplyViewpoint();
         }
 
@@ -126,7 +146,11 @@ namespace UnityXOPS
                 bool fire = currentWeapon.WeaponData.burstMode == WeaponBurstMode.FullAuto
                           ? input.Fire.IsPressed()
                           : input.Fire.WasPressedThisFrame();
-                if (fire) currentWeapon.Shoot(m_player);
+                if (fire)
+                {
+                    UpdateAimPoint();   // 발사 직전 카메라 중앙 표적점 갱신 → 총알이 크로스헤어로 수렴
+                    currentWeapon.Shoot(m_player);
+                }
             }
 
             // 발사 시 무기가 컨트롤러 시점각에 누적한 에임 킥을 마우스 누적값으로 되읽어 영구 반영.
@@ -152,6 +176,9 @@ namespace UnityXOPS
                 if (visual != null) visual.SetBodyVisible(viewMode != ViewMode.FirstPerson);
                 m_deathCamInitialized = false;
             }
+
+            // 스코프 조준 상태에 맞춰 시점 동기화 (스코프 ON→1인칭 강제, OFF→사용자 선택 복원). 토글은 별도 스크립트라 매 프레임 폴링.
+            ResolveViewMode();
 
             if (viewMode == ViewMode.FirstPerson)
             {
@@ -232,6 +259,33 @@ namespace UnityXOPS
             Vector3 cameraPos = pivot + viewBack * dist;
             playerCamera.transform.position = cameraPos;
             playerCamera.transform.rotation = Quaternion.LookRotation(pivot - cameraPos, Vector3.up);
+        }
+
+        /// <summary>
+        /// 카메라 중앙(크로스헤어)이 실제로 닿는 월드 표적점을 구해 플레이어에 주입.
+        /// 총알이 총구에서 이 점으로 향하면 3인칭 어깨 오프셋과 무관하게 크로스헤어에 명중한다.
+        /// 어깨 너머 자기 몸이 ray 에 걸리면 건너뛰고 그 너머를 표적으로 잡는다.
+        /// </summary>
+        private void UpdateAimPoint()
+        {
+            if (playerCamera == null) return;
+
+            Vector3 origin = playerCamera.transform.position;
+            Vector3 fwd    = playerCamera.transform.forward;
+            Vector3 target = origin + fwd * k_aimRayMaxDist;
+
+            RaycastHit[] hits = Physics.RaycastAll(origin, fwd, k_aimRayMaxDist, aimMask, QueryTriggerInteraction.Ignore);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            for (int i = 0; i < hits.Length; i++)
+            {
+                // 자기 자신(플레이어) 콜라이더는 통과 — 어깨 너머 화면에 잡힌 자기 몸을 표적으로 삼지 않도록.
+                HumanHitbox hb = hits[i].collider.GetComponent<HumanHitbox>();
+                if (hb != null && hb.Human == m_player) continue;
+                target = hits[i].point;
+                break;
+            }
+
+            m_player.SetAimPoint(target);
         }
 
         private bool TryAcquirePlayer()

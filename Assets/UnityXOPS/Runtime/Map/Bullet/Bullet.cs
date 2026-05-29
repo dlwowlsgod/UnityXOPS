@@ -14,11 +14,19 @@ namespace UnityXOPS
     {
         [SerializeField] private GameObject visual;
 
-        // 관통 시 attacks 감쇠 — OpenXOPS objectmanager.cpp:760-797 부위 명중 후 다음 hit 에 적용.
-        // Block 명중은 1차에선 즉시 정지(관통 미구현) 라 별도 상수 없음.
+        // 관통 시 attacks 감쇠 — OpenXOPS objectmanager.cpp:760-797 부위 명중 후 다음 hit 에 적용. 정수 truncation(원본 (int) 캐스팅) 유지.
         private const float k_pierceAttenHead = 0.5f;
         private const float k_pierceAttenBody = 0.6f;
         private const float k_pierceAttenLeg  = 0.7f;
+        // 벽(Block) 관통 후 attacks 감쇠 — OpenXOPS objectmanager.cpp:854 (penetration >= 0 일 때 × 0.6). 사람·벽이 penetration 카운터 공유.
+        private const float k_pierceAttenWall = 0.6f;
+        // 벽 두께 1 서브스텝 = 원본 BULLET_SPEEDSCALE 2.5 × 0.1. 벽 내부에 걸친 서브스텝마다 penetration 1 소비 → 두꺼운 벽은 관통력 있어도 소진돼 막힘 (원본 objectmanager.cpp:845-859).
+        private const float k_blockStepSize        = 0.25f;
+        // 두께 측정 상한 (Collider.Raycast 역방향 탐색). 이 이상이면 측정 실패 = 매우 두꺼움 → 사실상 막힘.
+        private const float k_maxBlockThickness    = 10f;
+        // 얇은 벽(서브스텝보다 얇아 inside 점이 안 걸림) — penetration 무소비, 위력만 감쇠 (원본 경로 B objectmanager.cpp:870-874).
+        private const float k_thinWallAttenPierce  = 0.75f; // penetration > 0
+        private const float k_thinWallAttenStop    = 0.55f; // penetration <= 0
 
         // 수류탄 마찰 — OpenXOPS object.cpp:3010-3026 (× 0.98 / frame, 33.333 fps). dt 가변 변환: 0.98^33.333 ≈ 0.5169.
         private const float k_grenadeFrictionPerSec = 0.5169f;
@@ -58,6 +66,8 @@ namespace UnityXOPS
         private float          m_lifetimeTimer;
         private float          m_armingTimer;
         private bool           m_active;
+        private Vector3        m_visualOrigin;   // visual 표시 기준점 (무기 머즐플래시 위치). 원본엔 없는 UnityXOPS 연출.
+        private bool           m_visualVisible;  // bulletBoundAdjust 거리 도달 후 true
         private HashSet<Human>       m_hitHumans  = new HashSet<Human>();
         private HashSet<SmallObject> m_hitObjects = new HashSet<SmallObject>();
 
@@ -95,7 +105,7 @@ namespace UnityXOPS
         /// </summary>
         public void Spawn(BulletData data, Human owner, int team,
                           int attacks, int penetration,
-                          Vector3 position, Vector3 velocity)
+                          Vector3 position, Vector3 velocity, Vector3 visualOrigin)
         {
             m_bulletData    = data;
             m_owner         = owner;
@@ -106,6 +116,7 @@ namespace UnityXOPS
             m_lifetimeTimer = data.lifetime;
             m_armingTimer   = data.armingDelay;
             m_active        = true;
+            m_visualOrigin  = visualOrigin;
             m_hitHumans.Clear();
             m_hitObjects.Clear();
 
@@ -113,6 +124,15 @@ namespace UnityXOPS
             transform.rotation = velocity.sqrMagnitude > 0f
                 ? Quaternion.LookRotation(velocity.normalized, Vector3.up)
                 : Quaternion.identity;
+
+            // visual 게이팅 — 머즐플래시 위치에서 bulletBoundAdjust 만큼 멀어지기 전까지 숨김 (카메라 발사 총알이 화면 앞에 크게 보이는 현상 방지).
+            SetVisualVisible(data.bulletBoundAdjust <= 0f);
+        }
+
+        private void SetVisualVisible(bool value)
+        {
+            m_visualVisible = value;
+            if (visual != null) visual.SetActive(value);
         }
 
         /// <summary>
@@ -136,6 +156,14 @@ namespace UnityXOPS
 
             if (m_bulletData.useGravity) UpdateGrenade(dt);
             else                         UpdateStraight(dt);
+
+            // 머즐 기준 bound 거리 도달 시 visual 표시 (충돌로 회수됐으면 m_active=false 라 스킵).
+            if (m_active && !m_visualVisible)
+            {
+                float bound = m_bulletData.bulletBoundAdjust;
+                if ((transform.position - m_visualOrigin).sqrMagnitude >= bound * bound)
+                    SetVisualVisible(true);
+            }
         }
 
         private void UpdateStraight(float dt)
@@ -234,7 +262,9 @@ namespace UnityXOPS
 
                 if (hit.collider.gameObject.layer == MapLoader.BlockLayer)
                 {
-                    return HandleBlockHit(hit, dir);
+                    HandleBlockHit(hit, dir, out bool blockConsumed);
+                    if (blockConsumed) return true;
+                    continue; // 벽 관통 — attacks 감쇠 후 다음 hit 진행
                 }
                 // 그 외 collider(CharacterController, weapon prefab 등) 는 무시.
             }
@@ -285,7 +315,7 @@ namespace UnityXOPS
                 HumanHitPart.Leg  => k_pierceAttenLeg,
                 _                 => 1f,
             };
-            m_attacks = Mathf.RoundToInt(m_attacks * atten);
+            m_attacks = Mathf.FloorToInt(m_attacks * atten);
             m_penetration--;
 
             if (m_penetration < 0)
@@ -299,22 +329,73 @@ namespace UnityXOPS
             return true;
         }
 
-        private bool HandleBlockHit(RaycastHit hit, Vector3 dir)
+        /// <summary>
+        /// 벽(Block) hit 처리. consumed=true 면 정지/폭발로 종료, false 면 관통(다음 hit 진행).
+        /// 원본 OpenXOPS objectmanager.cpp:845-860 CollideBullet 벽 판정 — penetration 소진 시 정지, 남으면 attacks×0.6 후 관통.
+        /// </summary>
+        private void HandleBlockHit(RaycastHit hit, Vector3 dir, out bool consumed)
         {
+            consumed = false;
+
             if ((m_bulletData.explosionTrigger & ExplosionTrigger.Block) != 0)
             {
-                if (m_armingTimer > 0f) { Recycle(); return true; }
+                if (m_armingTimer > 0f) { Recycle(); consumed = true; return; }
                 transform.position = hit.point - dir * k_hitEpsilon;
                 Explode();
-                return true;
+                consumed = true;
+                return;
             }
 
-            // 일반 탄 — 면 직전에 박혀 정지. 1차에선 Block 관통(원본 L865-878) 미구현.
-            transform.position = hit.point - dir * k_hitEpsilon;
-            PlayWallHitSound(hit.point); // 원본 objectmanager.cpp:897 HitMap
+            // 탄착 이펙트/사운드 — 관통 여부와 무관하게 표면에 1회 (원본 objectmanager.cpp:849 HitBulletMap).
+            PlayWallHitSound(hit.point);
             EffectManager.Instance.Play(m_bulletData.wallHitEffectIndex, hit.point);
-            Recycle();
-            return true;
+
+            float thickness = MeasureBlockThickness(hit, dir);
+
+            // 얇은 벽 (원본 경로 B) — penetration 무소비, 위력만 감쇠 후 통과.
+            if (thickness < k_blockStepSize)
+            {
+                m_attacks = Mathf.FloorToInt(m_attacks * (m_penetration > 0 ? k_thinWallAttenPierce : k_thinWallAttenStop));
+                return; // consumed=false → 관통
+            }
+
+            // 두꺼운 벽 (원본 경로 A) — 두께 내부에 걸친 서브스텝 점 개수만큼 반복: 매 점마다 penetration 1 소비 + attacks ×0.6. 소진되면 그 지점(벽 내부)에 박혀서 정지.
+            // 점 개수 = floor(두께 / 스텝). 원본은 진입 위상에 따라 floor~floor+1 이지만, 올림(ceil)은 애매한 두께를 과다 소비해 관통을 막으므로 내림 사용.
+            int steps = Mathf.FloorToInt(thickness / k_blockStepSize);
+            for (int s = 0; s < steps; s++)
+            {
+                m_penetration--;
+                if (m_penetration < 0)
+                {
+                    // 소진된 서브스텝 위치 = 진입면에서 s 스텝 들어간 지점 (원본은 벽 내부에서 멈춤).
+                    transform.position = hit.point + dir * (s * k_blockStepSize);
+                    Recycle();
+                    consumed = true;
+                    return;
+                }
+                m_attacks = Mathf.FloorToInt(m_attacks * k_pierceAttenWall);
+            }
+            // 관통 성공 — 위치는 옮기지 않음 (UpdateStraight 가 dt 끝까지 진행). consumed=false → 다음 hit 진행.
+        }
+
+        /// <summary>
+        /// 벽 두께 측정 — 진입 지점에서 총알 이동방향(dir)으로 같은 벽의 나가는 면(backface)까지 거리 = 경로상 실제 통과 두께.
+        /// 원본의 "탄도를 따라 벽 내부를 검사" 방식 대응 — 모서리에 비스듬히 걸치면 경로가 길어져 자동으로 두껍게 측정된다.
+        /// backface 를 잡기 위해 측정 동안만 queriesHitBackfaces 를 켜고 즉시 복원(동기 실행이라 다른 raycast 영향 없음). 단일 collider 한정이라 가벼움.
+        /// exit 면을 못 찾으면(상한 초과 두께) 상한값 반환 → 호출부에서 사실상 막힘 처리.
+        /// </summary>
+        private float MeasureBlockThickness(RaycastHit entry, Vector3 dir)
+        {
+            bool prev = Physics.queriesHitBackfaces;
+            Physics.queriesHitBackfaces = true;
+
+            float   thickness = k_maxBlockThickness;
+            Vector3 start     = entry.point + dir * k_hitEpsilon;
+            if (entry.collider.Raycast(new Ray(start, dir), out RaycastHit exit, k_maxBlockThickness))
+                thickness = exit.distance + k_hitEpsilon;
+
+            Physics.queriesHitBackfaces = prev;
+            return thickness;
         }
 
         /// <summary>
@@ -391,7 +472,8 @@ namespace UnityXOPS
                     }
 
                     hb.Human.ApplyDamage(total);
-                    hb.Human.SetHitReaction(DataManager.Instance.WeaponParameterData.weaponGeneralData.hitReactionExplosion); // 원본 object.cpp:1079 HitGrenadeExplosion =10
+                    hb.Human.SetHitReaction(DataManager.Instance.HumanParameterData.humanGeneralData.grenadeHitReaction); // 원본 object.cpp:1079 HitGrenadeExplosion =10
+                    EffectManager.Instance.Play(m_bulletData.humanHitEffectIndex, hb.Human.transform.position); // 원본 objectmanager.cpp:1119 SetHumanBlood
                 }
 
                 // 소품(SmallObject) 폭발 피격 — 단일 중심점 거리 감쇠 + 벽 차폐 (원본 objectmanager.cpp:1171-1211, damage = 80 - r).

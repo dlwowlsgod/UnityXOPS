@@ -359,6 +359,17 @@ namespace UnityXOPS
             // 7. 접지 처리 및 경사 미끄러짐
             if (fallFlag)
             {
+                // 낙하 데미지 — 임계 속도(fallMinSpeed) 보다 빠르게 착지한 프레임 1회. 원본 object.cpp:1792-1797.
+                //   damage = floor(fallDamageMax / |fallMaxSpeed - fallMinSpeed| × |v - fallMinSpeed|) + Random(0..fallDamageRandomMax)
+                // 종단속도(fallMaxSpeed) 착지 시 fallDamageMax + rand → HP 100 즉사. 임계점 착지면 rand 만(0~5).
+                if (m_human.Alive && m_moveVelocity.y < gen.fallMinSpeed)
+                {
+                    float scale  = gen.fallDamageMax / Mathf.Abs(gen.fallMaxSpeed - gen.fallMinSpeed);
+                    float damage = Mathf.Floor(scale * Mathf.Abs(m_moveVelocity.y - gen.fallMinSpeed))
+                                 + UnityEngine.Random.Range(0, gen.fallDamageRandomMax);
+                    m_human.ApplyDamage(damage);
+                }
+
                 m_moveVelocity.y = 0f;
 
                 // 점프 (원본: 이전 프레임 점프 입력 + 쿨다운 없음)
@@ -447,6 +458,11 @@ namespace UnityXOPS
 
             // 원본 OpenXOPS object.cpp:1228-1237 사망 진입 루프 — noneWeapon 이외 슬롯의 무기를 무작위로 흩뿌림.
             m_human.DropAllWeaponsOnDeath();
+
+            // 사망 이펙트 — HumanTypeData.deathEffectIndex 가 가리키는 이펙트(예: 로봇=RobotDeathSmoke). -1 이면 Play 가 무시.
+            // 원본 OpenXOPS DeadEffect (objectmanager.cpp:1234) — type==1(로봇)만 연기. UnityXOPS 는 타입별 인덱스 데이터로 일반화.
+            HumanTypeData type = m_human.HumanTypeData;
+            if (type != null) EffectManager.Instance.Play(type.deathEffectIndex, m_human.transform.position);
         }
 
         /// <summary>

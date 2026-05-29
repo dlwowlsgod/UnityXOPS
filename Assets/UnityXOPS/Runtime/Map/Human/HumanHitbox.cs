@@ -87,13 +87,13 @@ namespace UnityXOPS
             human.ApplyDamage(attacks * multiplier);
 
             // 피격 시 조준 오차 반동 — 부위별 값으로 덮어씀 (원본 objectmanager.cpp:910 HitBulletHuman → HitBulletHead/Up/Leg).
-            var gen = DataManager.Instance.WeaponParameterData.weaponGeneralData;
+            var gen = DataManager.Instance.HumanParameterData.humanGeneralData;
             human.SetHitReaction(part switch
             {
-                HumanHitPart.Head => gen.hitReactionHead,
-                HumanHitPart.Body => gen.hitReactionBody,
-                HumanHitPart.Leg  => gen.hitReactionLeg,
-                _                 => gen.hitReactionBody,
+                HumanHitPart.Head => gen.headHitReaction,
+                HumanHitPart.Body => gen.bodyHitReaction,
+                HumanHitPart.Leg  => gen.legHitReaction,
+                _                 => gen.bodyHitReaction,
             });
         }
     }

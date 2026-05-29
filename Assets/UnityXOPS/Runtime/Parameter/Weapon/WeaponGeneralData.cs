@@ -18,10 +18,6 @@ namespace UnityXOPS
         public int airborneAccuracyPenalty;
         public int injuryAccuracyPenalty;
         public int injuryHpThreshold;
-        public int hitReactionHead;
-        public int hitReactionBody;
-        public int hitReactionLeg;
-        public int hitReactionExplosion;
         public float reactionRecoveryPerSecond;
         public float weaponScale;
 

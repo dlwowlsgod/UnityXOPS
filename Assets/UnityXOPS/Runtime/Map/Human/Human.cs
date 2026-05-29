@@ -41,6 +41,7 @@ namespace UnityXOPS
         public void SetDeadState(HumanDeadState value)
         {
             deadState = value;
+            if (value != HumanDeadState.Alive) m_scoping = false; // 사망 시 스코프 해제 (원본 object.cpp:1240 SetDisableScope)
         }
 
         /// <summary>
@@ -118,6 +119,37 @@ namespace UnityXOPS
         public  bool     IsReloading       => m_reloadingCnt > 0f;
         public  bool     IsChanging        => IsSwitchingWeapon || IsReloading;
 
+        // 스코프(ADS) 상태 — 원본 OpenXOPS human::scopemode (object.cpp:918-944). 발사/이동으론 안 풀리고 무기교체·재장전·사망·비스코프무기면 자동 해제 (Update 에서 CanScope 체크).
+        private bool m_scoping;
+        public  bool IsScoping => m_scoping;
+
+        // 현재 무기의 스코프 데이터. 스코프 무기가 아니거나 인덱스가 잘못되면 null.
+        public ScopeData CurrentScopeData
+        {
+            get
+            {
+                Weapon w = CurrentWeapon;
+                if (w == null || w.WeaponData == null || !w.WeaponData.scope) return null;
+                var list = DataManager.Instance.WeaponParameterData.scopeData;
+                int idx  = w.WeaponData.scopeIndex;
+                return (list != null && idx >= 0 && idx < list.Count) ? list[idx] : null;
+            }
+        }
+
+        // 스코프 조준 중일 때만 non-null. 발사 반동(ScopeData.recoilAim*Adjust) 등 게임플레이가 읽는 단일 소스.
+        public ScopeData ActiveScope => m_scoping ? CurrentScopeData : null;
+
+        // 스코프 켜기/유지 가능 조건. 깨지면 자동 해제 (원본: 무기교체/재장전/사망 시 SetDisableScope).
+        public bool CanScope => Alive && !IsChanging && CurrentScopeData != null;
+
+        /// <summary>
+        /// 스코프 토글 (원본 ChangeScopeMode). 입력 측(PlayerController/UI)이 호출. 조건 불충족이면 무시.
+        /// </summary>
+        public void ToggleScope()
+        {
+            if (CanScope) m_scoping = !m_scoping;
+        }
+
         /// <summary>
         /// 슬롯 인덱스(0/1) 로 무기 인스턴스를 조회. UI HUD 등에서 비활성 슬롯 무기 정보가 필요할 때 사용.
         /// </summary>
@@ -189,6 +221,12 @@ namespace UnityXOPS
             humanVisual.BeginArmReaction(startDeg, duration);
         }
 
+        // 조준 표적점(월드). 플레이어가 카메라 중앙 ray 로 매 발사 전 주입 → SpawnBullets 가 총구→표적 방향으로 발사 (3인칭 어깨 오프셋 parallax 보정).
+        // null 이면 controller.Yaw/Pitch 사용 (AI). 원본엔 없는 UnityXOPS 3인칭 연출 보조.
+        private Vector3? m_aimPoint;
+        public  Vector3? AimPoint => m_aimPoint;
+        public  void SetAimPoint(Vector3 worldPoint) => m_aimPoint = worldPoint;
+
         private void Update()
         {
             // 사망 시 카운터/팔 reaction/픽업 모두 정지. HP ≤ 0 직후 다음 FixedUpdate 의 EnterDeadState 가
@@ -213,6 +251,9 @@ namespace UnityXOPS
 
             humanVisual.TickArmReaction(dt);
             TryPickupWeapon();
+
+            // 스코프 자동 해제 — 무기교체/재장전/비스코프무기 전환 시 (원본 SetDisableScope 트리거).
+            if (m_scoping && !CanScope) m_scoping = false;
         }
 
         /// <summary>

@@ -27,6 +27,8 @@ namespace UnityXOPS
         public float gravityAcceleration;
         public float fallMinSpeed;
         public float fallMaxSpeed;
+        public int   fallDamageMax;          // 종단속도 착지 시 데미지 (원본 HUMAN_DAMAGE_MAXFALL 120)
+        public int   fallDamageRandomMax;    // 가산 랜덤 데미지 상한 exclusive — Random.Range(0, N) (원본 GetRand(6) = 0~5)
         public float deadlineY;
         public float deadBodyFallAngularSpeed;
         public bool deadBodyCollision;

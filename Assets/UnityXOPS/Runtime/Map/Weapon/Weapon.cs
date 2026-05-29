@@ -141,10 +141,20 @@ namespace UnityXOPS
             if (owner.HumanVisual != null)
                 owner.HumanVisual.BeginArmShotReaction(m_weaponData.armReactionAngle);
 
-            // 비조준 에임 킥 — 실제 시점이 움직임 (영구 누적, 자동 복원 없음). 원본 human::ShotWeapon (object.cpp:710-726) WeaponRecoil_Scope* 의 비조준 분기.
-            // recoilAimHorizontal=좌우(대칭), recoilAimVertical=상하(양수 저장=위로 → Unity 적용 시 부호 반전). 스코프 무기의 조준 시 추가 킥(ScopeData.*Adjust)은 ADS 미구현이라 보류.
+            // 에임 킥 — 실제 시점이 움직임 (영구 누적, 자동 복원 없음). 원본 human::ShotWeapon (object.cpp:710-728).
+            // recoilAimHorizontal=좌우(대칭), recoilAimVertical=상하(양수 저장=위로 → Unity 적용 시 부호 반전).
             float yawKick   = UnityEngine.Random.Range(m_weaponData.recoilAimHorizontal.min, m_weaponData.recoilAimHorizontal.max);
             float pitchKick = UnityEngine.Random.Range(m_weaponData.recoilAimVertical.min,   m_weaponData.recoilAimVertical.max);
+
+            // 스코프 조준 중이면 ScopeData 반동을 추가 가산 (원본 object.cpp:710-728, 대체가 아닌 += 가산).
+            // PSG1 은 WeaponData 에, AUG 는 ScopeData 에 반동값이 들어있어 — 둘 다 같은 조준 킥으로 합쳐짐.
+            ScopeData scope = owner.ActiveScope;
+            if (scope != null)
+            {
+                yawKick   += UnityEngine.Random.Range(scope.recoilAimHorizontalAdjust.min, scope.recoilAimHorizontalAdjust.max);
+                pitchKick += UnityEngine.Random.Range(scope.recoilAimVerticalAdjust.min,   scope.recoilAimVerticalAdjust.max);
+            }
+
             if (yawKick != 0f || pitchKick != 0f)
                 owner.AddViewRecoil(yawKick, -pitchKick);
 
@@ -270,14 +280,35 @@ namespace UnityXOPS
             }
         }
 
+        // 무기 머즐플래시 월드 위치 — Bullet visual 게이팅 기준점. 모델 데이터/부착 루트 없으면 fallback(시점 위치).
+        private Vector3 MuzzleWorldPosition(Vector3 fallback)
+        {
+            Transform attach = transform.parent;
+            if (m_weaponModelData == null || attach == null) return fallback;
+            return attach.TransformPoint(m_weaponModelData.muzzleFlashOffset);
+        }
+
         private void SpawnBullets(Human owner, BulletData bulletData)
         {
             var humanGen = DataManager.Instance.HumanParameterData.humanGeneralData;
-            Vector3 spawnPos = owner.transform.position + Vector3.up * humanGen.cameraAttachPosition;
+            Vector3 spawnPos     = owner.transform.position + Vector3.up * humanGen.cameraAttachPosition;
+            Vector3 visualOrigin = MuzzleWorldPosition(spawnPos);  // 총알 visual 은 이 지점에서 bulletBoundAdjust 만큼 멀어진 후 표시
 
             HumanController controller = owner.GetComponent<HumanController>();
-            float yaw   = controller.Yaw;
-            float pitch = controller.Pitch;
+
+            // 조준 표적점이 있으면(플레이어) 총구→표적 방향으로 발사 — 3인칭 어깨 오프셋 parallax 보정. 없으면(AI) 캐릭터 시점각 그대로.
+            float yaw, pitch;
+            if (owner.AimPoint.HasValue)
+            {
+                Vector3 baseDir = (owner.AimPoint.Value - spawnPos).normalized;
+                yaw   =  Mathf.Atan2(baseDir.x, baseDir.z) * Mathf.Rad2Deg;
+                pitch = -Mathf.Asin(Mathf.Clamp(baseDir.y, -1f, 1f)) * Mathf.Rad2Deg;
+            }
+            else
+            {
+                yaw   = controller.Yaw;
+                pitch = controller.Pitch;
+            }
 
             // 기본 탄도 오차 (모든 펠릿 공유). 실효 오차 공식은 GetEffectiveErrorRange 단일 소스 (크로스헤어와 공유).
             float effError     = GetEffectiveErrorRange(owner);
@@ -307,10 +338,11 @@ namespace UnityXOPS
 
                 BulletManager.Instance.Spawn(
                     bulletData, owner, owner.Team,
-                    attacks:     (int)m_weaponData.damage,
-                    penetration: m_weaponData.penetration,
-                    position:    spawnPos,
-                    velocity:    velocity);
+                    attacks:      (int)m_weaponData.damage,
+                    penetration:  m_weaponData.penetration,
+                    position:     spawnPos,
+                    velocity:     velocity,
+                    visualOrigin: visualOrigin);
             }
         }
 

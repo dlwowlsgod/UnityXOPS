@@ -59,7 +59,7 @@ namespace UnityXOPS
         /// </summary>
         public Bullet Spawn(BulletData data, Human owner, int team,
                             int attacks, int penetration,
-                            Vector3 position, Vector3 velocity)
+                            Vector3 position, Vector3 velocity, Vector3 visualOrigin)
         {
             if (data == null) return null;
 
@@ -71,7 +71,7 @@ namespace UnityXOPS
 
             slot.gameObject.SetActive(true);
             slot.ApplyVisual(mesh, material, data.modelPosition, data.modelRotation, data.modelScale);
-            slot.Spawn(data, owner, team, attacks, penetration, position, velocity);
+            slot.Spawn(data, owner, team, attacks, penetration, position, velocity, visualOrigin);
             return slot;
         }
 
