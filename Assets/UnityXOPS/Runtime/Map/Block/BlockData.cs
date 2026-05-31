@@ -135,6 +135,9 @@ namespace UnityXOPS
         private const float k_lightY =  0.86602540f;  //  sin(120°)
         private const float k_lightZ =  0.17364818f;  // -sin(190°)
 
+        // 평평한 블록의 degenerate(부피 0) bounds 로 인한 프러스텀 컬링 오작동 방지용 최소 두께 (Unity 단위, = 1 OpenXOPS 단위).
+        private const float k_minBoundsThickness = 0.1f;
+
         private static Block BuildBlock(RawBlockData raw, bool darkFlag)
         {
             Vector3 center = Vector3.zero;
@@ -161,8 +164,9 @@ namespace UnityXOPS
                 Vector3 n  = (c1.sqrMagnitude > c2.sqrMagnitude ? c1 : c2).normalized;
 
                 Vector3 fc = (v0 + v1 + v2 + v3) * 0.25f;
-                // 법선이 중심에서 바깥쪽을 향하도록 보정
-                if (Vector3.Dot(n, fc - center) < 0f) n = -n;
+                // 원본 CalculationBlockdata(datafile.cpp:222-250) 와 동일하게 winding 으로 구한 법선을 그대로 쓴다.
+                // 중심 바깥쪽으로 강제 보정하면 IsCenterVisibleFromAnyFace(판자블록 조건2: 중심이 한 면이라도 앞쪽)가
+                // 항상 거짓이 돼, 함몰/뒤집힌 형태의 통과벽(원본 BoardBlock)이 콜라이더를 갖게 되어 통과 불가가 된다.
 
                 faceCenters[f] = fc;
                 faceNormals[f] = n;
@@ -231,6 +235,17 @@ namespace UnityXOPS
                 mesh.SetTriangles(subTriangles[s], s);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
+
+            // 평평한 블록(바닥/천장 등 한 축 두께 0)은 degenerate AABB(부피 0)가 되어, Unity 프러스텀 컬링이
+            // 특정 카메라 각도에서 "프러스텀 밖"으로 잘못 판정해 통째로 사라진다. 두께 0 축에 최소 두께를 부여해 막는다.
+            // 컬링 자체는 유지되고, 메시 지오메트리·MeshCollider(삼각형 기반)·렌더링에는 영향이 없다.
+            Bounds   mb   = mesh.bounds;
+            Vector3  size = mb.size;
+            size.x = Mathf.Max(size.x, k_minBoundsThickness);
+            size.y = Mathf.Max(size.y, k_minBoundsThickness);
+            size.z = Mathf.Max(size.z, k_minBoundsThickness);
+            mb.size     = size;
+            mesh.bounds = mb;
 
             Vector3[] expanded = ExpandVertices(raw.vertices);
             bool isBoardBlock  = HasDuplicateExpandedVertices(expanded)

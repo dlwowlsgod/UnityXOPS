@@ -1,15 +1,17 @@
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UnityXOPS
 {
     public class MaingameUIDynamicLayout : MonoBehaviour
     {
-        [SerializeField] private RectTransform state, hp, ammo, weaponName, reload, change;
+        [SerializeField] private RectTransform state, hp, ammo, weaponName, reload, change, simpleWeaponName;
         [SerializeField] private GameObject normalUI, simpleUI;
+        [SerializeField] private RawImage simpleHPLeft, simpleHPRight, simpleHPUp, simpleHPDown;
 
         private Human m_player;
-        private XOPSSpriteText m_stateText, m_hpText, m_ammoText, m_weaponNameText;
+        private XOPSSpriteText m_stateText, m_hpText, m_ammoText, m_weaponNameText, m_simpleWeaponNameText;
 
         private float  m_lastHP          = float.NaN;
         private int    m_lastMagazine    = -1;
@@ -44,6 +46,10 @@ namespace UnityXOPS
             m_weaponNameText = FontManager.CreateSpriteText<XOPSSpriteText>(
                 weaponName, weaponNameString, oneZero, oneZero, new Vector2(-250, 85), new Vector2(25 * weaponNameString.Length, 98), weaponNameFontSize, Color.white, TextAnchor.MiddleLeft, 0f);
 
+            string simpleWeaponNameString = m_player.CurrentWeapon.WeaponData.name;
+            Vector2 simpleWeaponNameFontSize = SetWeaponNameFontSize(simpleWeaponNameString, 10, new Vector2(16f, 20f));
+            m_simpleWeaponNameText = FontManager.CreateSpriteText<XOPSSpriteText>(
+                simpleWeaponName, simpleWeaponNameString, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(25 * simpleWeaponNameString.Length, 98), simpleWeaponNameFontSize, Color.white, TextAnchor.MiddleLeft, 0f);
 
             Vector2 reloadChargeFontSize = new Vector2(32f, 34f);
             FontManager.CreateSpriteText<XOPSSpriteText>(
@@ -59,6 +65,23 @@ namespace UnityXOPS
             m_lastMagazine    = m_player.CurrentWeapon.CurrentMagazine;
             m_lastReserveAmmo = m_player.CurrentWeapon.ReserveAmmo;
             m_lastWeaponName  = m_player.CurrentWeapon.WeaponData.name;
+
+            simpleUI.SetActive(false);
+        }
+
+        /// <summary>
+        /// Normal UI ↔ Simple UI 토글. 토글 직후 활성 UI가 최신값을 즉시 반영하도록 캐시를 무효화한다.
+        /// </summary>
+        public void ToggleUIMode()
+        {
+            bool toSimple = normalUI.activeSelf;
+            normalUI.SetActive(!toSimple);
+            simpleUI.SetActive(toSimple);
+
+            m_lastHP          = float.NaN;
+            m_lastMagazine    = -1;
+            m_lastReserveAmmo = -1;
+            m_lastWeaponName  = null;
         }
 
         private void Update()
@@ -95,6 +118,30 @@ namespace UnityXOPS
                 {
                     m_weaponNameText.Text                    = name;
                     m_weaponNameText.rectTransform.sizeDelta = new Vector2(25 * name.Length, 98);
+                    m_lastWeaponName = name;
+                }
+            }
+
+            if (simpleUI.activeSelf)
+            {
+                float hp = m_player.HP;
+                if (hp != m_lastHP)
+                {
+                    Color32 stateColor = SetStateColor(hp);
+                    simpleHPLeft.color  = stateColor;
+                    simpleHPRight.color = stateColor;
+                    simpleHPUp.color    = stateColor;
+                    simpleHPDown.color  = stateColor;
+
+                    m_lastHP = hp;
+                }
+
+                Weapon w = m_player.CurrentWeapon;
+                string name = w.WeaponData.name;
+                if (name != m_lastWeaponName)
+                {
+                    m_simpleWeaponNameText.Text                    = name;
+                    m_simpleWeaponNameText.rectTransform.sizeDelta = new Vector2(25 * name.Length, 98);
                     m_lastWeaponName = name;
                 }
             }

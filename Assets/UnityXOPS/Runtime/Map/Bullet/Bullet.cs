@@ -256,7 +256,7 @@ namespace UnityXOPS
                 ObjectCollider objCollider = hit.collider.GetComponentInParent<ObjectCollider>();
                 if (objCollider != null && objCollider.Owner != null)
                 {
-                    HandleObjectHit(objCollider.Owner, hit.point);
+                    HandleObjectHit(objCollider.Owner, hit, dir);
                     continue; // 소품은 총알을 막지 않음 — 데미지 + attacks 감쇠 후 관통 (원본 objectmanager.cpp:835-839)
                 }
 
@@ -399,17 +399,44 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// 소품(SmallObject) 총알 피격. 원본 objectmanager.cpp:835-839 — 데미지 = floor(attacks×0.25), 통과 후 잔여 attacks ×0.7.
-        /// 소품은 총알을 멈추지 않고 관통시키며, 같은 소품은 1발당 1회만 처리.
+        /// 소품 콜라이더(Sphere/Box/Capsule = 프리미티브) 통과 길이(chord) 측정.
+        /// 프리미티브 콜라이더는 queriesHitBackfaces 가 적용되지 않고 내부 시작 raycast 도 hit 를 안 잡으므로,
+        /// 콜라이더 뒤쪽(바깥)에서 진행 반대방향으로 쏴 먼 면(exit)을 찾는 방식을 쓴다. 단일 collider 한정.
+        /// 측정 실패(빗맞음) 시 0 반환 → 호출부에서 최소 1회 처리.
         /// </summary>
-        private void HandleObjectHit(SmallObject obj, Vector3 hitPoint)
+        private float MeasureObjectChord(Collider collider, Vector3 entryPoint, Vector3 dir)
+        {
+            Vector3 farStart = entryPoint + dir * k_maxBlockThickness;
+            if (collider.Raycast(new Ray(farStart, -dir), out RaycastHit exit, k_maxBlockThickness))
+                return Mathf.Max(0f, k_maxBlockThickness - exit.distance);
+            return 0f;
+        }
+
+        /// <summary>
+        /// 소품(SmallObject) 총알 피격. 원본 objectmanager.cpp:831-840 — 데미지 = floor(attacks×배율), 명중 후 잔여 attacks ×= 감쇠.
+        /// 원본은 총알을 BULLET_SPEEDSCALE 간격으로 서브스텝하며 매 스텝 소물 충돌 구체를 검사하는데, 사람(BulletObj_HumanIndex)과 달리
+        /// "이미 맞음" 가드가 없어 구체를 지나는 서브스텝 수만큼 반복 피격된다 → 한 발이 통과 두께만큼 여러 번 데미지를 준다.
+        /// 우리는 콜라이더 통과 길이(chord) / 서브스텝 크기로 그 명중 횟수를 재현한다. 소품은 penetration 을 소비하지 않는다.
+        /// </summary>
+        private void HandleObjectHit(SmallObject obj, RaycastHit hit, Vector3 dir)
         {
             if (obj == null || obj.IsDestroyed) return;
-            if (!m_hitObjects.Add(obj))         return; // 같은 소품 중복 hit 차단
+            if (!m_hitObjects.Add(obj))         return; // 같은 소품은 1발당 1회 진입 — 통과 전체 서브스텝을 여기서 처리
 
-            obj.HitBullet(Mathf.FloorToInt(m_attacks * 0.25f));
-            m_attacks = Mathf.FloorToInt(m_attacks * 0.7f);
-            EffectManager.Instance.Play(m_bulletData.objectHitEffectIndex, hitPoint);
+            var gen = DataManager.Instance.ObjectParameterData.objectGeneralData;
+
+            // chord(콜라이더 통과 길이) / k_blockStepSize(= BULLET_SPEEDSCALE×0.1) = 명중 횟수. 최소 1회.
+            // 소물은 프리미티브 콜라이더라 벽용 MeasureBlockThickness 가 안 통함 → 전용 측정 사용.
+            float chord = MeasureObjectChord(hit.collider, hit.point, dir);
+            int   steps = Mathf.Max(1, Mathf.FloorToInt(chord / k_blockStepSize));
+
+            for (int s = 0; s < steps; s++)
+            {
+                obj.HitBullet(Mathf.FloorToInt(m_attacks * gen.bulletDamageMultiplier));     // 파괴 후엔 SmallObject 가 자체 가드로 no-op
+                m_attacks = Mathf.FloorToInt(m_attacks * gen.bulletPenetrationAttenuation);
+            }
+
+            EffectManager.Instance.Play(m_bulletData.objectHitEffectIndex, hit.point);
         }
 
         /// <summary>

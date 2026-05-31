@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace UnityXOPS
 {
@@ -8,7 +8,7 @@ namespace UnityXOPS
 
         private void Start()
         {
-            Color32 fontColor = new Color(1.0f, 1.0f, 1.0f, 0.5f);
+            Color32 fontColor = new Color(1.0f, 1.0f, 1.0f, 0.75f);
             Vector2 fontSize = new Vector2(32, 32);
             Vector2 oneZero = new Vector2(1, 0);
             FontManager.CreateSpriteText<XOPSSpriteText>(

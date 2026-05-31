@@ -23,7 +23,17 @@ namespace UnityXOPS
         /// <param name="modelData">무기 모델 파라미터 데이터.</param>
         public void CreateWeaponVisual(WeaponData data, WeaponModelData modelData)
         {
-            m_weaponMaterials = new List<Material>();
+            m_weaponMaterials = BuildModelParts(visualRoot, modelData);
+        }
+
+        /// <summary>
+        /// modelData 의 textures/modelData 를 순회해 parent 아래에 머티리얼/메시(Part_{i})를 빌드한다.
+        /// CreateWeaponVisual(장착 무기 visualRoot) 과 HUDWeaponDisplay(HUD 모델) 가 공유한다.
+        /// </summary>
+        /// <returns>textureIndex 매핑용으로 생성/캐시된 머티리얼 리스트.</returns>
+        public static List<Material> BuildModelParts(Transform parent, WeaponModelData modelData)
+        {
+            var materials = new List<Material>();
 
             // textures: HumanVisual.CreateHumanVisual 의 텍스처 블록 미러. WeaponMaterialCache 로 맵 단위 공유.
             for (int i = 0; i < modelData.textures.Count; i++)
@@ -33,14 +43,14 @@ namespace UnityXOPS
 
                 if (MapLoader.Instance.WeaponMaterialCache.TryGetValue(fullPath, out var cached))
                 {
-                    m_weaponMaterials.Add(cached);
+                    materials.Add(cached);
                     continue;
                 }
 
                 var texture = ImageLoader.LoadTexture(fullPath);
                 if (texture == null)
                 {
-                    m_weaponMaterials.Add(MaterialManager.Instance.MainMaterial);
+                    materials.Add(MaterialManager.Instance.MainMaterial);
                     continue;
                 }
                 texture.name = Path.GetFileName(fullPath);
@@ -50,7 +60,7 @@ namespace UnityXOPS
                 material.name = texture.name;
 
                 MapLoader.Instance.WeaponMaterialCache[fullPath] = material;
-                m_weaponMaterials.Add(material);
+                materials.Add(material);
             }
 
             // modelData: 각 ModelData 마다 Part_{i} 자식 GameObject 생성.
@@ -59,7 +69,7 @@ namespace UnityXOPS
                 ModelData md = modelData.modelData[i];
 
                 var partObj = new GameObject($"Part_{i}");
-                partObj.transform.SetParent(visualRoot, false);
+                partObj.transform.SetParent(parent, false);
                 partObj.transform.SetLocalPositionAndRotation(md.position, Quaternion.Euler(md.rotation));
                 partObj.transform.localScale = md.scale;
 
@@ -68,15 +78,17 @@ namespace UnityXOPS
                 meshFilter.sharedMesh = ModelLoader.LoadMesh(meshPath);
 
                 var meshRenderer = partObj.AddComponent<MeshRenderer>();
-                if (md.textureIndex < 0 || md.textureIndex >= m_weaponMaterials.Count)
+                if (md.textureIndex < 0 || md.textureIndex >= materials.Count)
                 {
                     meshRenderer.sharedMaterial = MaterialManager.Instance.MainMaterial;
                 }
                 else
                 {
-                    meshRenderer.sharedMaterial = m_weaponMaterials[md.textureIndex];
+                    meshRenderer.sharedMaterial = materials[md.textureIndex];
                 }
             }
+
+            return materials;
         }
 
         /// <summary>

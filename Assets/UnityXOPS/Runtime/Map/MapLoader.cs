@@ -136,6 +136,15 @@ namespace UnityXOPS
                 Instance.blockMaterials.Add(blockMaterial);
             }
 
+            // 원본 OpenXOPS 는 맵 블록을 먼저(RenderMapdata), 소물/오브젝트를 나중(ObjMgr.Render)에 그린다.
+            // 블록과 addon(소물)이 같은 셰이더·같은 queue(2450)면 Unity 가 카메라 거리순으로 정렬해 순서가 뒤집히며
+            // 동일 평면에서 Z-fighting(회전 시 깜빡임)이 난다. 블록 queue 를 2449 로 내려 addon(2450) 보다 항상 먼저
+            // 그려지게 하면, ZTest LEqual 상 동일 깊이서 나중에 그린 addon 이 이겨 블록을 덮는다 = 원본 그리기 순서와 동일.
+            // BlockMaterial 은 MainMaterial 과 별도 에셋이고 여기선 블록용 런타임 인스턴스만 바꾸므로 오브젝트 렌더엔 영향 없음.
+            const int k_blockRenderQueue = 2449;
+            for (int i = 0; i < Instance.blockMaterials.Count; i++)
+                Instance.blockMaterials[i].renderQueue = k_blockRenderQueue;
+
             for (int i = 0; i < blockData.blocks.Length; i++)
             {
                 Block block = blockData.blocks[i];
@@ -370,6 +379,11 @@ namespace UnityXOPS
             // param1=ObjectData 인덱스 (범위 초과 시 silently skip), param2=바닥 스냅 플래그 (1이면 SnapToGround), param3=식별 ID (이벤트 시스템용).
             Instance.objectCount = 0;
             var op = DataManager.Instance.ObjectParameterData;
+
+            // .mif 미션 전용 추가 사물(ADDON-OBJECT, index = addonObjectIndex) 슬롯을 채운다.
+            // 소물 스폰 루프가 objectData[addonObjectIndex] 를 읽기 전에 호출돼야 함. addon 없는 미션이면 슬롯을 비워 잔존 방지.
+            InitializeAddonObject();
+
             for (int i = 0; i < pointData.rawPointData.Length; i++)
             {
                 var raw = pointData.rawPointData[i];
@@ -486,6 +500,9 @@ namespace UnityXOPS
             skyObject.transform.SetParent(Instance.skyRoot, false);
             skyObject.AddComponent<MeshFilter>().sharedMesh = skyMesh;
             skyObject.AddComponent<MeshRenderer>().sharedMaterial = skyMaterial;
+
+            // fog(RenderSettings)는 씬별 자산이라 여기서 걸면 씬 전환에 씻겨나간다.
+            // fog 가 보여야 할 씬의 카메라(CameraClippingApplier)가 Awake 에서 ApplySkyFog 를 직접 호출한다.
         }
 
         /// <summary>
@@ -500,6 +517,8 @@ namespace UnityXOPS
                 if (renderer != null) DestroyIfRuntimeMaterial(renderer.sharedMaterial);
                 Destroy(child.gameObject);
             }
+
+            ClearFog();
         }
 
         /// <summary>

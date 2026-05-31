@@ -17,6 +17,7 @@ namespace UnityXOPS
         [SerializeField] private ViewMode  viewMode                 = ViewMode.FirstPerson;
         [SerializeField] private LayerMask thirdPersonCollisionMask = ~0;
         [SerializeField] private LayerMask aimMask                  = ~0;   // 조준 표적점 ray 대상 (블록/사람/소품). 자기 자신 hitbox 는 코드에서 제외.
+        [SerializeField] private MaingameUIDynamicLayout uiLayout;          // F4 로 Normal ↔ Simple UI 토글
 
         // 카메라 중앙 ray 가 아무것도 안 맞을 때 쓰는 먼 표적 거리.
         private const float k_aimRayMaxDist = 1000f;
@@ -104,6 +105,10 @@ namespace UnityXOPS
         private void Update()
         {
             if (!TryAcquirePlayer()) return;
+
+            // UI 토글은 카메라(사망 시 Death Camera로 전환)와 무관하므로 사망 중에도 허용.
+            // F4 = Normal UI ↔ Simple UI 토글
+            if (uiLayout != null && InputManager.Keyboard.f4Key.wasPressedThisFrame) uiLayout.ToggleUIMode();
 
             // 사망 시 모든 입력 무시 (이동/회전/무기 전환/시점 사이클).
             // 카메라는 LateUpdate가 별도 분기로 ApplyDeathCamera 처리.
