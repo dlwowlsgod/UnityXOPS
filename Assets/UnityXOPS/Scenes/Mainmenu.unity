@@ -250,6 +250,9 @@ GameObject:
   - component: {fileID: 140308882}
   - component: {fileID: 140308881}
   - component: {fileID: 140308883}
+  - component: {fileID: 140308884}
+  - component: {fileID: 140308886}
+  - component: {fileID: 140308885}
   m_Layer: 0
   m_Name: MainmenuScene
   m_TagString: Untagged
@@ -384,6 +387,43 @@ MonoBehaviour:
     rgba: 4278190080
   labelSize: {x: 18, y: 20}
   buttonSize: {x: 18, y: 20}
+--- !u!114 &140308884
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140308876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea3307a43d515cc4b9a385464563a89a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &140308885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140308876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64e9510a3b173cf4ba8908d7310743b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  menuCamera: {fileID: 810341564}
+--- !u!114 &140308886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140308876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eacc8ca61dbf784881746846952bf5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &254225895
 GameObject:
   m_ObjectHideFlags: 0

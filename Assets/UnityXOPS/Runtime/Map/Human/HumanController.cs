@@ -92,6 +92,10 @@ namespace UnityXOPS
         private void Start()
         {
             m_rotationX = transform.eulerAngles.y;
+
+            // 팔 pitch 초기값 — 원본 armrotation_y init -30°(아래). arm-space(음수=아래) → 카메라 pitch space(양수=아래) 부호 반전.
+            // 무기 든 평상시 팔이 수평(0)이 아니라 살짝 아래로 쉬게 함. 플레이어는 조작권 획득 시 0으로 덮어쓰고, AI 는 조준 시 갱신.
+            m_armRotationY = -DataManager.Instance.HumanParameterData.humanGeneralData.armAngleInitial;
         }
 
         public void SetMoveFlag(HumanMoveFlag flag) { m_moveFlag |= flag; }
@@ -149,10 +153,34 @@ namespace UnityXOPS
             m_moveFlagLt = m_moveFlag;
             m_moveFlag   = HumanMoveFlag.None;
 
+            EmitFootstep(); // 달리기 발소리 월드사운드 — 근처 적 AI 경계 트리거 (원본 ObjectManager::Process 足音)
+
             // 원본 human::ProcessObject 말미의 MotionCtrl->ProcessObject 호출 대응.
             // MoveFlag_lt (= 이번 프레임 입력)와 현재 body yaw로 다리 애니메이션/회전 갱신.
             if (m_humanVisual != null)
                 m_humanVisual.TickLeg(Time.fixedDeltaTime, m_moveFlagLt, m_rotationX, m_human.Alive);
+        }
+
+        /// <summary>
+        /// 달리기 발소리를 월드사운드로 방출 — 청취 범위 내 "적(다른 팀)" AI 만 경계 전환. 원본 OpenXOPS objectmanager.cpp:2774-2785
+        /// + soundmanager.cpp:348-365. 걷기(Walk)·정지·점프는 인식 안 됨(달리기만). 방향별 거리: 전진/좌우/후진. 방향 정보는 안 씀.
+        /// </summary>
+        private void EmitFootstep()
+        {
+            if (!m_human.Alive) return;
+
+            HumanMoveFlag f = m_moveFlagLt;
+            bool moving = (f & (HumanMoveFlag.Forward | HumanMoveFlag.Back |
+                                HumanMoveFlag.Left    | HumanMoveFlag.Right)) != 0;
+            if (!moving || (f & HumanMoveFlag.Walk) != 0) return; // 정지/걷기 = 발소리 인식 안 됨, 달리기만
+
+            HumanGeneralData gen = DataManager.Instance.HumanParameterData.humanGeneralData;
+            float dist = (f & HumanMoveFlag.Forward) != 0 ? gen.aiHearFootstepForward
+                       : (f & HumanMoveFlag.Back)    != 0 ? gen.aiHearFootstepBack
+                       :                                    gen.aiHearFootstepSide;
+
+            // 음원=발 위치(transform.position), 적(다른 팀)만 들음(allyDist=0 → 같은 팀 무시). 방향은 안 씀 — CAUTION 트리거만.
+            WorldSound.EmitPointSound(transform.position, m_human.Team, dist, 0f);
         }
 
         private void Tick()

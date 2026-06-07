@@ -13,6 +13,9 @@ namespace UnityXOPS
     {
         private const int k_maxParameterCount = 20;
 
+        // 랜덤 무기([7]) 스폰 시 자동 보충 탄수 배율 = 장탄수 × 배율. OpenXOPS TOTAL_WEAPON_AUTOBULLET (objectmanager.h:45).
+        private const int k_weaponAutoBullet = 3;
+
         [SerializeField]
         private Transform blockRoot, humanRoot, weaponRoot, objectRoot, skyRoot;
         [SerializeField]
@@ -41,6 +44,10 @@ namespace UnityXOPS
         private Human player;
         public static Human Player => Instance.player;
 
+        // 스폰된 전체 Human 목록 — AI 타겟 탐색(SearchEnemy 랜덤 샘플링)용. 스폰 순서대로 채워지며 언로드 시 비워진다.
+        private List<Human> m_humans = new List<Human>();
+        public static IReadOnlyList<Human> Humans => Instance.m_humans;
+
 
         [SerializeField]
         private string missionName, missionFullname, missionBD1Path, missionPD1Path,
@@ -56,6 +63,46 @@ namespace UnityXOPS
         public static int BlockLayer     => blockLayer;
 
         public static IReadOnlyList<Block> BlockColliders => Instance.blockColliders;
+
+        /// <summary>
+        /// AI 경로 포인트를 식별번호(param3=원본 p4)로 조회. AIPATH(param0=3) 먼저, 없으면 RAND_AIPATH(param0=8).
+        /// 원본 SearchPointdata(pmask=0x08) 대응 — 중복 시 첫 매치. 못 찾으면 false (경로 끝/막다른 길).
+        /// </summary>
+        public static bool TryGetPathPoint(int id, out RawPointData point)
+        {
+            point = null;
+            var sorted = Instance.m_sortedRawPointData;
+            if (sorted == null) return false;
+
+            if (sorted[3].TryGetValue(id, out var aipath) && aipath.Count > 0) { point = aipath[0]; return true; }
+            if (sorted[8].TryGetValue(id, out var rand)   && rand.Count   > 0) { point = rand[0];   return true; }
+            return false;
+        }
+
+        /// <summary>
+        /// 이벤트 노드를 식별번호(param3=원본 P4)로 조회. 이벤트 타입(param0=10~19) 전체에서 검색.
+        /// 원본 SearchPointdata(pmask=0x08, P4만) 대응 — 중복 시 첫 매치. 못 찾으면 false (라인 끝).
+        /// </summary>
+        public static bool TryGetEventPoint(int id, out RawPointData point)
+        {
+            point = null;
+            var sorted = Instance.m_sortedRawPointData;
+            if (sorted == null) return false;
+
+            for (int type = 10; type <= 19; type++)
+            {
+                if (sorted[type].TryGetValue(id, out var list) && list.Count > 0) { point = list[0]; return true; }
+            }
+            return false;
+        }
+
+        /// <summary>메시지 ID(.msg 파일 0-base 행번호)로 텍스트 조회. 범위 밖이면 빈 문자열 (원본 GetMessageText).</summary>
+        public static string GetMessageText(int id)
+        {
+            var msgs = Instance.messages;
+            if (msgs == null || id < 0 || id >= msgs.Count) return string.Empty;
+            return msgs[id];
+        }
 
         public string MissionName => missionName;
         public string MissionFullname => missionFullname;
@@ -292,6 +339,7 @@ namespace UnityXOPS
             
             Instance.pointCount = pointData.rawPointData.Length;
             Instance.player = null;
+            Instance.m_humans.Clear();
             Instance.m_humanMaterialCache = new Dictionary<string, Material>();
             Instance.m_weaponMaterialCache = new Dictionary<string, Material>();
             Instance.m_objectMaterialCache = new Dictionary<string, Material>();
@@ -332,6 +380,7 @@ namespace UnityXOPS
                 var human = humanObj.GetComponent<Human>();
                 // 원본 SearchPointdata는 첫 매치를 반환
                 human.CreateHuman(raw, infoList[0]);
+                Instance.m_humans.Add(human);
 
                 // AddHumanIndex: p4==0인 HUMAN/HUMAN2는 Player_HumanID를 무조건 덮어씀 → 파일 내 마지막이 승
                 if (raw.param3 == 0) Instance.player = human;
@@ -341,20 +390,34 @@ namespace UnityXOPS
             if (Instance.player == null && Instance.humanRoot.childCount > 0)
                 Instance.player = Instance.humanRoot.GetChild(0).GetComponent<Human>();
 
-            // PD1 weapon 포인트(param0=2) 스폰. OpenXOPS objectmanager.cpp:367-413 AddWeaponIndex 대응.
+            // PD1 weapon 포인트 스폰. OpenXOPS objectmanager.cpp:367-414 AddWeaponIndex 대응 (param0=2, 7 둘 다 동일 함수 처리).
             // weaponRoot 는 localScale=1 유지 (스케일 박으면 자식 position 도 같이 곱해져 옹기종기 발생).
             // 스케일은 Weapon.CreateWeapon(dropped:true) 가 자기 localScale 에 weaponScale * size 로 적용한다.
-            // PD1 [2] (param0=2): 떨어진 무기 spawn. param2 = 총탄수 → magazine/reserve 분배는 spawn 시점 1회만 일어남.
+            // [2] 일반 무기: param1 = 무기 인덱스, param2 = 총탄수.
+            // [7] 랜덤 무기: param1(a)·param2(b) = 무기 인덱스 후보 2개 → GetRand(2)로 50:50 선택, param3(c)는 식별번호(스폰 미사용).
+            //               탄수는 PD1 값이 아니라 선택된 무기의 magazineSize × k_weaponAutoBullet(3) 로 자동 산출.
             // OpenXOPS object.cpp:2383-2408 RunReload 분배 환산: magazine = min(total, magSize), reserve = max(0, total - magSize).
             Instance.weaponCount = 0;
             var wp = DataManager.Instance.WeaponParameterData;
             for (int i = 0; i < pointData.rawPointData.Length; i++)
             {
                 var raw = pointData.rawPointData[i];
-                if (raw.param0 != 2) continue;
+                if (raw.param0 != 2 && raw.param0 != 7) continue;
 
-                int weaponIndex  = raw.param1;
-                int totalBullets = raw.param2;
+                int weaponIndex;
+                int totalBullets;
+                if (raw.param0 == 7)
+                {
+                    weaponIndex = Random.Range(0, 2) == 0 ? raw.param1 : raw.param2;
+                    // 원본은 GetWeapon 실패 시 그 포인트를 스폰하지 않음 (return -1). 탄수도 무기 데이터에서 산출하므로 범위 밖이면 skip.
+                    if (weaponIndex < 0 || weaponIndex >= wp.weaponData.Count) continue;
+                    totalBullets = wp.weaponData[weaponIndex].magazineSize * k_weaponAutoBullet;
+                }
+                else
+                {
+                    weaponIndex  = raw.param1;
+                    totalBullets = raw.param2;
+                }
 
                 int magazine = -1;
                 int reserve  = -1;
@@ -419,6 +482,7 @@ namespace UnityXOPS
             Instance.weaponCount = 0;
             Instance.objectCount = 0;
             Instance.player = null;
+            Instance.m_humans.Clear();
 
             foreach (Transform child in Instance.humanRoot)
             {

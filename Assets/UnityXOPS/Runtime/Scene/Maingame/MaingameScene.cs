@@ -17,6 +17,7 @@ namespace UnityXOPS
         {
             InputManager.MouseCursorMode(true, true, true);
             HumanController.TickEnabled = true;
+            EventManager.Instance.BeginMission(); // 미션 이벤트/판정 가동 (Maingame 진입 시)
         }
 
         private void Update()
@@ -31,6 +32,7 @@ namespace UnityXOPS
                 MapLoader.UnloadSkyData();
                 MapLoader.UnloadMissionData();
                 HumanController.TickEnabled = false;
+                // StopMission 은 EventManager 가 sceneUnloaded 로 자동 처리 (어떤 이탈 경로든 누수 없음).
                 Camera.main.gameObject.SetActive(false);
                 SceneManager.LoadScene(2);
             }

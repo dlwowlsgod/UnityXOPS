@@ -91,7 +91,14 @@ namespace UnityXOPS
         /// effectIndex 프리셋을 position 에서 재생 (방향 없음·등배·정지). 탄착/폭발 등 무지향 이펙트용.
         /// </summary>
         public void Play(int effectIndex, Vector3 position)
-            => Play(effectIndex, position, Quaternion.identity, 1f, Vector3.zero);
+            => Play(effectIndex, position, Quaternion.identity, 1f, Vector3.zero, 0f);
+
+        /// <summary>
+        /// triggerValue(예: 피격 데미지)를 받아 countPerTrigger emitter 의 생성 개수를 동적으로 정한다.
+        /// 혈흔 분사처럼 데미지에 비례하는 이펙트용. triggerValue=0 이면 분사 emitter 는 0개(폭발 혈흔=메인만).
+        /// </summary>
+        public void Play(int effectIndex, Vector3 position, float triggerValue)
+            => Play(effectIndex, position, Quaternion.identity, 1f, Vector3.zero, triggerValue);
 
         /// <summary>
         /// effectIndex 프리셋을 position 에서 재생. 각 emitter 를 spawnCount 회 풀 슬롯에 스폰하고 랜덤 범위를 적용.
@@ -102,7 +109,7 @@ namespace UnityXOPS
         ///  - sizeScale: emitter.size 에 곱하는 per-weapon 크기 (muzzleFlashSize/shellSize). 프리셋 size=1.0 은 중립 배수. sizeRate 는 원본대로 절대값 유지.
         ///  - worldExtraVelocity: 회전과 무관한 월드 기본 속도(탄피 배출 = direction×speed). emitter.velocity 에 가산.
         /// </summary>
-        public void Play(int effectIndex, Vector3 position, Quaternion orientation, float sizeScale, Vector3 worldExtraVelocity)
+        public void Play(int effectIndex, Vector3 position, Quaternion orientation, float sizeScale, Vector3 worldExtraVelocity, float triggerValue = 0f)
         {
             if (m_pool == null) return;
 
@@ -118,7 +125,13 @@ namespace UnityXOPS
                 Material      mat = GetMaterial(em.textureIndex);
                 if (mat == null) continue;
 
-                for (int s = 0; s < em.spawnCount; s++)
+                // countPerTrigger>0 면 개수 = floor(트리거값 × 계수) (원본 혈흔 분사 damage/10). 0 이면 분사 없음. 그 외엔 고정 spawnCount.
+                int count = em.countPerTrigger > 0f
+                    ? Mathf.FloorToInt(triggerValue * em.countPerTrigger)
+                    : em.spawnCount;
+                if (count <= 0) continue;
+
+                for (int s = 0; s < count; s++)
                 {
                     Effect slot = GetIdleSlot();
                     if (slot == null) return; // 풀 포화 — 이번 재생의 잔여 입자 drop

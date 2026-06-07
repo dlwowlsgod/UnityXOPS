@@ -162,6 +162,16 @@ namespace UnityXOPS
             if (m_fireSound != null)
                 SoundManager.Instance.PlayAt(m_fireSound, transform.position, m_weaponData.soundVolume);
 
+            // 총성 AI 인지 — soundVolume>0 무기만 (원본 objectmanager.cpp:2051 발포음 등록 게이트). suppressor 면 청취 거리 단축.
+            // 음원은 사수 머리 높이 (원본 WEAPONSHOT_HEIGHT). AI 는 청취 범위 안이면 경계 전환.
+            if (m_weaponData.soundVolume > 0f)
+            {
+                var humanGen   = DataManager.Instance.HumanParameterData.humanGeneralData;
+                float enemyDist = m_weaponData.suppressor ? humanGen.aiHearGunfireSilencerDist : humanGen.aiHearGunfireDist;
+                Vector3 shotPos = owner.transform.position + Vector3.up * humanGen.cameraAttachPosition;
+                WorldSound.EmitPointSound(shotPos, owner.Team, enemyDist, humanGen.aiHearGunfireAllyDist);
+            }
+
             // 발사 이펙트 — 머즐플래시 + 총구연기 + 탄피 (원본 ShotWeaponEffect/ShotWeaponYakkyou objectmanager.cpp:2065,2119).
             PlayFireEffects();
 

@@ -22,6 +22,22 @@ namespace UnityXOPS
         private AudioSource[] m_pool;
         private int           m_next;
 
+        // 리스너(메인 카메라 AudioListener) 위치 캐시. 총알 통과음(hyu) closest-approach 판정 등 "카메라 기준" 거리 계산에 사용.
+        // 씬 전환으로 리스너가 파괴되면 null → 다음 접근 시 재탐색 (lazy).
+        private Transform m_listener;
+        public Vector3 ListenerPosition
+        {
+            get
+            {
+                if (m_listener == null)
+                {
+                    var al = FindFirstObjectByType<AudioListener>();
+                    if (al != null) m_listener = al.transform;
+                }
+                return m_listener != null ? m_listener.position : transform.position;
+            }
+        }
+
         protected override void Awake()
         {
             base.Awake();

@@ -68,9 +68,9 @@ namespace UnityXOPS
         /// 총알 명중 시 호출. HumanTypeData 부위 배율을 적용한 최종 데미지를 Human 에 전달.
         /// 원본 OpenXOPS HitBulletHuman (objectmanager.cpp:910-1000) 의 부위 배율 단계.
         /// </summary>
-        public void OnBulletHit(int attacks)
+        public float OnBulletHit(int attacks)
         {
-            if (human == null || !human.Alive) return;
+            if (human == null || !human.Alive) return 0f;
 
             float multiplier = 1f;
             HumanTypeData type = human.HumanTypeData;
@@ -84,7 +84,8 @@ namespace UnityXOPS
                     _                 => 1f,
                 };
             }
-            human.ApplyDamage(attacks * multiplier);
+            float damage = attacks * multiplier;
+            human.ApplyDamage(damage);
 
             // 피격 시 조준 오차 반동 — 부위별 값으로 덮어씀 (원본 objectmanager.cpp:910 HitBulletHuman → HitBulletHead/Up/Leg).
             var gen = DataManager.Instance.HumanParameterData.humanGeneralData;
@@ -95,6 +96,8 @@ namespace UnityXOPS
                 HumanHitPart.Leg  => gen.legHitReaction,
                 _                 => gen.bodyHitReaction,
             });
+
+            return damage; // 혈흔 분사 개수(데미지 비례)용
         }
     }
 }

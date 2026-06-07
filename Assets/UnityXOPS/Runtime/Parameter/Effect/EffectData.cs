@@ -25,6 +25,9 @@ namespace UnityXOPS
         public int          textureIndex;             // EffectGeneralData.texturePaths 인덱스
         public EffectFlags  flags;                    // 빌보드/맵 충돌 동작 플래그
         public int          spawnCount;               // 같은 emitter 를 N 번 발사 (랜덤 시드만 다름)
+        // >0 이면 개수 = floor(트리거값 × 이 값) — spawnCount 무시. 원본 혈흔 분사 damage/10 대응(0.1).
+        // 트리거값(데미지)이 0 이면 0개 → 폭발 혈흔(flowing=false)은 메인만, 분사 없음.
+        public float        countPerTrigger;
 
         public Vector3 positionOffset;                // 트리거 좌표 기준
         public Vector3 positionRandomRange;           // ±range each axis

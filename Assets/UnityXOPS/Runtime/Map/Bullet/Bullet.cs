@@ -56,6 +56,8 @@ namespace UnityXOPS
         private const float k_wallHitVolume   = 0.8f;
         // 사람 피격음 볼륨 — 원본 MAX_SOUNDHITHUMAN 75 / 폭발(120) 정규화. 부위·사망 무관 단일 hit2.wav (원본 soundmanager.cpp:605-612).
         private const float k_humanHitVolume  = 0.625f;
+        // 총알 통과음(hyu) 볼륨 — 원본 MAX_SOUNDPASSING 80 / 폭발(120) 정규화 (soundmanager.h:40).
+        private const float k_passingVolume   = 0.667f;
 
         private BulletData     m_bulletData;
         private Human          m_owner;
@@ -68,6 +70,7 @@ namespace UnityXOPS
         private bool           m_active;
         private Vector3        m_visualOrigin;   // visual 표시 기준점 (무기 머즐플래시 위치). 원본엔 없는 UnityXOPS 연출.
         private bool           m_visualVisible;  // bulletBoundAdjust 거리 도달 후 true
+        private bool           m_passingSoundDone; // 통과음(hyu) 한 발당 1회만 재생 — closest-approach 프레임에서 true
         private HashSet<Human>       m_hitHumans  = new HashSet<Human>();
         private HashSet<SmallObject> m_hitObjects = new HashSet<SmallObject>();
 
@@ -117,6 +120,7 @@ namespace UnityXOPS
             m_armingTimer   = data.armingDelay;
             m_active        = true;
             m_visualOrigin  = visualOrigin;
+            m_passingSoundDone = false;
             m_hitHumans.Clear();
             m_hitObjects.Clear();
 
@@ -154,15 +158,24 @@ namespace UnityXOPS
 
             if (m_armingTimer > 0f) m_armingTimer -= dt;
 
+            Vector3 startPos = transform.position;
+
             if (m_bulletData.useGravity) UpdateGrenade(dt);
             else                         UpdateStraight(dt);
 
-            // 머즐 기준 bound 거리 도달 시 visual 표시 (충돌로 회수됐으면 m_active=false 라 스킵).
-            if (m_active && !m_visualVisible)
+            // 충돌로 회수됐으면(m_active=false) 통과음/visual 스킵.
+            if (m_active)
             {
-                float bound = m_bulletData.bulletBoundAdjust;
-                if ((transform.position - m_visualOrigin).sqrMagnitude >= bound * bound)
-                    SetVisualVisible(true);
+                TickPassingSound(startPos);
+                NotifyAiBulletPass(startPos);
+
+                // 머즐 기준 bound 거리 도달 시 visual 표시.
+                if (!m_visualVisible)
+                {
+                    float bound = m_bulletData.bulletBoundAdjust;
+                    if ((transform.position - m_visualOrigin).sqrMagnitude >= bound * bound)
+                        SetVisualVisible(true);
+                }
             }
         }
 
@@ -303,10 +316,21 @@ namespace UnityXOPS
             HumanController controller = human.GetComponent<HumanController>();
             if (controller != null) controller.AddKnockback(knockYaw, 0f, k_bulletKnockbackSpeedMps);
 
-            hitbox.OnBulletHit(m_attacks);
+            float dealtDmg = hitbox.OnBulletHit(m_attacks);
             m_hitHumans.Add(human);
             PlayHumanHitSound(hit.point); // 원본 objectmanager.cpp:971 HitHuman — 부위·사망 무관 탄착점에서 1회
-            EffectManager.Instance.Play(m_bulletData.humanHitEffectIndex, hit.point); // 혈흔 (원본 objectmanager.cpp:968 SetHumanBlood)
+            // 혈흔 (원본 objectmanager.cpp:968 SetHumanBlood, flowing=true) — 데미지 비례 분사(damage/10) 포함.
+            EffectManager.Instance.Play(m_bulletData.humanHitEffectIndex, hit.point, dealtDmg);
+
+            // 피탄음 AI 인지 (원본 HIT_HUMAN_*, 부위별 거리, 팀 무관 → enemyDist==allyDist). 근처 AI 경계 트리거.
+            var hg = DataManager.Instance.HumanParameterData.humanGeneralData;
+            float hitDist = hitbox.Part switch
+            {
+                HumanHitPart.Head => hg.aiHearHitHumanHead,
+                HumanHitPart.Leg  => hg.aiHearHitHumanLeg,
+                _                 => hg.aiHearHitHumanBody,
+            };
+            WorldSound.EmitPointSound(hit.point, m_team, hitDist, hitDist);
 
             float atten = hitbox.Part switch
             {
@@ -349,6 +373,10 @@ namespace UnityXOPS
             // 탄착 이펙트/사운드 — 관통 여부와 무관하게 표면에 1회 (원본 objectmanager.cpp:849 HitBulletMap).
             PlayWallHitSound(hit.point);
             EffectManager.Instance.Play(m_bulletData.wallHitEffectIndex, hit.point);
+            // 벽 탄착음 AI 인지 (원본 HIT_MAP, 팀 무관 → enemyDist==allyDist). 근처 AI 경계 트리거.
+            WorldSound.EmitPointSound(hit.point, m_team,
+                DataManager.Instance.HumanParameterData.humanGeneralData.aiHearBulletWallHitDist,
+                DataManager.Instance.HumanParameterData.humanGeneralData.aiHearBulletWallHitDist);
 
             float thickness = MeasureBlockThickness(hit, dir);
 
@@ -437,6 +465,10 @@ namespace UnityXOPS
             }
 
             EffectManager.Instance.Play(m_bulletData.objectHitEffectIndex, hit.point);
+
+            // 소품 피탄음 AI 인지 (원본 HIT_SMALLOBJECT, 팀 무관).
+            float od = DataManager.Instance.HumanParameterData.humanGeneralData.aiHearHitSmallObject;
+            WorldSound.EmitPointSound(hit.point, m_team, od, od);
         }
 
         /// <summary>
@@ -448,6 +480,10 @@ namespace UnityXOPS
         {
             PlayExplosionSound(transform.position); // 원본 objectmanager.cpp:1227 GrenadeExplosion, 폭발 1회
             EffectManager.Instance.Play(m_bulletData.explosionEffectIndex, transform.position);
+
+            // 폭발음 AI 인지 — 팀 무관(원본 GRE_EXPLOSION 팀 비교 없음). 청취 범위 내 AI 경계 전환.
+            float hearDist = DataManager.Instance.HumanParameterData.humanGeneralData.aiHearExplosionDist;
+            WorldSound.EmitPointSound(transform.position, m_team, hearDist, hearDist);
 
             float radius = m_bulletData.explosionRadius;
             if (radius > 0f)
@@ -500,7 +536,9 @@ namespace UnityXOPS
 
                     hb.Human.ApplyDamage(total);
                     hb.Human.SetHitReaction(DataManager.Instance.HumanParameterData.humanGeneralData.grenadeHitReaction); // 원본 object.cpp:1079 HitGrenadeExplosion =10
-                    EffectManager.Instance.Play(m_bulletData.humanHitEffectIndex, hb.Human.transform.position); // 원본 objectmanager.cpp:1119 SetHumanBlood
+                    // 폭발 혈흔 — 원본 objectmanager.cpp:1119 SetHumanBlood(flowing=false): 메인 혈흔만, 분사 없음.
+                    // triggerValue 미전달(=0) → countPerTrigger 분사 emitter 는 0개. (총알/좀비 피격만 데미지 비례 분사)
+                    EffectManager.Instance.Play(m_bulletData.humanHitEffectIndex, hb.Human.transform.position);
                 }
 
                 // 소품(SmallObject) 폭발 피격 — 단일 중심점 거리 감쇠 + 벽 차폐 (원본 objectmanager.cpp:1171-1211, damage = 80 - r).
@@ -548,22 +586,103 @@ namespace UnityXOPS
         /// </summary>
         private void PlayWallHitSound(Vector3 position)
         {
-            List<string> sounds = m_bulletData.wallHitSounds;
+            PlayRandomSound(m_bulletData.wallHitSounds, position, k_wallHitVolume);
+        }
+
+        private void PlayHumanHitSound(Vector3 position)
+        {
+            PlayRandomSound(m_bulletData.humanHitSounds, position, k_humanHitVolume);
+        }
+
+        /// <summary>
+        /// 총알이 카메라(리스너) 근처를 스쳐 지나가는 hyu 음. 원본 OpenXOPS SoundManager::CheckApproach + PlaySound(BULLET) 대응.
+        /// 궤적이 카메라에 최단 접근하는 프레임 1회만 재생 (이전/현재/다음 프레임 거리 비교). 아군(플레이어 팀) 총알은 제외.
+        /// 비어있는 bulletPassingSounds(GRENADE 등)면 재생 안 함.
+        /// </summary>
+        private void TickPassingSound(Vector3 startPos)
+        {
+            if (m_passingSoundDone) return;
+
+            List<string> sounds = m_bulletData.bulletPassingSounds;
+            if (sounds == null || sounds.Count == 0) return;
+
+            // 아군 총알 제외 — 원본은 플레이어 "팀" 단위 제외 (soundmanager.cpp:626).
+            Human player = MapLoader.Player;
+            if (player == null || m_team == player.Team) return;
+
+            Vector3 listener = SoundManager.Instance.ListenerPosition;
+            Vector3 current  = transform.position;
+            Vector3 move     = current - startPos;
+
+            if (!IsClosestApproach(startPos, current, move, listener, out Vector3 closestPoint)) return;
+
+            PlayRandomSound(sounds, closestPoint, k_passingVolume);
+            m_passingSoundDone = true;
+        }
+
+        /// <summary>
+        /// 총알이 AI 머리 근처를 스쳐 지나가면 그 AI 에게 위협 신호 (원본 GetWorldSound BULLET, maxdist 20→2.0, 팀 무관 거리 판정).
+        /// 카메라 hyu 와 달리 팀 무관 — 아군 탄이 스쳐도 경계. 플레이어 Human 은 brain 이 없어 제외. closest-approach 머신은 카메라용과 공유.
+        /// </summary>
+        private void NotifyAiBulletPass(Vector3 startPos)
+        {
+            if (!HumanController.TickEnabled) return;
+
+            var humans = MapLoader.Humans;
+            if (humans == null) return;
+
+            var     gen      = DataManager.Instance.HumanParameterData.humanGeneralData;
+            float   maxDist  = gen.aiHearBulletDist;
+            float   eye      = gen.cameraAttachPosition;
+            Human   player   = MapLoader.Player;
+            Vector3 current  = transform.position;
+            Vector3 move     = current - startPos;
+
+            for (int i = 0; i < humans.Count; i++)
+            {
+                Human h = humans[i];
+                if (h == null || h == player || !h.Alive) continue;
+
+                Vector3 head = h.transform.position + Vector3.up * eye;
+                if (IsClosestApproach(startPos, current, move, head, out Vector3 cp) &&
+                    (cp - head).sqrMagnitude < maxDist * maxDist)
+                    h.NotifyThreatHeard();
+            }
+        }
+
+        /// <summary>
+        /// 이번 프레임이 listener 에 대한 궤적 최단접근(통과) 프레임인지 판정. 원본 CheckApproach (soundmanager.cpp:513) 의 3점 비교.
+        /// true 면 궤적 직선 위 listener 수직 투영점(closestPoint)을 출력 — 3D 음원 위치로 사용. (AI 총알 감지에서 재사용 가능)
+        /// </summary>
+        private static bool IsClosestApproach(Vector3 prev, Vector3 current, Vector3 move, Vector3 listener, out Vector3 closestPoint)
+        {
+            closestPoint = current;
+
+            Vector3 next = current + move;
+            float d1 = (listener - prev).sqrMagnitude;
+            float d2 = (listener - current).sqrMagnitude;
+            float d3 = (listener - next).sqrMagnitude;
+            // 현재 위치가 직전·직후보다 가까운 국소 최소 = 막 스쳐가는 프레임.
+            if (!(d1 > d2 && d2 < d3)) return false;
+
+            float moveLen = move.magnitude;
+            if (moveLen > 1e-5f)
+            {
+                Vector3 mdir = move / moveLen;
+                closestPoint = current + mdir * Vector3.Dot(listener - current, mdir);
+            }
+            return true;
+        }
+
+        private static void PlayRandomSound(List<string> sounds, Vector3 position, float volume)
+        {
             if (sounds == null || sounds.Count == 0) return;
 
             string path = sounds[Random.Range(0, sounds.Count)];
             if (string.IsNullOrEmpty(path)) return;
 
             AudioClip clip = SoundLoader.LoadAudio(SafePath.Combine(Application.streamingAssetsPath, path));
-            SoundManager.Instance.PlayAt(clip, position, k_wallHitVolume);
-        }
-
-        private void PlayHumanHitSound(Vector3 position)
-        {
-            if (string.IsNullOrEmpty(m_bulletData.humanHitSound)) return;
-
-            AudioClip clip = SoundLoader.LoadAudio(SafePath.Combine(Application.streamingAssetsPath, m_bulletData.humanHitSound));
-            SoundManager.Instance.PlayAt(clip, position, k_humanHitVolume);
+            SoundManager.Instance.PlayAt(clip, position, volume);
         }
 
         private void PlayExplosionSound(Vector3 position)

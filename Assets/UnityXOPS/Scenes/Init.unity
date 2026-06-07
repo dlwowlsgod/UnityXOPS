@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &26162311
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 26162312}
+  - component: {fileID: 26162313}
+  m_Layer: 0
+  m_Name: EventManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &26162312
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 26162311}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1049169627}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &26162313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 26162311}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 659b694871681c449b398b22f97123b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &49272952
 GameObject:
   m_ObjectHideFlags: 0
@@ -182,6 +226,8 @@ MonoBehaviour:
       gravityAcceleration: 0
       fallMinSpeed: 0
       fallMaxSpeed: 0
+      fallDamageMax: 0
+      fallDamageRandomMax: 0
       deadlineY: 0
       deadBodyFallAngularSpeed: 0
       deadBodyCollision: 0
@@ -197,17 +243,52 @@ MonoBehaviour:
       weaponPickupRadius: 0
       armAngleNoWeapon: 0
       armAngleReloading: 0
+      armAngleInitial: 0
       headHitReaction: 0
       bodyHitReaction: 0
       legHitReaction: 0
       zombieHitReaction: 0
       grenadeHitReaction: 0
+      aiSearchFovHNear: 0
+      aiSearchFovVNear: 0
+      aiSearchFovHLong: 0
+      aiSearchFovVLong: 0
+      aiSearchFovHNearCaution: 0
+      aiSearchFovVNearCaution: 0
+      aiSearchFovHLongCaution: 0
+      aiSearchFovVLongCaution: 0
+      aiSearchDistBaseNormal: 0
+      aiSearchDistCoeffNormal: 0
+      aiSearchDistBaseCaution: 0
+      aiSearchDistCoeffCaution: 0
+      aiSearchLoopScale: 0
+      aiSearchPoolSize: 0
+      aiTurnRateDeg: 0
+      aiTurnDamping: 0
+      aiTurnDeadzoneDeg: 0
+      aiTurnMaxPitchDeg: 0
+      aiShortAttackDist: 0
+      aiActionCancelDist: 0
+      aiCautionFrames: 0
+      aiHearGunfireDist: 0
+      aiHearGunfireSilencerDist: 0
+      aiHearGunfireAllyDist: 0
+      aiHearBulletDist: 0
+      aiHearExplosionDist: 0
+      aiArrivalDistPath: 0
+      aiStop5SecFrames: 0
+      aiJumpCheckDist: 0
+      aiArrivalDistTracking: 0
+      aiArrivalDistWalkTracking: 0
+      aiCombatRetreatDist: 0
+      aiScopeData: []
       humanAnimation: []
     humanData: []
     humanModelData: []
     humanArmModelData: []
     humanLegModelData: []
     humanTypeData: []
+    humanAIData: []
   weaponParameterData:
     weaponGeneralData:
       noneWeaponIndex: 0
@@ -235,16 +316,26 @@ MonoBehaviour:
   objectParameterData:
     objectGeneralData:
       modelScale: 0
+      bulletDamageMultiplier: 0
+      bulletPenetrationAttenuation: 0
+      addonObjectIndex: 0
     objectData: []
     objectModelData: []
     objectColliderData: []
   effectParameterData:
     effectGeneralData:
       texturePaths: []
+      wallBloodEffectIndex: 0
     effectData: []
   skyData:
     skyMeshPath: 
     skyTexturePath: []
+    skyColor: []
+    nearClippingPlane: 0
+    farClippingPlane: 0
+    fog: 0
+    fogStart: 0
+    fogEnd: 0
   missionData:
     demoData: []
     officialMissions: []
@@ -693,6 +784,7 @@ Transform:
   - {fileID: 1296688389}
   - {fileID: 1184229131}
   - {fileID: 364479297}
+  - {fileID: 26162312}
   m_Father: {fileID: 1758087128}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1101759674

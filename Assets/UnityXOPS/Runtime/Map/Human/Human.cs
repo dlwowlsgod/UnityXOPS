@@ -30,6 +30,9 @@ namespace UnityXOPS
         private int team;
         public int Team => team;
 
+        // 미션 이벤트 19(チーム変更) — 대상 인물의 팀번호를 0(아군측)으로 변경. 원본 EventControl::SetTeamID.
+        public void SetTeam(int value) => team = value;
+
         [SerializeField]
         private HumanDeadState deadState = HumanDeadState.Alive;
         public HumanDeadState DeadState => deadState;
@@ -40,8 +43,25 @@ namespace UnityXOPS
         /// </summary>
         public void SetDeadState(HumanDeadState value)
         {
+            bool aliveChanged = (deadState == HumanDeadState.Alive) != (value == HumanDeadState.Alive);
             deadState = value;
             if (value != HumanDeadState.Alive) m_scoping = false; // 사망 시 스코프 해제 (원본 object.cpp:1240 SetDisableScope)
+
+            // 생사 전환 시 팔 비주얼 재적용 — 사망하면 비무장 동적 팔이 fixedArm 으로 복귀(시체 팔 늘어뜨림). 부활 시 재평가.
+            if (aliveChanged && humanVisual != null && m_weapons != null)
+                humanVisual.ApplyWeaponVisual(m_weapons[m_selectWeapon]);
+        }
+
+        // 비무장 팔을 dynamicArmRoot(AI 조준 pitch 추종)에 둘지 여부. fixed/dynamic 자체는 무기 데이터가 결정하지만,
+        // 좀비 공격·항복처럼 비무장인데 팔을 "조준 방향으로 움직여야" 하는 ACTION 포즈 중에만 AIBrain 이 true 로 세팅한다.
+        // 평상시(NORMAL/CAUTION)·사망·플레이어는 false → 무기 데이터 그대로(none=fixed).
+        private bool m_unarmedArmDynamic;
+        public bool UnarmedArmDynamic => m_unarmedArmDynamic;
+        public void SetUnarmedArmDynamic(bool value)
+        {
+            if (m_unarmedArmDynamic == value) return; // 변경 시에만 재적용 (re-parent 비용 절약)
+            m_unarmedArmDynamic = value;
+            if (humanVisual != null && m_weapons != null) humanVisual.ApplyWeaponVisual(m_weapons[m_selectWeapon]);
         }
 
         /// <summary>
@@ -69,7 +89,30 @@ namespace UnityXOPS
         /// </summary>
         public void SetHitYaw(float yawDeg)
         {
-            m_hitYaw = yawDeg;
+            m_hitYaw     = yawDeg;
+            m_hitPending = true; // AI 피격 반응(FaceCaution)용 — 다음 AI 틱이 ConsumeHit 로 소비.
+        }
+
+        // 이번 구간 피격 여부 (원본 human::HitFlag). AIBrain 이 매 틱 소비해 경계+공격자 방향 조준(FaceCaution).
+        private bool m_hitPending;
+        /// <summary>피격 소비. 맞았으면 true + 공격자를 바라보는 월드 yaw(=총알 진행방향 HitYaw + 180°). 원본 CheckHit + SetHitFlag(공격자 방향).</summary>
+        public bool ConsumeHit(out float faceYawDeg)
+        {
+            faceYawDeg = m_hitYaw + 180f; // SetHitYaw 는 총알 진행방향(피격자→탄착) → 공격자는 반대편
+            bool v = m_hitPending;
+            m_hitPending = false;
+            return v;
+        }
+
+        // 적 총성·총알 통과·폭발 등 위협 소리를 들었다는 신호 (원본 월드 사운드 GetWorldSound>0).
+        // 음원(WorldSound/Bullet)이 청취 범위 안에서 set, AIBrain 이 매 틱 ConsumeThreatHeard 로 소비해 경계 전환. 방향은 쓰지 않음(원본도 카운트만).
+        private bool m_threatHeard;
+        public void NotifyThreatHeard() => m_threatHeard = true;
+        public bool ConsumeThreatHeard()
+        {
+            bool v = m_threatHeard;
+            m_threatHeard = false;
+            return v;
         }
 
         [SerializeField]
@@ -85,6 +128,9 @@ namespace UnityXOPS
         [SerializeField] private HumanHitbox legHitbox;
 
         private HumanData m_humanData;
+        public HumanData HumanData => m_humanData;
+        // AI 레벨 = HumanData.aiIndex (원본 HumanParameter.AIlevel). humanAIData 리스트 인덱스. 데이터 없으면 0.
+        public int AILevel => m_humanData != null ? m_humanData.aiIndex : 0;
         private HumanTypeData m_humanTypeData;
         public HumanTypeData HumanTypeData => m_humanTypeData;
 
@@ -98,6 +144,9 @@ namespace UnityXOPS
 
         private int m_identifier;
         public  int Identifier => m_identifier;
+
+        // AI 경로 시작 웨이포인트 식별번호 — HUMAN 포인트의 param2(=원본 p3). AIMoveNavi 가 첫 포인트로 사용. (원본 점프: human point → p3 → 첫 AIPATH p4)
+        public  int PathStartId => m_humanParam != null ? m_humanParam.param2 : 0;
 
         private Weapon[] m_weapons = new Weapon[2];
         private int      m_selectWeapon;

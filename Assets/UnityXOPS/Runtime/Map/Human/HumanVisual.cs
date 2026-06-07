@@ -30,6 +30,8 @@ namespace UnityXOPS
         private HumanArmModelData m_humanArmModelData;
         private HumanLegModelData m_humanLegModelData;
 
+        private Human m_human; // 소유 Human (비무장 NPC 팔 동적화 판정용)
+
         private List<HumanAnimation> m_legAnimation;
         private HumanAnimation m_idleAnimation;
         private HumanAnimation m_walkAnimation;
@@ -57,6 +59,7 @@ namespace UnityXOPS
         /// <param name="data">인간 파라미터 데이터.</param>
         public void CreateHumanVisual(HumanData data)
         {
+            m_human = GetComponentInParent<Human>();
             m_humanMaterials = new List<Material>();
             m_leftArmMeshes = new List<Mesh>();
             m_rightArmMeshes = new List<Mesh>();
@@ -258,7 +261,27 @@ namespace UnityXOPS
                 return;
             }
             WeaponModelData m = active.WeaponModelData;
+
+            // fixed/dynamic 은 무기 데이터(fixLeftArm/fixRightArm)가 결정. 단 비무장(none-weapon)인데 AIBrain 이 ACTION 포즈
+            // (좀비 공격/항복)로 표시한 경우에만 dynamicArmRoot 로 강제해 팔이 AI pitch 를 따르게 한다. 그 외엔 데이터대로(none=fixed).
+            int noneIdx = DataManager.Instance.WeaponParameterData.weaponGeneralData.noneWeaponIndex;
+            if (active.WeaponIndex == noneIdx && UseDynamicUnarmedArm())
+            {
+                SetArmModel(m.leftArmIndex, m.rightArmIndex, false, false);
+                return;
+            }
+
             SetArmModel(m.leftArmIndex, m.rightArmIndex, m.fixLeftArm, m.fixRightArm);
+        }
+
+        /// <summary>
+        /// 비무장 팔을 dynamicArmRoot(AI pitch 추종)로 강제할지. 살아있고 Human.UnarmedArmDynamic(AIBrain 이 ACTION 포즈 중 세팅) 일 때만.
+        /// 평상시·사망·플레이어(플래그 미세팅)는 false → 무기 데이터의 fixed 그대로.
+        /// </summary>
+        private bool UseDynamicUnarmedArm()
+        {
+            if (m_human == null) m_human = GetComponentInParent<Human>();
+            return m_human != null && m_human.Alive && m_human.UnarmedArmDynamic;
         }
 
         public void SetArmModel(int leftIndex, int rightIndex, bool fixLeft, bool fixRight)

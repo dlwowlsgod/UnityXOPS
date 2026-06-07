@@ -32,6 +32,8 @@ namespace UnityXOPS
 
         public bool zombie;
         public IntRange zombieMeleeDamageRange;
+        // 좀비 근접 공격음. 원본은 일반 피탄음(HIT_HUMAN_ZOMBIE = human被弾음)과 동일 사운드 재사용 (soundmanager.cpp:608).
+        public string zombieAttackSound;
 
         public int autoBulletMultiplier;
     }

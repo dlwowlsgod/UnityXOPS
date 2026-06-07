@@ -47,7 +47,8 @@ namespace UnityXOPS
         public int              humanHitEffectIndex;
         public int              objectHitEffectIndex;
         public List<string>     wallHitSounds;
-        public string           humanHitSound;
+        public List<string>     humanHitSounds;       // 사람 피격음 — 리스트에서 균등 랜덤 선택 (wallHitSounds 와 동일 방식). 하나만 넣으면 그것만 재생.
+        public List<string>     bulletPassingSounds;  // 총알이 카메라 근처 통과 시 hyu 음 — 리스트 랜덤 선택. 비어있으면(GRENADE 등) 재생 안 함.
         public float            lifetime;
     }
 }
