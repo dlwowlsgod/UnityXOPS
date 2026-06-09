@@ -270,11 +270,21 @@ MonoBehaviour:
       aiShortAttackDist: 0
       aiActionCancelDist: 0
       aiCautionFrames: 0
+      aiZombieArmAngle: 0
       aiHearGunfireDist: 0
       aiHearGunfireSilencerDist: 0
       aiHearGunfireAllyDist: 0
       aiHearBulletDist: 0
+      aiHearBulletWallHitDist: 0
       aiHearExplosionDist: 0
+      aiHearHitHumanHead: 0
+      aiHearHitHumanBody: 0
+      aiHearHitHumanLeg: 0
+      aiHearHitHumanZombie: 0
+      aiHearHitSmallObject: 0
+      aiHearFootstepForward: 0
+      aiHearFootstepSide: 0
+      aiHearFootstepBack: 0
       aiArrivalDistPath: 0
       aiStop5SecFrames: 0
       aiJumpCheckDist: 0
@@ -293,6 +303,7 @@ MonoBehaviour:
     weaponGeneralData:
       noneWeaponIndex: 0
       caseWeaponIndex: 
+      grenadeWeaponIndex: 0
       walkAccuracyPenalty: 0
       forwardAccuracyPenalty: 0
       backAccuracyPenalty: 0
@@ -785,6 +796,7 @@ Transform:
   - {fileID: 1184229131}
   - {fileID: 364479297}
   - {fileID: 26162312}
+  - {fileID: 1493523916}
   m_Father: {fileID: 1758087128}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1101759674
@@ -1005,6 +1017,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f73d2b6bab196be4ca0af5f79b3b9327, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1493523915
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1493523916}
+  - component: {fileID: 1493523917}
+  m_Layer: 0
+  m_Name: Config
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1493523916
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493523915}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1049169627}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1493523917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493523915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 654915c2bcaca3441a0dda591fcf2cab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config:
+    mouseSensitivity: 0.1
+    fullscreen: 0
+    resolution: 0
 --- !u!1 &1499613603
 GameObject:
   m_ObjectHideFlags: 0

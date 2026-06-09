@@ -14,7 +14,9 @@ namespace UnityXOPS
         public static int AddonScrollIndex = 0;
 
         [SerializeField]
-        private GameObject switchCanvas, exitCanvas;
+        private GameObject switchCanvas, missionCanvas, exitCanvas;
+
+        private bool m_exiting = false;
 
         /// <summary>
         /// 랜덤 데모 맵을 로드하고, 애드온 미션이 없을 경우 탭 전환 UI를 비활성화한다.
@@ -56,7 +58,19 @@ namespace UnityXOPS
         {
             if (InputManager.Keyboard.escapeKey.wasPressedThisFrame)
             {
-                exitCanvas.SetActive(true);
+                if (m_exiting)
+                {
+                    m_exiting = false;
+                    exitCanvas.SetActive(false);
+                    missionCanvas.SetActive(true);
+                }
+                else
+                {
+                    m_exiting = true;
+                    exitCanvas.SetActive(true);
+                    missionCanvas.SetActive(false);
+                }
+                
             }
         }
 

@@ -22,6 +22,13 @@ namespace UnityXOPS
         private readonly Dictionary<Human, AIBrain> m_brains = new Dictionary<Human, AIBrain>();
         private float m_accum;
 
+        /// <summary>미션 재시작(맵 재로드) 시 brain/누산 캐시 초기화 — 파괴된 Human 키의 stale brain 제거.</summary>
+        public void ResetState()
+        {
+            m_brains.Clear();
+            m_accum = 0f;
+        }
+
         // 수동 조작 주체(PlayerController). 씬에 존재하면 MapLoader.Player 를 AI 에서 제외하고, 없으면(Mainmenu/Opening 데모)
         // 플레이어 Human 도 AI 가 구동한다. per-scene MonoBehaviour 이므로 씬 로드 시점에 1회만 resolve.
         private PlayerController m_playerController;

@@ -61,14 +61,16 @@ namespace UnityXOPS
             set { color = value; SetVerticesDirty(); }    
         }
 
+#if UNITY_EDITOR
         /// <summary>
-        /// 에디터에서 프로퍼티 변경 시 메시를 재생성한다.
+        /// 에디터에서 프로퍼티 변경 시 메시를 재생성한다. Graphic.OnValidate 가 에디터 전용이라 빌드에선 override 대상이 없다.
         /// </summary>
         protected override void OnValidate()
         {
             base.OnValidate();
             SetVerticesDirty();
         }
+#endif //UNITY_EDITOR
 
         /// <summary>
         /// 문자별 UV를 계산해 쿼드 버텍스와 삼각형을 생성한다.

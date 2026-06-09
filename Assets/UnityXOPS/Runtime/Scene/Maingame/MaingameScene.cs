@@ -13,16 +13,32 @@ namespace UnityXOPS
     {
         [SerializeField] private PlayerController playerController;
 
+        private MaingameFadeSequence m_fadeSequence;
+
+        // 씬 진입/재시작 직후 ESC·F12 잠금 시간 — 전환 시 눌린 키가 새어 즉시 나가기/재시작 되는 것 방지.
+        private const float k_inputLockSeconds = 1f;
+        private float m_inputLockTimer;
+
+        private bool m_missionEnded;  // 종료 시퀀스(FadeOut+EndText) 1회 트리거 가드. RestartMission 에서 리셋.
+        private bool m_resultLoading; // Result 씬 전환 1회 가드. RestartMission 에서 리셋.
+
         private void Start()
         {
+            m_fadeSequence = GetComponent<MaingameFadeSequence>();
+
             InputManager.MouseCursorMode(true, true, true);
             HumanController.TickEnabled = true;
             EventManager.Instance.BeginMission(); // 미션 이벤트/판정 가동 (Maingame 진입 시)
+            m_inputLockTimer = k_inputLockSeconds;
         }
 
         private void Update()
         {
-            if (InputManager.Keyboard.escapeKey.wasPressedThisFrame)
+            // 진입/재시작 직후 잠금 카운트다운 — 잠금 중엔 ESC·F12 무시.
+            if (m_inputLockTimer > 0f) m_inputLockTimer -= Time.deltaTime;
+            bool inputLocked = m_inputLockTimer > 0f;
+
+            if (!inputLocked && InputManager.Keyboard.escapeKey.wasPressedThisFrame)
             {
                 BulletManager.Instance.ClearPool();
                 SoundManager.Instance.ClearPool();
@@ -39,10 +55,89 @@ namespace UnityXOPS
 
             UpdateViewModeInput();
 
-            if (InputManager.Keyboard.f12Key.wasPressedThisFrame)
+            if (!inputLocked && InputManager.Keyboard.f12Key.wasPressedThisFrame)
             {
-
+                RestartMission();
             }
+
+            // 플레이타임 누적 — 미션 진행 중에만 (원본 framecnt, gamemain.cpp:2705). 종료/판정 확정 후 정지.
+            if (EventManager.Instance.Result == MissionResult.InProgress)
+                MapLoader.AddPlayTime(Time.deltaTime);
+
+            // 미션 종료 시퀀스 — 반드시 1회만. 매 프레임 호출하면 FadeOut 이 매번 알파 0 으로 리셋돼 화면이 안 어두워짐.
+            if (!m_missionEnded && EventManager.Instance.Result != MissionResult.InProgress)
+            {
+                m_missionEnded = true;
+                m_fadeSequence.PlayMissionEndSequence();
+            }
+
+            // 종료 시퀀스(화면 암전 + 종료 텍스트)가 모두 끝나면 Result 로 전환 — 1회만. 원본은 종료 후 4초 고정(gamemain.cpp:2715)이지만
+            // 여기선 페이드 완료를 직접 신호로 받아 전환(시간이 인스펙터 페이드 값에 따라가도록).
+            if (m_missionEnded && !m_resultLoading && m_fadeSequence.MissionEndComplete)
+            {
+                m_resultLoading = true;
+                LoadResult();
+            }
+        }
+
+        /// <summary>
+        /// 미션 종료 시퀀스 완료 후 Result(빌드 인덱스 5)로 전환. 맵 시각물(블록/포인트/스카이)은 언로드하되
+        /// 미션 데이터·통계(MapLoader.Stats)는 유지 — Result 가 읽는다(Stats 는 LoadPointData 에서만 리셋되므로 언로드해도 생존).
+        /// UnloadPointData 가 플레이어와 그 자식 카메라를 함께 파괴해 카메라 누수도 방지된다.
+        /// </summary>
+        private void LoadResult()
+        {
+            BulletManager.Instance.ClearPool();
+            SoundManager.Instance.ClearPool();
+            EffectManager.Instance.ClearPool();
+            MapLoader.UnloadBlockData();
+            MapLoader.UnloadPointData();  // 사람/무기/소품 파괴 + m_humans 비움 (통계 m_stats 는 유지)
+            MapLoader.UnloadSkyData();
+            // UnloadMissionData 는 호출 안 함 — Result 가 미션 이름 등 표시에 사용.
+            HumanController.TickEnabled = false;
+            // StopMission 은 EventManager 가 sceneUnloaded 로 자동 처리.
+            SceneManager.LoadScene(5);
+        }
+
+        /// <summary>
+        /// F12 — 현재 미션을 맵 재로드로 처음부터 다시 시작. 캐릭터·무기·소품 재배치, 이벤트·AI·미션 상태 전부 초기화.
+        /// 씬은 유지(미션 데이터/경로 보존)하고 블록/포인트/스카이만 언로드 후 같은 미션 맵을 재로드한다.
+        /// </summary>
+        private void RestartMission()
+        {
+            // 카메라는 플레이어 CameraRoot 자식 → 포인트 언로드로 플레이어가 파괴되면 카메라도 같이 파괴됨.
+            // 언로드 전에 분리해 보호. 재로드 후 PlayerController 가 새 플레이어 CameraRoot 로 다시 붙인다.
+            Camera main = Camera.main;
+            if (main != null && main.transform.parent != null) main.transform.SetParent(null, true);
+
+            // 풀 회수 + 현재 맵 언로드 (미션 데이터는 유지 — 같은 미션 경로/스카이 재사용).
+            BulletManager.Instance.ClearPool();
+            SoundManager.Instance.ClearPool();
+            EffectManager.Instance.ClearPool();
+            MapLoader.UnloadBlockData();
+            MapLoader.UnloadPointData();   // 사람/무기/소품 파괴 + m_humans 비움
+            MapLoader.UnloadSkyData();
+
+            // AI/충돌 매니저 캐시 초기화 — 동기 재로드라 "Humans 빔" 자가정리 타이밍이 없어 명시적으로 비운다(stale brain/참조 방지).
+            AIController ai = FindFirstObjectByType<AIController>();
+            if (ai != null) ai.ResetState();
+            HumanCollision col = FindFirstObjectByType<HumanCollision>();
+            if (col != null) col.ResetState();
+
+            // 같은 미션 맵 재로드 → 캐릭터·무기·소품·이벤트/경로 노드 전부 재생성 (LoadPointData 가 m_sortedRawPointData 재구성).
+            MapLoader.LoadBlockData(MapLoader.Instance.MissionBD1Path);
+            MapLoader.LoadPointData(MapLoader.Instance.MissionPD1Path);
+            MapLoader.LoadSkyData(MapLoader.Instance.SkyIndex);
+
+            // 미션 상태 초기화 — 이벤트 라인 커서/결과/메시지 리셋 + Tick 보장.
+            HumanController.TickEnabled = true;
+            EventManager.Instance.BeginMission();
+            m_inputLockTimer = k_inputLockSeconds; // 재시작 직후도 1초 잠금 (F12 연타·잔여 입력 방지)
+
+            // 종료 시퀀스 상태 리셋 — 검은 화면 다시 페이드 인 + 이전 종료 텍스트 제거 (안 하면 재시작해도 화면이 검은 채 + 종료텍스트 잔존).
+            m_missionEnded  = false;
+            m_resultLoading = false;
+            if (m_fadeSequence != null) m_fadeSequence.ResetForRestart();
         }
 
         /// <summary>

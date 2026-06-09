@@ -3,7 +3,6 @@ using UnityEngine;
 using TMPro;
 using System.Linq;
 using JJLUtility.IO;
-using GluonGui.WorkspaceWindow.Views.WorkspaceExplorer.Explorer;
 
 namespace UnityXOPS
 {

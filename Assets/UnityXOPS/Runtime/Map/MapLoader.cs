@@ -48,6 +48,11 @@ namespace UnityXOPS
         private List<Human> m_humans = new List<Human>();
         public static IReadOnlyList<Human> Humans => Instance.m_humans;
 
+        // 플레이어 미션 통계(플레이타임/발사/명중/킬/헤드샷). Briefing→Maingame→Result 씬 전환(맵 1개 재사용)을 넘어 유지.
+        // 맵 로드(LoadPointData)에서만 리셋 — 씬 전환만으로는 유지되므로 Result 까지 값이 살아있다.
+        private readonly MissionStats m_stats = new MissionStats();
+        public static MissionStats Stats => Instance.m_stats;
+
 
         [SerializeField]
         private string missionName, missionFullname, missionBD1Path, missionPD1Path,
@@ -102,6 +107,42 @@ namespace UnityXOPS
             var msgs = Instance.messages;
             if (msgs == null || id < 0 || id >= msgs.Count) return string.Empty;
             return msgs[id];
+        }
+
+        /// <summary>
+        /// 플레이어 발사 1회 기록(+1). 산탄(펠릿 수 무관)/수류탄 제외는 호출자(Weapon.Shoot)가 게이트. 원본 gamemain.cpp:2240.
+        /// shooter==Player 일 때만 누적 — 원본의 "플레이어 슬롯만 픽업" 구조를 기록 시점 게이트로 등가 처리.
+        /// </summary>
+        public static void RecordFire(Human shooter)
+        {
+            if (shooter == null || shooter != Instance.player) return;
+            Instance.m_stats.Fire += 1;
+        }
+
+        /// <summary>
+        /// 플레이어 탄 명중 기록 — onTargetWeight 가산(산탄 가중), 머리 명중이면 헤드샷 +1. 원본 objectmanager.cpp:975-976.
+        /// 수류탄은 명중/헤드샷 미집계(원본 비대칭) — Bullet.Explode 가 호출하지 않으므로 자연히 제외.
+        /// </summary>
+        public static void RecordHit(Human shooter, bool headshot, float onTargetWeight)
+        {
+            if (shooter == null || shooter != Instance.player) return;
+            Instance.m_stats.OnTarget += onTargetWeight;
+            if (headshot) Instance.m_stats.Headshot += 1;
+        }
+
+        /// <summary>
+        /// 플레이어 킬 기록(+1) — 총알/수류탄 공통. "이전 HP>0 && 현재 HP<=0" 판정은 호출자 책임. 원본 objectmanager.cpp:978,1115.
+        /// </summary>
+        public static void RecordKill(Human killer)
+        {
+            if (killer == null || killer != Instance.player) return;
+            Instance.m_stats.Kill += 1;
+        }
+
+        /// <summary>미션 경과 시간 누적(초). 원본 framecnt(gamemain.cpp:2705)의 실시간 대응 — 진행 중에만 호출(MaingameScene).</summary>
+        public static void AddPlayTime(float deltaSeconds)
+        {
+            Instance.m_stats.PlayTime += deltaSeconds;
         }
 
         public string MissionName => missionName;
@@ -340,6 +381,7 @@ namespace UnityXOPS
             Instance.pointCount = pointData.rawPointData.Length;
             Instance.player = null;
             Instance.m_humans.Clear();
+            Instance.m_stats.Reset(); // 맵 로드(Briefing 진입/F12 재시작) 시 통계 초기화. 씬 전환(→Maingame→Result)엔 미호출이라 Result 까지 유지.
             Instance.m_humanMaterialCache = new Dictionary<string, Material>();
             Instance.m_weaponMaterialCache = new Dictionary<string, Material>();
             Instance.m_objectMaterialCache = new Dictionary<string, Material>();

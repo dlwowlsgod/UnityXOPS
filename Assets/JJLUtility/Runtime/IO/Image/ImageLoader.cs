@@ -116,7 +116,7 @@ namespace JJLUtility.IO
             Instance.textureCacheList.Add(texture);
             Instance.m_textureCache.Add(filepath, Instance.textureCacheList.Count - 1);
 #else
-            Instance._textureCache.Add(filepath, texture);
+            Instance.m_textureCache.Add(filepath, texture);
 #endif //UNITY_EDITOR
 
             return texture;

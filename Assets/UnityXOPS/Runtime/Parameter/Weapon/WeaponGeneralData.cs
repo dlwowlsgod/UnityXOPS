@@ -11,6 +11,7 @@ namespace UnityXOPS
     {
         public int noneWeaponIndex;
         public List<int> caseWeaponIndex;
+        public int grenadeWeaponIndex;
         public int walkAccuracyPenalty;
         public int forwardAccuracyPenalty;
         public int backAccuracyPenalty;

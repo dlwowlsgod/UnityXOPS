@@ -133,6 +133,10 @@ namespace UnityXOPS
             BulletData bulletData = wp.bulletData[bulletIdx];
             SpawnBullets(owner, bulletData);
 
+            // 발사 통계 — 플레이어 총기 발사만 +1 (수류탄 제외: 원본 ShotWeapon 반환 1만 카운트 gamemain.cpp:2240). RecordFire 가 owner==Player 게이트.
+            if (m_weaponIndex != wp.weaponGeneralData.grenadeWeaponIndex)
+                MapLoader.RecordFire(owner);
+
             // 이번 발사 분 반동을 누적 — 다음 발사부터 조준 오차에 반영 (원본 human::ShotWeapon object.cpp:707).
             owner.AddShotReaction(m_weaponData.recoil);
 
@@ -331,6 +335,8 @@ namespace UnityXOPS
             }
 
             int pellets = Mathf.Max(1, m_weaponData.pelletCount);
+            // 명중 가중 — 산탄은 펠릿당 2/pellet(전탄 명중 시 합 2.0), 단발=1.0. 원본 objectmanager.cpp:1998-2014 ontargetcnt.
+            float onTargetWeight = pellets > 1 ? 2f / pellets : 1f;
             for (int i = 0; i < pellets; i++)
             {
                 float pitchErr = basePitchErr;
@@ -346,13 +352,14 @@ namespace UnityXOPS
                 Quaternion rot      = Quaternion.Euler(pitch + pitchErr, yaw + yawErr, 0f);
                 Vector3    velocity = rot * Vector3.forward * m_weaponData.bulletSpeed;
 
-                BulletManager.Instance.Spawn(
+                Bullet b = BulletManager.Instance.Spawn(
                     bulletData, owner, owner.Team,
                     attacks:      (int)m_weaponData.damage,
                     penetration:  m_weaponData.penetration,
                     position:     spawnPos,
                     velocity:     velocity,
                     visualOrigin: visualOrigin);
+                if (b != null) b.SetOnTargetWeight(onTargetWeight); // 명중 통계용 가중치 — 펠릿마다 동일
             }
         }
 

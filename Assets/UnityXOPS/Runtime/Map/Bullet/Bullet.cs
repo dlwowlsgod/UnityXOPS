@@ -68,6 +68,7 @@ namespace UnityXOPS
         private float          m_lifetimeTimer;
         private float          m_armingTimer;
         private bool           m_active;
+        private float          m_onTargetWeight; // 명중 통계 가중(산탄=2/pellet, 단발=1). Weapon.SpawnBullets 가 Spawn 직후 주입.
         private Vector3        m_visualOrigin;   // visual 표시 기준점 (무기 머즐플래시 위치). 원본엔 없는 UnityXOPS 연출.
         private bool           m_visualVisible;  // bulletBoundAdjust 거리 도달 후 true
         private bool           m_passingSoundDone; // 통과음(hyu) 한 발당 1회만 재생 — closest-approach 프레임에서 true
@@ -78,6 +79,9 @@ namespace UnityXOPS
         private MeshRenderer   m_visualMeshRenderer;
 
         public bool IsActive => m_active;
+
+        /// <summary>명중 통계 가중치 주입 (Weapon.SpawnBullets 가 Spawn 직후 호출). 산탄=2/pellet, 단발=1.</summary>
+        public void SetOnTargetWeight(float weight) => m_onTargetWeight = weight;
 
         private void Awake()
         {
@@ -119,6 +123,7 @@ namespace UnityXOPS
             m_lifetimeTimer = data.lifetime;
             m_armingTimer   = data.armingDelay;
             m_active        = true;
+            m_onTargetWeight = 1f; // 기본 단발 가중. 산탄은 SpawnBullets 가 SetOnTargetWeight 로 덮어씀.
             m_visualOrigin  = visualOrigin;
             m_passingSoundDone = false;
             m_hitHumans.Clear();
@@ -316,8 +321,14 @@ namespace UnityXOPS
             HumanController controller = human.GetComponent<HumanController>();
             if (controller != null) controller.AddKnockback(knockYaw, 0f, k_bulletKnockbackSpeedMps);
 
+            float hpBefore = human.HP;                  // 킬 판정용 스냅샷 (원본 hp_old, objectmanager.cpp:977)
             float dealtDmg = hitbox.OnBulletHit(m_attacks);
             m_hitHumans.Add(human);
+
+            // 발사자 통계 — 명중(산탄 가중)/헤드샷/킬. RecordHit/RecordKill 가 발사자==Player 게이트. 원본 objectmanager.cpp:975-979.
+            MapLoader.RecordHit(m_owner, hitbox.Part == HumanHitPart.Head, m_onTargetWeight);
+            if (hpBefore > 0f && human.HP <= 0f) MapLoader.RecordKill(m_owner);
+
             PlayHumanHitSound(hit.point); // 원본 objectmanager.cpp:971 HitHuman — 부위·사망 무관 탄착점에서 1회
             // 혈흔 (원본 objectmanager.cpp:968 SetHumanBlood, flowing=true) — 데미지 비례 분사(damage/10) 포함.
             EffectManager.Instance.Play(m_bulletData.humanHitEffectIndex, hit.point, dealtDmg);
@@ -534,7 +545,10 @@ namespace UnityXOPS
                         }
                     }
 
+                    float hpBefore = hb.Human.HP; // 수류탄 킬 판정 스냅샷 (원본 objectmanager.cpp:1113-1115)
                     hb.Human.ApplyDamage(total);
+                    // 수류탄 킬만 집계 — 명중/헤드샷은 미집계(원본 비대칭). RecordKill 가 발사자==Player 게이트.
+                    if (hpBefore > 0f && hb.Human.HP <= 0f) MapLoader.RecordKill(m_owner);
                     hb.Human.SetHitReaction(DataManager.Instance.HumanParameterData.humanGeneralData.grenadeHitReaction); // 원본 object.cpp:1079 HitGrenadeExplosion =10
                     // 폭발 혈흔 — 원본 objectmanager.cpp:1119 SetHumanBlood(flowing=false): 메인 혈흔만, 분사 없음.
                     // triggerValue 미전달(=0) → countPerTrigger 분사 emitter 는 0개. (총알/좀비 피격만 데미지 비례 분사)

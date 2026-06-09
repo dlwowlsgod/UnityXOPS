@@ -288,6 +288,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   switchCanvas: {fileID: 586200895}
+  missionCanvas: {fileID: 882607192}
   exitCanvas: {fileID: 954320151}
 --- !u!114 &140308879
 MonoBehaviour:
@@ -2577,7 +2578,7 @@ SceneRoots:
   - {fileID: 810341565}
   - {fileID: 489043697}
   - {fileID: 882607196}
+  - {fileID: 954320155}
   - {fileID: 435431928}
   - {fileID: 1241452373}
-  - {fileID: 954320155}
   - {fileID: 28376930}

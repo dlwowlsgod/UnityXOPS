@@ -86,6 +86,20 @@ namespace UnityXOPS
 
         private void Update()
         {
+            // 스폰/리스폰(F12 인-씬 재시작)으로 Player 가 교체·소멸될 수 있어 매 프레임 재취득.
+            // 안 하면 언로드로 파괴된 옛 Player 접근 → MissingReferenceException 으로 Update 가 매 프레임 중단돼 UI 전체 먹통.
+            Human player = MapLoader.Player;
+            if (player == null) return;
+            if (player != m_player)
+            {
+                m_player = player;
+                // 교체 시 캐시 무효화 → 새 Player 의 HP/탄/무기명을 즉시 다시 칠함 (텍스트 오브젝트는 Start 생성분 그대로 사용).
+                m_lastHP          = float.NaN;
+                m_lastMagazine    = -1;
+                m_lastReserveAmmo = -1;
+                m_lastWeaponName  = null;
+            }
+
             if (normalUI.activeSelf)
             {
                 float hp = m_player.HP;

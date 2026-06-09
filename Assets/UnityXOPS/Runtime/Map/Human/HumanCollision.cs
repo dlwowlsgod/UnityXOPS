@@ -21,6 +21,13 @@ namespace UnityXOPS
         private readonly Dictionary<Human, HumanController> m_controllers = new Dictionary<Human, HumanController>();
         private float m_accum;
 
+        /// <summary>미션 재시작(맵 재로드) 시 컨트롤러 캐시/누산 초기화 — 파괴된 Human 키의 stale 참조 제거.</summary>
+        public void ResetState()
+        {
+            m_controllers.Clear();
+            m_accum = 0f;
+        }
+
         private void FixedUpdate()
         {
             // Maingame/데모 공통 게이트 (HumanController 와 동일). Briefing 등에서는 정지.

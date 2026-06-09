@@ -12,7 +12,6 @@ namespace UnityXOPS
     public class PlayerController : MonoBehaviour
     {
         [SerializeField] private Camera    playerCamera;
-        [SerializeField] private float     mouseSensitivity         = 0.1f;
         [SerializeField] private float     pitchLimit               = 70f;
         [SerializeField] private ViewMode  viewMode                 = ViewMode.FirstPerson;
         [SerializeField] private LayerMask thirdPersonCollisionMask = ~0;
@@ -116,9 +115,10 @@ namespace UnityXOPS
 
             var input = InputManager.Instance;
 
+            float sensitivity = ConfigManager.Instance.MouseSensitivity; // 외부 config(0~1) 감도
             Vector2 look = input.Look.ReadValue<Vector2>();
-            m_yaw   += look.x * mouseSensitivity;
-            m_pitch -= look.y * mouseSensitivity;
+            m_yaw   += look.x * sensitivity;
+            m_pitch -= look.y * sensitivity;
             m_pitch  = Mathf.Clamp(m_pitch, -pitchLimit, pitchLimit);
             m_controller.SetYawPitch(m_yaw, m_pitch);
 
