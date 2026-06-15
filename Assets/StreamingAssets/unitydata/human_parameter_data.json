@@ -1,0 +1,1850 @@
+﻿{
+    "humanGeneralData": {
+        "humanBodyScale": 0.94,
+        "humanArmScale": 0.9,
+        "humanLegScale": 0.9,
+        "controllerHeight": 1.9,
+        "humanBodyHeight" : -0.1,
+        "humanArmHeight" : 1.6,
+        "humanLegHeight" : -0.02,
+        "cameraAttachPosition" : 1.9,
+        "controllerRadiusControllerToMap": 0.28,
+        "controllerRadiusControllerToController": 0.25,
+        "controllerStepOffset": 0.32,
+        "controllerStepClimbSpeed": 1.333333,
+        "controllerSlopeLimit": 50,
+        "controllerGroundProbeRadius": 0.05,
+        "gravityAcceleration": 21.999,
+        "fallMinSpeed": -12.667,
+        "fallMaxSpeed": -23.333,
+        "fallDamageMax": 120,
+        "fallDamageRandomMax": 6,
+        "deadlineY": -10.0,
+        "deadBodyFallAngularSpeed": 25.0,
+        "deadBodyCollision": true,
+        "headHitboxHeight": 0.29,
+        "headHitboxRadius": 0.15,
+        "bodyHitboxHeight": 0.7,
+        "bodyHitboxRadius": 0.24,
+        "legHitboxHeight": 1.05,
+        "legHitboxRadius": 0.26,
+        "weaponPickupVerticalRange": { "min": -0.2, "max": 1.6 },
+        "weaponPickupRadius": 0.38,
+        "armAngleNoWeapon": -70,
+        "armAngleReloading": -20,
+        "armAngleInitial": -30,
+        "headHitReaction": 15,
+        "bodyHitReaction": 12,
+        "legHitReaction": 8,
+        "zombieHitReaction": 10,
+        "grenadeHitReaction": 10,
+
+        "aiSearchFovHNear": 110,
+        "aiSearchFovVNear": 60,
+        "aiSearchFovHLong": 60,
+        "aiSearchFovVLong": 40,
+        "aiSearchFovHNearCaution": 130,
+        "aiSearchFovVNearCaution": 80,
+        "aiSearchFovHLongCaution": 80,
+        "aiSearchFovVLongCaution": 50,
+
+        "aiSearchDistBaseNormal": 35,
+        "aiSearchDistCoeffNormal": 1.2,
+        "aiSearchDistBaseCaution": 42,
+        "aiSearchDistCoeffCaution": 1.5,
+        "aiSearchLoopScale": 4,
+        "aiSearchPoolSize": 96,
+
+        "aiTurnRateDeg": 0.8,
+        "aiTurnDamping": 0.8,
+        "aiTurnDeadzoneDeg": 0.2,
+        "aiTurnMaxPitchDeg": 70,
+
+        "aiShortAttackDist": 20,
+        "aiActionCancelDist": 62,
+        "aiCautionFrames": 160,
+        "aiZombieArmAngle": 0,
+
+        "aiHearGunfireDist": 12,
+        "aiHearGunfireSilencerDist": 3,
+        "aiHearGunfireAllyDist": 2,
+        "aiHearBulletDist": 2,
+        "aiHearBulletWallHitDist": 3,
+        "aiHearExplosionDist": 8,
+        "aiHearHitHumanHead": 6,
+        "aiHearHitHumanBody": 5,
+        "aiHearHitHumanLeg": 4,
+        "aiHearHitHumanZombie": 4,
+        "aiHearHitSmallObject": 2,
+        "aiHearFootstepForward": 4.0,
+        "aiHearFootstepSide": 3.5,
+        "aiHearFootstepBack": 3.0,
+
+        "aiArrivalDistPath": 0.5,
+        "aiStop5SecFrames": 167,
+        "aiJumpCheckDist": 0.2,
+        "aiArrivalDistTracking": 1.8,
+        "aiArrivalDistWalkTracking": 2.4,
+        "aiCombatRetreatDist": 2.0,
+
+        "aiScopeData": [
+            { "aiShotAngle": 8, "aiShotAngleLong": 4, "aiAddSearchDistNormal": 0,   "aiAddSearchDistCaution": 0   },
+            { "aiShotAngle": 6, "aiShotAngleLong": 3, "aiAddSearchDistNormal": 2.5, "aiAddSearchDistCaution": 4.0 },
+            { "aiShotAngle": 4, "aiShotAngleLong": 2, "aiAddSearchDistNormal": 5.0, "aiAddSearchDistCaution": 8.0 },
+            { "aiShotAngle": 4, "aiShotAngleLong": 2, "aiAddSearchDistNormal": 5.0, "aiAddSearchDistCaution": 8.0 }
+        ],
+
+        "humanAnimation": [
+            {
+                "name": "Idle",
+                "index": [
+                    0
+                ],
+                "forwardSpeed": 1,
+                "strafeSpeed": 1,
+                "backwardSpeed": 1
+            },
+            {
+                "name": "Walk",
+                "index": [
+                    1,
+                    2,
+                    3,
+                    4
+                ],
+                "forwardSpeed": 0.72,
+                "strafeSpeed": 0.72,
+                "backwardSpeed": 0.72
+            },
+            {
+                "name": "Run",
+                "index": [
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ],
+                "forwardSpeed": 0.72,
+                "strafeSpeed": 1.08,
+                "backwardSpeed": 1.44
+            }
+        ]
+    },
+    "humanData": [
+        {
+            "name": "Special Force Black A",
+            "hp": 120,
+            "modelIndex": 21,
+            "aiIndex": 3,
+            "weaponIndex0": 21,
+            "weaponIndex1": 8,
+            "typeIndex": 0
+        },
+        {
+            "name": "Special Force Black B",
+            "hp": 120,
+            "modelIndex": 21,
+            "aiIndex": 3,
+            "weaponIndex0": 21,
+            "weaponIndex1": 2,
+            "typeIndex": 0
+        },
+        {
+            "name": "Special Force Green A",
+            "hp": 110,
+            "modelIndex": 23,
+            "aiIndex": 2,
+            "weaponIndex0": 3,
+            "weaponIndex1": 6,
+            "typeIndex": 0
+        },
+        {
+            "name": "Special Force Green B",
+            "hp": 110,
+            "modelIndex": 23,
+            "aiIndex": 2,
+            "weaponIndex0": 3,
+            "weaponIndex1": 10,
+            "typeIndex": 0
+        },
+        {
+            "name": "Special Force Green C",
+            "hp": 110,
+            "modelIndex": 23,
+            "aiIndex": 2,
+            "weaponIndex0": 3,
+            "weaponIndex1": 2,
+            "typeIndex": 0
+        },
+        {
+            "name": "Special Force White A",
+            "hp": 110,
+            "modelIndex": 25,
+            "aiIndex": 2,
+            "weaponIndex0": 4,
+            "weaponIndex1": 7,
+            "typeIndex": 0
+        },
+        {
+            "name": "Special Force White B",
+            "hp": 110,
+            "modelIndex": 25,
+            "aiIndex": 2,
+            "weaponIndex0": 4,
+            "weaponIndex1": 2,
+            "typeIndex": 0
+        },
+        {
+            "name": "Skinhead",
+            "hp": 100,
+            "modelIndex": 10,
+            "aiIndex": 3,
+            "weaponIndex0": 4,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Special Force Purple",
+            "hp": 110,
+            "modelIndex": 24,
+            "aiIndex": 3,
+            "weaponIndex0": 22,
+            "weaponIndex1": 14,
+            "typeIndex": 0
+        },
+        {
+            "name": "Special Force Blue",
+            "hp": 120,
+            "modelIndex": 22,
+            "aiIndex": 2,
+            "weaponIndex0": 3,
+            "weaponIndex1": 1,
+            "typeIndex": 0
+        },
+        {
+            "name": "Robot",
+            "hp": 2500,
+            "modelIndex": 20,
+            "aiIndex": 4,
+            "weaponIndex0": 6,
+            "weaponIndex1": 12,
+            "typeIndex": 1
+        },
+        {
+            "name": "Suit Black SG",
+            "hp": 100,
+            "modelIndex": 9,
+            "aiIndex": 1,
+            "weaponIndex0": 18,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Suit Black",
+            "hp": 100,
+            "modelIndex": 8,
+            "aiIndex": 1,
+            "weaponIndex0": 5,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Suit Gray",
+            "hp": 100,
+            "modelIndex": 17,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Police Officer",
+            "hp": 100,
+            "modelIndex": 13,
+            "aiIndex": 1,
+            "weaponIndex0": 3,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Suit Brown",
+            "hp": 100,
+            "modelIndex": 14,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Shirt Man 1",
+            "hp": 100,
+            "modelIndex": 31,
+            "aiIndex": 0,
+            "weaponIndex0": 17,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Middle East Soldier",
+            "hp": 100,
+            "modelIndex": 11,
+            "aiIndex": 1,
+            "weaponIndex0": 17,
+            "weaponIndex1": 10,
+            "typeIndex": 0
+        },
+        {
+            "name": "Woman",
+            "hp": 90,
+            "modelIndex": 34,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Blond Man",
+            "hp": 100,
+            "modelIndex": 0,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Civilian 1",
+            "hp": 100,
+            "modelIndex": 2,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Civilian 2",
+            "hp": 100,
+            "modelIndex": 4,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Shirt Man 1 SG",
+            "hp": 100,
+            "modelIndex": 32,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Blond Man SG",
+            "hp": 100,
+            "modelIndex": 1,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Civilian 1 SG",
+            "hp": 100,
+            "modelIndex": 3,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Civilian 2 SG",
+            "hp": 100,
+            "modelIndex": 5,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Soldier 1 A",
+            "hp": 115,
+            "modelIndex": 26,
+            "aiIndex": 2,
+            "weaponIndex0": 5,
+            "weaponIndex1": 9,
+            "typeIndex": 0
+        },
+        {
+            "name": "Soldier 1 B",
+            "hp": 115,
+            "modelIndex": 27,
+            "aiIndex": 2,
+            "weaponIndex0": 5,
+            "weaponIndex1": 12,
+            "typeIndex": 0
+        },
+        {
+            "name": "Soldier 2",
+            "hp": 115,
+            "modelIndex": 28,
+            "aiIndex": 2,
+            "weaponIndex0": 13,
+            "weaponIndex1": 10,
+            "typeIndex": 0
+        },
+        {
+            "name": "Zombie 1",
+            "hp": 1000,
+            "modelIndex": 35,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 2
+        },
+        {
+            "name": "Zombie 2",
+            "hp": 1000,
+            "modelIndex": 36,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 2
+        },
+        {
+            "name": "Zombie 3",
+            "hp": 1000,
+            "modelIndex": 37,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 2
+        },
+        {
+            "name": "Zombie 4",
+            "hp": 950,
+            "modelIndex": 38,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 2
+        },
+        {
+            "name": "Suit Navy",
+            "hp": 100,
+            "modelIndex": 18,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Suit Navy SG",
+            "hp": 100,
+            "modelIndex": 19,
+            "aiIndex": 1,
+            "weaponIndex0": 17,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "General",
+            "hp": 95,
+            "modelIndex": 12,
+            "aiIndex": 1,
+            "weaponIndex0": 17,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Suit Blue",
+            "hp": 100,
+            "modelIndex": 15,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Suit Blue SG",
+            "hp": 100,
+            "modelIndex": 16,
+            "aiIndex": 1,
+            "weaponIndex0": 18,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Shirt Man 2 SG",
+            "hp": 100,
+            "modelIndex": 33,
+            "aiIndex": 1,
+            "weaponIndex0": 6,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Soldier 3",
+            "hp": 105,
+            "modelIndex": 29,
+            "aiIndex": 3,
+            "weaponIndex0": 5,
+            "weaponIndex1": 20,
+            "typeIndex": 0
+        },
+        {
+            "name": "Soldier 3 SG",
+            "hp": 105,
+            "modelIndex": 30,
+            "aiIndex": 3,
+            "weaponIndex0": 21,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Gates",
+            "hp": 100,
+            "modelIndex": 6,
+            "aiIndex": 0,
+            "weaponIndex0": 0,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        },
+        {
+            "name": "Gates SG",
+            "hp": 100,
+            "modelIndex": 7,
+            "aiIndex": 4,
+            "weaponIndex0": 22,
+            "weaponIndex1": 0,
+            "typeIndex": 0
+        }
+    ],
+    "humanModelData": [
+        {
+            "name": "civ1",
+            "textures": [
+                "data/model/civ1.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "civ1_sg",
+            "textures": [
+                "data/model/civ1.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "civ2",
+            "textures": [
+                "data/model/civ2.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "civ2_sg",
+            "textures": [
+                "data/model/civ2.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "civ3",
+            "textures": [
+                "data/model/civ3.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "civ3_sg",
+            "textures": [
+                "data/model/civ3.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "gates",
+            "textures": [
+                "data/model/gates.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "gates_sg",
+            "textures": [
+                "data/model/gates.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "gs",
+            "textures": [
+                "data/model/gs.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "gs_sg",
+            "textures": [
+                "data/model/gs.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "hage",
+            "textures": [
+                "data/model/hage.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "islam",
+            "textures": [
+                "data/model/islam.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "islam2",
+            "textures": [
+                "data/model/islam2.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "police",
+            "textures": [
+                "data/model/police.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up2.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "riiman",
+            "textures": [
+                "data/model/riiman.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "riiman_b",
+            "textures": [
+                "data/model/riiman_b.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "riiman_b_sg",
+            "textures": [
+                "data/model/riiman_b.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "riiman_g",
+            "textures": [
+                "data/model/riiman_g.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "riiman_k",
+            "textures": [
+                "data/model/riiman_k.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "riiman_k_sg",
+            "textures": [
+                "data/model/riiman_k.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "robot",
+            "textures": [
+                "data/model/robot.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier_black",
+            "textures": [
+                "data/model/soldier_black.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up5.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier_blue",
+            "textures": [
+                "data/model/soldier_blue.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up5.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier_green",
+            "textures": [
+                "data/model/soldier_green.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier_violet",
+            "textures": [
+                "data/model/soldier_violet.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier_white",
+            "textures": [
+                "data/model/soldier_white.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier0",
+            "textures": [
+                "data/model/soldier0.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up4.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier1",
+            "textures": [
+                "data/model/soldier1.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up4.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier2",
+            "textures": [
+                "data/model/soldier2.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up4.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier3",
+            "textures": [
+                "data/model/soldier3.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "soldier3_sg",
+            "textures": [
+                "data/model/soldier3.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "syatu",
+            "textures": [
+                "data/model/syatu.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "syatu_sg",
+            "textures": [
+                "data/model/syatu.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "syatu2",
+            "textures": [
+                "data/model/syatu2.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up1.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "woman",
+            "textures": [
+                "data/model/woman.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up3.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "zombie1",
+            "textures": [
+                "data/model/zombie1.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "zombie2",
+            "textures": [
+                "data/model/zombie2.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "zombie3",
+            "textures": [
+                "data/model/zombie3.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up0.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        },
+        {
+            "name": "zombie4",
+            "textures": [
+                "data/model/zombie4.bmp"
+            ],
+            "modelData": [
+                {
+                    "modelPath": "data/model/up3.x",
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "rotation": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "textureIndex": 0
+                }
+            ],
+            "armIndex": 0,
+            "armTextureIndex": 0,
+            "legIndex": 0,
+            "legTextureIndex": 0
+        }
+    ],
+    "humanArmModelData": [
+        {
+            "name" : "xops_arm",
+            "leftArms": [
+                
+            ],
+            "rightArms": [
+                "data/model/arm01.x",
+                "data/model/arm02.x",
+                "data/model/arm00.x"
+            ]
+        }
+    ],
+    "humanLegModelData": [
+        {
+            "name" : "xops_leg",
+            "legs": [
+                "data/model/leg.x",
+                "data/model/walk01.x",
+                "data/model/walk02.x",
+                "data/model/walk03.x",
+                "data/model/walk04.x",
+                "data/model/run01.x",
+                "data/model/run02.x",
+                "data/model/run03.x",
+                "data/model/run04.x",
+                "data/model/run05.x",
+                "data/model/run06.x"
+            ]
+        }
+    ],
+    "humanTypeData": [
+        {
+            "progressRunAcceleration": 77.777,
+            "sidewaysRunAcceleration": 55.555,
+            "regressRunAcceleration": 42.222,
+            "progressWalkAcceleration": 38.888,
+            "attenuation": 23.105,
+            "jumpSpeed": 7.333,
+            "headDamageMultiplier": 2.0,
+            "bodyDamageMultiplier": 1.0,
+            "legDamageMultiplier": 0.7,
+            "maxFallDamage": 120,
+            "headRandomAddDamage": { "min": 0, "max": 16 },
+            "bodyRandomAddDamage": { "min": 0, "max": 8 },
+            "legRandomAddDamage": { "min": 0, "max": 6 },
+            "bloodEffectIndex": 4,
+            "bloodEffectThreshold": 32767,
+            "hitEffectIndex": 4,
+            "deathEffectIndex": -1,
+            "bloodAttachesToMap": true,
+            "canPickupWeapon": true,
+            "zombie": false,
+            "zombieMeleeDamageRange": { "min": 0, "max": 0 },
+            "autoBulletMultiplier": 3
+        },
+        {
+            "progressRunAcceleration": 77.777,
+            "sidewaysRunAcceleration": 55.555,
+            "regressRunAcceleration": 42.222,
+            "progressWalkAcceleration": 38.888,
+            "attenuation": 23.105,
+            "jumpSpeed": 7.333,
+            "headDamageMultiplier": 2.0,
+            "bodyDamageMultiplier": 1.0,
+            "legDamageMultiplier": 0.7,
+            "maxFallDamage": 120,
+            "headRandomAddDamage": { "min": 0, "max": 16 },
+            "bodyRandomAddDamage": { "min": 0, "max": 8 },
+            "legRandomAddDamage": { "min": 0, "max": 6 },
+            "bloodEffectIndex": 4,
+            "bloodEffectThreshold": 32767,
+            "hitEffectIndex": 4,
+            "deathEffectIndex": 9,
+            "bloodAttachesToMap": false,
+            "canPickupWeapon": true,
+            "zombie": false,
+            "zombieMeleeDamageRange": { "min": 0, "max": 0 },
+            "autoBulletMultiplier": 3
+        },
+        {
+            "progressRunAcceleration": 77.777,
+            "sidewaysRunAcceleration": 55.555,
+            "regressRunAcceleration": 42.222,
+            "progressWalkAcceleration": 38.888,
+            "attenuation": 23.105,
+            "jumpSpeed": 7.333,
+            "headDamageMultiplier": 2.0,
+            "bodyDamageMultiplier": 1.0,
+            "legDamageMultiplier": 0.7,
+            "maxFallDamage": 120,
+            "headRandomAddDamage": { "min": 0, "max": 16 },
+            "bodyRandomAddDamage": { "min": 0, "max": 8 },
+            "legRandomAddDamage": { "min": 0, "max": 6 },
+            "bloodEffectIndex": 4,
+            "bloodEffectThreshold": 32767,
+            "hitEffectIndex": 4,
+            "deathEffectIndex": -1,
+            "bloodAttachesToMap": true,
+            "canPickupWeapon": false,
+            "zombie": true,
+            "zombieMeleeDamageRange": { "min": 15, "max": 20 },
+            "zombieAttackSound": "data/sound/hit2.wav",
+            "autoBulletMultiplier": 3
+        }
+    ],
+
+    "humanAIData": [
+        { "aiming": 1, "attack": 99, "search": 1, "limitsError": 0 },
+        { "aiming": 1, "attack": 18, "search": 2, "limitsError": 2 },
+        { "aiming": 2, "attack": 16, "search": 3, "limitsError": 0 },
+        { "aiming": 3, "attack": 14, "search": 4, "limitsError": -1 },
+        { "aiming": 4, "attack": 12, "search": 5, "limitsError": -2 },
+        { "aiming": 5, "attack": 10, "search": 6, "limitsError": -3 }
+    ]
+}

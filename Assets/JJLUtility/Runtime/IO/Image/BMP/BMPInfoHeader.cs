@@ -1,8 +1,8 @@
 ﻿namespace JJLUtility.IO
 {
     /// <summary>
-    /// Represents the information header of a BMP file, providing metadata about the dimensions,
-    /// color format, and compression details of the BMP image.
+    /// BMP 파일의 정보 헤더를 나타내는 구조체. BMP 이미지의 크기, 색상 포맷,
+    /// 압축 방식 등의 메타데이터를 담는다.
     /// </summary>
     public struct BMPInfoHeader
     {

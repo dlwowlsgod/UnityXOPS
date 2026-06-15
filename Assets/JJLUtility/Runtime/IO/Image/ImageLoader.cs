@@ -131,7 +131,7 @@ namespace JJLUtility.IO
                 return (width, height, pixels);
 
             float scale = (float)k_maxTextureSize / Mathf.Max(width, height);
-            int newW = Mathf.Max(1, Mathf.FloorToInt(width  * scale));
+            int newW = Mathf.Max(1, Mathf.FloorToInt(width * scale));
             int newH = Mathf.Max(1, Mathf.FloorToInt(height * scale));
             return (newW, newH, ResizePixels(pixels, width, height, newW, newH));
         }
@@ -150,7 +150,7 @@ namespace JJLUtility.IO
                 float srcY = y * scaleY;
                 int y0 = (int)srcY;
                 int y1 = Mathf.Min(y0 + 1, srcH - 1);
-                float fy  = srcY - y0;
+                float fy = srcY - y0;
                 float fy0 = 1f - fy;
 
                 for (int x = 0; x < dstW; x++)
@@ -158,7 +158,7 @@ namespace JJLUtility.IO
                     float srcX = x * scaleX;
                     int x0 = (int)srcX;
                     int x1 = Mathf.Min(x0 + 1, srcW - 1);
-                    float fx  = srcX - x0;
+                    float fx = srcX - x0;
                     float fx0 = 1f - fx;
 
                     Color32 c00 = src[y0 * srcW + x0];
@@ -168,8 +168,8 @@ namespace JJLUtility.IO
 
                     float w00 = fy0 * fx0;
                     float w10 = fy0 * fx;
-                    float w01 = fy  * fx0;
-                    float w11 = fy  * fx;
+                    float w01 = fy * fx0;
+                    float w11 = fy * fx;
 
                     dst[y * dstW + x] = new Color32(
                         (byte)(c00.r * w00 + c10.r * w10 + c01.r * w01 + c11.r * w11),

@@ -3,8 +3,8 @@
 namespace System.IO
 {
     /// <summary>
-    /// Provides functionality to read individual bits or a specified number of bits from a stream.
-    /// Inherits from <see cref="BinaryReader"/>.
+    /// 스트림에서 개별 비트 또는 지정된 개수의 비트를 읽는 기능을 제공한다.
+    /// <see cref="BinaryReader"/>를 상속한다.
     /// </summary>
     public class BitReader : BinaryReader
     {
@@ -27,11 +27,9 @@ namespace System.IO
         }
 
         /// <summary>
-        /// Reads a single bit from the current position in the stream.
+        /// 스트림의 현재 위치에서 1비트를 읽는다.
         /// </summary>
-        /// <returns>
-        /// A single bit represented as a byte. The value will be either 0 or 1.
-        /// </returns>
+        /// <returns>읽은 1비트. byte로 표현되며 값은 0 또는 1이다.</returns>
         public byte ReadBit()
         {
             if (m_currentBit <= 0)
@@ -43,14 +41,10 @@ namespace System.IO
         }
 
         /// <summary>
-        /// Reads a specified number of bits from the current position in the stream.
+        /// 스트림의 현재 위치에서 지정된 개수의 비트를 읽는다.
         /// </summary>
-        /// <param name="count">
-        /// The number of bits to read. Count limit is 1~32.
-        /// </param>
-        /// <returns>
-        /// An unsigned 64-bit integer representing the value of the bits read.
-        /// </returns>
+        /// <param name="count">읽을 비트 수. 범위는 1~32로 제한된다.</param>
+        /// <returns>읽은 비트 값을 나타내는 부호 없는 64비트 정수.</returns>
         public ulong ReadBits(int count)
         {
             count = count <= 0 ? 1 : count;
@@ -66,8 +60,8 @@ namespace System.IO
         }
 
         /// <summary>
-        /// Resets the internal bit buffer, clearing all currently buffered bits
-        /// and preparing the reader to align with the next byte boundary in the stream.
+        /// 내부 비트 버퍼를 초기화한다. 현재 버퍼링된 비트를 모두 비우고
+        /// 다음 바이트 경계에 맞춰 읽을 수 있도록 준비한다.
         /// </summary>
         public void ResetBitBuffer()
         {

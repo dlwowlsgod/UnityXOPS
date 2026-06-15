@@ -50,9 +50,6 @@ namespace JJLUtility
 
         public static bool Loaded => m_instance != null;
 
-        /// <summary>
-        /// 인스턴스 중복 여부를 확인하고, 중복 시 자신을 파괴한다.
-        /// </summary>
         protected virtual void Awake()
         {
             if (m_instance == null)
@@ -66,9 +63,6 @@ namespace JJLUtility
             }
         }
 
-        /// <summary>
-        /// 애플리케이션 종료 시 플래그를 설정해 이후 Instance 접근 시 null을 반환하도록 한다.
-        /// </summary>
         protected virtual void OnApplicationQuit()
         {
             m_isApplicationQuitting = true;

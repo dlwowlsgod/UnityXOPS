@@ -29,7 +29,6 @@ namespace JJLUtility.IO
             {
                 Debugger.LogError($"File is not .bmp file: {filepath}", Instance, nameof(ImageLoader));
                 return null;
-                ;
             }
 
             if (!File.Exists(filepath))
@@ -38,8 +37,7 @@ namespace JJLUtility.IO
                 return null;
             }
 
-            var stream = File.OpenRead(filepath);
-            var binaryReader = new BinaryReader(stream);
+            using var binaryReader = new BinaryReader(File.OpenRead(filepath));
 
             if (binaryReader.ReadUInt16() != BMPFileHeader.Type)
             {

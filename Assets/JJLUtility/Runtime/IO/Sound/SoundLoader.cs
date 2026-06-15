@@ -10,9 +10,9 @@ namespace JJLUtility.IO
     public partial class SoundLoader : SingletonBehavior<SoundLoader>
     {
 #if UNITY_EDITOR
-        private Dictionary<string, int> m_audioCache  = new Dictionary<string, int>();
+        private Dictionary<string, int> m_audioCache = new Dictionary<string, int>();
         [SerializeField]
-        private List<AudioClip>         audioCacheList = new List<AudioClip>();
+        private List<AudioClip> audioCacheList = new List<AudioClip>();
 #else
         private Dictionary<string, AudioClip> m_audioCache = new Dictionary<string, AudioClip>();
 #endif

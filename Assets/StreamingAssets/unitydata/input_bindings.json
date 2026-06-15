@@ -1,0 +1,24 @@
+{
+    "look": "<Mouse>/delta",
+    "lookUp": "<Keyboard>/upArrow",
+    "lookDown": "<Keyboard>/downArrow",
+    "lookLeft": "<Keyboard>/leftArrow",
+    "lookRight": "<Keyboard>/rightArrow",
+
+    "moveForward": "<Keyboard>/w",
+    "moveBackward": "<Keyboard>/s",
+    "moveLeft": "<Keyboard>/a",
+    "moveRight": "<Keyboard>/d",
+
+    "jump": "<Keyboard>/space",
+    "walk": "<Keyboard>/leftShift",
+    "drop": "<Keyboard>/g",
+    "fire": "<Mouse>/leftButton",
+    "zoom": "<Mouse>/rightButton",
+    "previous": "<Keyboard>/z",
+    "next": "<Keyboard>/x",
+    "reload": "<Keyboard>/r",
+    "first": "<Keyboard>/1",
+    "second": "<Keyboard>/2",
+    "interact": "<Keyboard>/F"
+}

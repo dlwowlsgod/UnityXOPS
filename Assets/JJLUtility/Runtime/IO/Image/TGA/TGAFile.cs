@@ -34,8 +34,7 @@ namespace JJLUtility.IO
                 return null;
             }
 
-            var stream = File.OpenRead(filepath);
-            var binaryReader = new BinaryReader(stream);
+            using var binaryReader = new BinaryReader(File.OpenRead(filepath));
 
             var tgaFile = new TGAFile();
             tgaFile.Header = LoadTGAHeader(binaryReader);
@@ -87,17 +86,17 @@ namespace JJLUtility.IO
         private static TGAHeader LoadTGAHeader(BinaryReader binaryReader)
         {
             var header = new TGAHeader();
-            header.IDLength        = binaryReader.ReadByte();
-            header.ColorMapType    = binaryReader.ReadByte();
-            header.ImageType       = (TGAImageType)binaryReader.ReadByte();
-            header.ColorMapStart   = binaryReader.ReadUInt16();
-            header.ColorMapLength  = binaryReader.ReadUInt16();
-            header.ColorMapDepth   = binaryReader.ReadByte();
-            header.XOrigin         = binaryReader.ReadUInt16();
-            header.YOrigin         = binaryReader.ReadUInt16();
-            header.Width           = binaryReader.ReadUInt16();
-            header.Height          = binaryReader.ReadUInt16();
-            header.PixelDepth      = binaryReader.ReadByte();
+            header.IDLength = binaryReader.ReadByte();
+            header.ColorMapType = binaryReader.ReadByte();
+            header.ImageType = (TGAImageType)binaryReader.ReadByte();
+            header.ColorMapStart = binaryReader.ReadUInt16();
+            header.ColorMapLength = binaryReader.ReadUInt16();
+            header.ColorMapDepth = binaryReader.ReadByte();
+            header.XOrigin = binaryReader.ReadUInt16();
+            header.YOrigin = binaryReader.ReadUInt16();
+            header.Width = binaryReader.ReadUInt16();
+            header.Height = binaryReader.ReadUInt16();
+            header.PixelDepth = binaryReader.ReadByte();
             header.ImageDescriptor = binaryReader.ReadByte();
             return header;
         }

@@ -12,9 +12,6 @@ namespace JJLUtilityEditor.IO
     {
         private SerializedProperty m_audioCache;
 
-        /// <summary>
-        /// 직렬화된 audioCacheList 프로퍼티를 캐싱한다.
-        /// </summary>
         private void OnEnable()
         {
             m_audioCache = serializedObject.FindProperty("audioCacheList");

@@ -17,6 +17,5 @@ Assets/StreamingAssets/addon
 *.csproj
 .vs
 CLAUDE.md
-Assets/StreamingAssets
 .claude
 docs

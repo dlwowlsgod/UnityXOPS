@@ -1,0 +1,248 @@
+{
+    "openingBD1Path" : "data/map10/temp.bd1",
+    "openingPD1Path" : "data/map10/op.pd1",
+    "openingSkyIndex" : 1,
+    "letterBoxHeight" : 80,
+    "openingFadeData" : {
+        "fadeInStart" : 0.0,
+        "fadeInEnd" : 2.0,
+        "fadeOutStart" : 11.0,
+        "fadeOutEnd" : 15.0
+    },
+    "openingTextData" : [
+        {
+            "text" : "Project UnityXOPS",
+            "position" : {
+                "x" : 0,
+                "y" : 120
+            },
+            "size" : {
+                "x" : 22,
+                "y" : 22
+            },
+            "color" : {
+                "r" : 1.0,
+                "g" : 1.0,
+                "b" : 1.0,
+                "a" : 1
+            },
+            "alignment" : 7,
+            "spacing" : 0,
+            "fadeInStart" : 0.5,
+            "fadeInEnd" : 1.5,
+            "fadeOutStart" : 3.0,
+            "fadeOutEnd" : 4.0
+        },
+        {
+            "text" : "Original by",
+            "position" : {
+                "x" : 60,
+                "y" : -120
+            },
+            "size" : {
+                "x" : 20,
+                "y" : 20
+            },
+            "color" : {
+                "r" : 1.0,
+                "g" : 1.0,
+                "b" : 1.0,
+                "a" : 1
+            },
+            "alignment" : 0,
+            "spacing" : 0,
+            "fadeInStart" : 4.5,
+            "fadeInEnd" : 5.5,
+            "fadeOutStart" : 7.5,
+            "fadeOutEnd" : 8.5
+        },
+        {
+            "text" : "nine-two",
+            "position" : {
+                "x" : 100,
+                "y" : -150
+            },
+            "size" : {
+                "x" : 20,
+                "y" : 20
+            },
+            "color" : {
+                "r" : 1.0,
+                "g" : 1.0,
+                "b" : 1.0,
+                "a" : 1
+            },
+            "alignment" : 0,
+            "spacing" : 0,
+            "fadeInStart" : 5.0,
+            "fadeInEnd" : 6.0,
+            "fadeOutStart" : 8.0,
+            "fadeOutEnd" : 9.0
+        },
+        {
+            "text" : "TENNKUU",
+            "position" : {
+                "x" : 100,
+                "y" : -180
+            },
+            "size" : {
+                "x" : 20,
+                "y" : 20
+            },
+            "color" : {
+                "r" : 1.0,
+                "g" : 1.0,
+                "b" : 1.0,
+                "a" : 1
+            },
+            "alignment" : 0,
+            "spacing" : 0,
+            "fadeInStart" : 5.0,
+            "fadeInEnd" : 6.0,
+            "fadeOutStart" : 8.0,
+            "fadeOutEnd" : 9.0
+        },
+        {
+            "text" : "UnityXOPS by",
+            "position" : {
+                "x" : -100,
+                "y" : -270
+            },
+            "size" : {
+                "x" : 20,
+                "y" : 20
+            },
+            "color" : {
+                "r" : 1.0,
+                "g" : 1.0,
+                "b" : 1.0,
+                "a" : 1
+            },
+            "alignment" : 2,
+            "spacing" : 0,
+            "fadeInStart" : 7.0,
+            "fadeInEnd" : 8.0,
+            "fadeOutStart" : 10.0,
+            "fadeOutEnd" : 11.0
+        },
+        {
+            "text" : "JayTwoGames",
+            "position" : {
+                "x" : -70,
+                "y" : -300
+            },
+            "size" : {
+                "x" : 20,
+                "y" : 20
+            },
+            "color" : {
+                "r" : 1.0,
+                "g" : 1.0,
+                "b" : 1.0,
+                "a" : 1
+            },
+            "alignment" : 2,
+            "spacing" : 0,
+            "fadeInStart" : 7.5,
+            "fadeInEnd" : 8.5,
+            "fadeOutStart" : 10.5,
+            "fadeOutEnd" : 11.5
+        },
+        {
+            "text" : "JJL",
+            "position" : {
+                "x" : -70,
+                "y" : -330
+            },
+            "size" : {
+                "x" : 20,
+                "y" : 20
+            },
+            "color" : {
+                "r" : 1.0,
+                "g" : 1.0,
+                "b" : 1.0,
+                "a" : 1
+            },
+            "alignment" : 2,
+            "spacing" : 0,
+            "fadeInStart" : 7.5,
+            "fadeInEnd" : 8.5,
+            "fadeOutStart" : 10.5,
+            "fadeOutEnd" : 11.5
+        },
+        {
+            "text" : "dlwowlsgod",
+            "position" : {
+                "x" : -70,
+                "y" : -360
+            },
+            "size" : {
+                "x" : 20,
+                "y" : 20
+            },
+            "color" : {
+                "r" : 1.0,
+                "g" : 1.0,
+                "b" : 1.0,
+                "a" : 1
+            },
+            "alignment" : 2,
+            "spacing" : 0,
+            "fadeInStart" : 7.5,
+            "fadeInEnd" : 8.5,
+            "fadeOutStart" : 10.5,
+            "fadeOutEnd" : 11.5
+        },
+        {
+            "text" : "X OPERATIONS",
+            "position" : {
+                "x" : 0,
+                "y" : 0
+            },
+            "size" : {
+                "x" : 22,
+                "y" : 22
+            },
+            "color" : {
+                "r" : 1.0,
+                "g" : 0.0,
+                "b" : 0.0,
+                "a" : 1
+            },
+            "alignment" : 4,
+            "spacing" : 0,
+            "fadeInStart" : 12.0,
+            "fadeInEnd" : 13.0,
+            "fadeOutStart" : 15.0,
+            "fadeOutEnd" : 16.0
+        }
+    ],
+    "openingCameraData": {
+        "initialPosition": { "x": 0.5, "y": 5.8, "z": -2.9 },
+        "initialEuler": { "x": -12.0, "y": 64.0, "z": 0.0 },
+
+        "posAnim": {
+            "accelStart": 4.0,
+            "accelEnd": 5.0,
+            "constantEnd": -1.0,
+            "targetAdd": {
+                "x": 0.0,
+                "y": -0.1667,
+                "z": -0.2667
+            },
+            "smoothFactor": 0.8
+        },
+        "rotAnim": {
+            "accelStart": 2.6,
+            "accelEnd": 3.6,
+            "constantEnd": 5.0,
+            "targetAdd": {
+                "x": 20.20,
+                "y": -30,
+                "z": 0.0
+            },
+            "smoothFactor": 0.8
+        }
+    }
+}

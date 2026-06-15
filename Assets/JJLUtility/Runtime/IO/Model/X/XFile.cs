@@ -131,7 +131,6 @@ namespace JJLUtility.IO
                 return int.Parse(Read(), CultureInfo.InvariantCulture);
             }
 
-            // '{' 를 이미 소비한 상태에서 호출 - matching '}' 까지 전부 건너뜀
             /// <summary>
             /// 현재 블록의 닫는 중괄호까지 모든 토큰을 건너뛴다. '{' 는 이미 소비한 상태여야 한다.
             /// </summary>
@@ -148,9 +147,8 @@ namespace JJLUtility.IO
             }
         }
 
-        // 블록 이름이 있을 수도 없을 수도 있음 (예: "Mesh {" vs "Mesh obj11 {")
         /// <summary>
-        /// 블록 앞에 선택적으로 붙는 이름 토큰이 있으면 읽어 건너뛴다.
+        /// 블록 앞에 선택적으로 붙는 이름 토큰이 있으면 읽어 건너뛴다. (예: "Mesh {" vs "Mesh obj11 {")
         /// </summary>
         private static void SkipOptionalName(XTokenizer tokenizer)
         {

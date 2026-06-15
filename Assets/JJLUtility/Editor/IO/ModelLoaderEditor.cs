@@ -12,9 +12,6 @@ namespace JJLUtilityEditor.IO
     {
         private SerializedProperty m_meshCache;
 
-        /// <summary>
-        /// 직렬화 프로퍼티 참조를 초기화한다.
-        /// </summary>
         private void OnEnable()
         {
             m_meshCache = serializedObject.FindProperty("meshCacheList");

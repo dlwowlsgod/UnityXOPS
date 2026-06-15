@@ -37,8 +37,7 @@ namespace JJLUtility.IO
                 return null;
             }
 
-            var stream = File.OpenRead(filepath);
-            var reader = new BinaryReader(stream);
+            using var reader = new BinaryReader(File.OpenRead(filepath));
 
             if (reader.ReadUInt32() != DDSMagic)
             {
@@ -124,19 +123,19 @@ namespace JJLUtility.IO
         private static DDSHeader LoadDDSHeader(BinaryReader reader)
         {
             var h = new DDSHeader();
-            h.Size              = reader.ReadUInt32();
-            h.Flags             = (DDSFlags)reader.ReadUInt32();
-            h.Height            = reader.ReadUInt32();
-            h.Width             = reader.ReadUInt32();
+            h.Size = reader.ReadUInt32();
+            h.Flags = (DDSFlags)reader.ReadUInt32();
+            h.Height = reader.ReadUInt32();
+            h.Width = reader.ReadUInt32();
             h.PitchOrLinearSize = reader.ReadUInt32();
-            h.Depth             = reader.ReadUInt32();
-            h.MipMapCount       = reader.ReadUInt32();
+            h.Depth = reader.ReadUInt32();
+            h.MipMapCount = reader.ReadUInt32();
             for (int i = 0; i < 11; i++) reader.ReadUInt32();
-            h.PixelFormat       = LoadDDSPixelFormat(reader);
-            h.Caps              = (DDSCaps)reader.ReadUInt32();
-            h.Caps2             = (DDSCaps2)reader.ReadUInt32();
-            h.Caps3             = reader.ReadUInt32();
-            h.Caps4             = reader.ReadUInt32();
+            h.PixelFormat = LoadDDSPixelFormat(reader);
+            h.Caps = (DDSCaps)reader.ReadUInt32();
+            h.Caps2 = (DDSCaps2)reader.ReadUInt32();
+            h.Caps3 = reader.ReadUInt32();
+            h.Caps4 = reader.ReadUInt32();
             reader.ReadUInt32();
             return h;
         }
@@ -147,14 +146,14 @@ namespace JJLUtility.IO
         private static DDSPixelFormat LoadDDSPixelFormat(BinaryReader reader)
         {
             var pf = new DDSPixelFormat();
-            pf.Size        = reader.ReadUInt32();
-            pf.Flags       = (DDSPixelFormatFlags)reader.ReadUInt32();
-            pf.FourCC      = (DDSFourCC)reader.ReadUInt32();
+            pf.Size = reader.ReadUInt32();
+            pf.Flags = (DDSPixelFormatFlags)reader.ReadUInt32();
+            pf.FourCC = (DDSFourCC)reader.ReadUInt32();
             pf.RGBBitCount = reader.ReadUInt32();
-            pf.RBitMask    = reader.ReadUInt32();
-            pf.GBitMask    = reader.ReadUInt32();
-            pf.BBitMask    = reader.ReadUInt32();
-            pf.ABitMask    = reader.ReadUInt32();
+            pf.RBitMask = reader.ReadUInt32();
+            pf.GBitMask = reader.ReadUInt32();
+            pf.BBitMask = reader.ReadUInt32();
+            pf.ABitMask = reader.ReadUInt32();
             return pf;
         }
 
@@ -164,11 +163,11 @@ namespace JJLUtility.IO
         private static DDSHeaderDX10 LoadDDSHeaderDX10(BinaryReader reader)
         {
             var dx10 = new DDSHeaderDX10();
-            dx10.DxgiFormat        = (DXGIFormat)reader.ReadUInt32();
+            dx10.DxgiFormat = (DXGIFormat)reader.ReadUInt32();
             dx10.ResourceDimension = (D3D10ResourceDimension)reader.ReadUInt32();
-            dx10.MiscFlag          = reader.ReadUInt32();
-            dx10.ArraySize         = reader.ReadUInt32();
-            dx10.MiscFlags2        = reader.ReadUInt32();
+            dx10.MiscFlag = reader.ReadUInt32();
+            dx10.ArraySize = reader.ReadUInt32();
+            dx10.MiscFlags2 = reader.ReadUInt32();
             return dx10;
         }
 
@@ -255,11 +254,11 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadBC1DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
-            int blocksW = (width  + 3) / 4;
+            int blocksW = (width + 3) / 4;
             int blocksH = (height + 3) / 4;
             for (int by = 0; by < blocksH; by++)
             for (int bx = 0; bx < blocksW; bx++)
@@ -274,11 +273,11 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadBC2DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
-            int blocksW = (width  + 3) / 4;
+            int blocksW = (width + 3) / 4;
             int blocksH = (height + 3) / 4;
             for (int by = 0; by < blocksH; by++)
             for (int bx = 0; bx < blocksW; bx++)
@@ -293,11 +292,11 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadBC3DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
-            int blocksW = (width  + 3) / 4;
+            int blocksW = (width + 3) / 4;
             int blocksH = (height + 3) / 4;
             for (int by = 0; by < blocksH; by++)
             for (int bx = 0; bx < blocksW; bx++)
@@ -312,11 +311,11 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadBC4DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
-            int blocksW = (width  + 3) / 4;
+            int blocksW = (width + 3) / 4;
             int blocksH = (height + 3) / 4;
             for (int by = 0; by < blocksH; by++)
             for (int bx = 0; bx < blocksW; bx++)
@@ -331,11 +330,11 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadBC5DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
-            int blocksW = (width  + 3) / 4;
+            int blocksW = (width + 3) / 4;
             int blocksH = (height + 3) / 4;
             for (int by = 0; by < blocksH; by++)
             for (int bx = 0; bx < blocksW; bx++)
@@ -350,7 +349,7 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadUncompressedDDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             var pf = ddsFile.Header.PixelFormat;
             int bytesPerPixel = ((int)pf.RGBBitCount + 7) / 8;
@@ -393,7 +392,7 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadLuminanceDDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
@@ -413,7 +412,7 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadDX10RGBA8DDS(BinaryReader reader, ref DDSFile ddsFile, bool hasAlpha)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
@@ -436,7 +435,7 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadDX10BGRA8DDS(BinaryReader reader, ref DDSFile ddsFile, bool hasAlpha)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
@@ -459,7 +458,7 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadDX10B5G6R5DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
@@ -468,8 +467,8 @@ namespace JJLUtility.IO
             {
                 ushort v = reader.ReadUInt16();
                 byte b5 = (byte)((v >> 11) & 0x1F);
-                byte g6 = (byte)((v >> 5)  & 0x3F);
-                byte r5 = (byte)(v          & 0x1F);
+                byte g6 = (byte)((v >> 5) & 0x3F);
+                byte r5 = (byte)(v & 0x1F);
                 ddsFile.Pixels[y * width + x] = new Color32(
                     (byte)((r5 << 3) | (r5 >> 2)),
                     (byte)((g6 << 2) | (g6 >> 4)),
@@ -486,7 +485,7 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadDX10B5G5R5A1DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
@@ -496,8 +495,8 @@ namespace JJLUtility.IO
                 ushort v = reader.ReadUInt16();
                 byte a1 = (byte)((v >> 15) & 0x1);
                 byte b5 = (byte)((v >> 10) & 0x1F);
-                byte g5 = (byte)((v >> 5)  & 0x1F);
-                byte r5 = (byte)(v          & 0x1F);
+                byte g5 = (byte)((v >> 5) & 0x1F);
+                byte r5 = (byte)(v & 0x1F);
                 ddsFile.Pixels[y * width + x] = new Color32(
                     (byte)((r5 << 3) | (r5 >> 2)),
                     (byte)((g5 << 3) | (g5 >> 2)),
@@ -514,7 +513,7 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadDX10B4G4R4A4DDS(BinaryReader reader, ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
@@ -523,9 +522,9 @@ namespace JJLUtility.IO
             {
                 ushort v = reader.ReadUInt16();
                 byte a4 = (byte)((v >> 12) & 0xF);
-                byte r4 = (byte)((v >> 8)  & 0xF);
-                byte g4 = (byte)((v >> 4)  & 0xF);
-                byte b4 = (byte)(v          & 0xF);
+                byte r4 = (byte)((v >> 8) & 0xF);
+                byte g4 = (byte)((v >> 4) & 0xF);
+                byte b4 = (byte)(v & 0xF);
                 ddsFile.Pixels[y * width + x] = new Color32(
                     (byte)(r4 * 17),
                     (byte)(g4 * 17),
@@ -542,7 +541,7 @@ namespace JJLUtility.IO
         /// </summary>
         private static bool LoadDX10R8DDS(BinaryReader reader, ref DDSFile ddsFile, bool isAlphaOnly)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             ddsFile.Pixels = new Color32[width * height];
 
@@ -617,7 +616,7 @@ namespace JJLUtility.IO
             for (int i = 0; i < 8; i++)
             {
                 byte pair = reader.ReadByte();
-                alpha[i * 2]     = (byte)((pair & 0xF) * 17);
+                alpha[i * 2] = (byte)((pair & 0xF) * 17);
                 alpha[i * 2 + 1] = (byte)(((pair >> 4) & 0xF) * 17);
             }
 
@@ -761,7 +760,7 @@ namespace JJLUtility.IO
             }
 
             byte[] indexBytes = reader.ReadBytes(6);
-            ulong bits = (ulong)indexBytes[0]        | ((ulong)indexBytes[1] << 8)  |
+            ulong bits = (ulong)indexBytes[0] | ((ulong)indexBytes[1] << 8) |
                          ((ulong)indexBytes[2] << 16) | ((ulong)indexBytes[3] << 24) |
                          ((ulong)indexBytes[4] << 32) | ((ulong)indexBytes[5] << 40);
 
@@ -777,8 +776,8 @@ namespace JJLUtility.IO
         private static Color32 DDSExpand565(ushort value)
         {
             byte r5 = (byte)((value >> 11) & 0x1F);
-            byte g6 = (byte)((value >> 5)  & 0x3F);
-            byte b5 = (byte)(value          & 0x1F);
+            byte g6 = (byte)((value >> 5) & 0x3F);
+            byte b5 = (byte)(value & 0x1F);
             return new Color32(
                 (byte)((r5 << 3) | (r5 >> 2)),
                 (byte)((g6 << 2) | (g6 >> 4)),
@@ -791,7 +790,7 @@ namespace JJLUtility.IO
         /// </summary>
         private static void FlipDDS(ref DDSFile ddsFile)
         {
-            int width  = (int)ddsFile.Header.Width;
+            int width = (int)ddsFile.Header.Width;
             int height = (int)ddsFile.Header.Height;
             int center = height / 2;
             for (int y = 0; y < center; y++)

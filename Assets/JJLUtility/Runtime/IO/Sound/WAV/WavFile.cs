@@ -33,16 +33,16 @@ namespace JJLUtility.IO
                 return null;
             }
 
-            int    channels      = 0;
-            int    sampleRate    = 0;
+            int channels = 0;
+            int sampleRate = 0;
             ushort bitsPerSample = 0;
-            byte[] pcmData       = null;
+            byte[] pcmData = null;
 
             // chunk 순회 (fmt / data 외 chunk는 건너뜀)
             while (reader.BaseStream.Position < reader.BaseStream.Length - 8)
             {
-                string chunkId   = Encoding.ASCII.GetString(reader.ReadBytes(4));
-                int    chunkSize = reader.ReadInt32();
+                string chunkId = Encoding.ASCII.GetString(reader.ReadBytes(4));
+                int chunkSize = reader.ReadInt32();
 
                 if (chunkId == "fmt ")
                 {
@@ -52,9 +52,9 @@ namespace JJLUtility.IO
                         Debugger.LogError($"Only PCM WAV is supported (audioFormat={audioFormat}): {filepath}", Instance, nameof(SoundLoader));
                         return null;
                     }
-                    channels      = reader.ReadUInt16();
-                    sampleRate    = reader.ReadInt32();
-                    reader.ReadInt32();  // byteRate
+                    channels = reader.ReadUInt16();
+                    sampleRate = reader.ReadInt32();
+                    reader.ReadInt32(); // byteRate
                     reader.ReadUInt16(); // blockAlign
                     bitsPerSample = reader.ReadUInt16();
 
@@ -91,9 +91,9 @@ namespace JJLUtility.IO
             }
 
             // PCM bytes → float 샘플 변환
-            int     bytesPerSample = bitsPerSample / 8;
-            int     sampleCount    = pcmData.Length / bytesPerSample / channels;
-            float[] samples        = new float[sampleCount * channels];
+            int bytesPerSample = bitsPerSample / 8;
+            int sampleCount = pcmData.Length / bytesPerSample / channels;
+            float[] samples = new float[sampleCount * channels];
 
             if (bitsPerSample == 8)
             {
@@ -109,8 +109,8 @@ namespace JJLUtility.IO
                 }
             }
 
-            string    clipName = Path.GetFileNameWithoutExtension(filepath);
-            AudioClip clip     = AudioClip.Create(clipName, sampleCount, channels, sampleRate, stream: false);
+            string clipName = Path.GetFileNameWithoutExtension(filepath);
+            AudioClip clip = AudioClip.Create(clipName, sampleCount, channels, sampleRate, stream: false);
             clip.SetData(samples, offsetSamples: 0);
             return clip;
         }
