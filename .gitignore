@@ -9,7 +9,6 @@ Logs
 Assets/Plugins
 Assets/StreamingAssets/data
 OpenXOPS
-*.meta
 Library
 Assets/Resources/char.dds
 Assets/TextMesh Pro
