@@ -11,9 +11,9 @@ namespace UnityXOPS
     /// </summary>
     public class FontManager : SingletonBehavior<FontManager>
     {
-        private const string k_koreanOSFontPath = "WINDOWS/Fonts/malgun.ttf";
-        private const string k_japaneseOSFontPath = "WINDOWS/Fonts/YuGothR.ttc";
-        private const string k_englishOSFontPath = "WINDOWS/Fonts/segoeui.ttf";
+        private const string k_koreanOSFontPath = "malgun.ttf";
+        private const string k_japaneseOSFontPath = "YuGothR.ttc";
+        private const string k_englishOSFontPath = "segoeui.ttf";
 
         private string m_koreanOSFontPath;
         private string m_japaneseOSFontPath;
