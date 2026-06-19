@@ -13,9 +13,6 @@ namespace UnityXOPS
 
         private float m_time;
 
-        /// <summary>
-        /// 페이드 데이터를 가져오고 페이드 코루틴을 시작한다.
-        /// </summary>
         private void Start()
         {
             m_time = Time.time;
@@ -25,7 +22,7 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// 데이터에 지정된 타이밍에 따라 페이드 인과 페이드 아웃을 순차 실행하는 코루틴.
+        /// 인자 data 의 타이밍에 따라 페이드 인 후 페이드 아웃을 순차 실행하는 코루틴.
         /// </summary>
         private IEnumerator FadeRoutine(OpeningFadeData data)
         {

@@ -19,11 +19,8 @@ namespace UnityXOPS
 
         // 종료 시퀀스(화면 암전 + 종료 텍스트) 완료 플래그 — 둘 중 더 긴 쪽이 끝나면 true. MaingameScene 이 Result 전환 트리거로 폴링.
         private bool m_missionEndComplete;
-        public  bool MissionEndComplete => m_missionEndComplete;
+        public bool MissionEndComplete => m_missionEndComplete;
 
-        /// <summary>
-        /// 페이드 인 시퀀스를 시작한다.
-        /// </summary>
         private void Start()
         {
             StartCoroutine(FadeInRoutine());
@@ -72,11 +69,14 @@ namespace UnityXOPS
         private IEnumerator MissionEndCompleteWatcher()
         {
             float screenTotal = fadeOutTime;
-            float textTotal   = endTextFadeInTime + endTextHoldTime + endTextFadeOutTime;
+            float textTotal = endTextFadeInTime + endTextHoldTime + endTextFadeOutTime;
             yield return new WaitForSeconds(Mathf.Max(screenTotal, textTotal));
             m_missionEndComplete = true;
         }
 
+        /// <summary>
+        /// 미션 결과(성공/실패)에 맞는 종료 텍스트를 생성하고 페이드 시퀀스를 시작한다. 중복 호출 시 1회만.
+        /// </summary>
         public void MissionEndText()
         {
             if (m_missionEndText != null) return; // 이미 표시 중 — 중복 생성/시퀀스 방지 (Result 폴링으로 매 프레임 호출돼도 안전)

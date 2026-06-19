@@ -13,9 +13,6 @@ namespace UnityXOPSEditor
         const string k_prefKey = "UnityXOPS.PlayFromFirstScene";
         const string k_prevScenePrefKey = "UnityXOPS.PlayFromFirstScene.PrevScene";
 
-        /// <summary>
-        /// 에디터 로드 시 플레이모드 상태 변경 콜백을 등록한다.
-        /// </summary>
         static PlayFromFirstScene()
         {
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
@@ -23,9 +20,6 @@ namespace UnityXOPSEditor
 
         static bool IsEnabled => EditorPrefs.GetBool(k_prefKey, false);
 
-        /// <summary>
-        /// 메뉴 항목 클릭 시 기능 활성화 여부를 토글한다.
-        /// </summary>
         [MenuItem(k_menuPath, priority = 1)]
         static void Toggle()
         {
@@ -33,9 +27,6 @@ namespace UnityXOPSEditor
             Menu.SetChecked(k_menuPath, IsEnabled);
         }
 
-        /// <summary>
-        /// 메뉴 항목 렌더링 시 체크 상태를 현재 활성화 여부로 갱신한다.
-        /// </summary>
         [MenuItem(k_menuPath, true)]
         static bool ToggleValidate()
         {
@@ -43,9 +34,6 @@ namespace UnityXOPSEditor
             return true;
         }
 
-        /// <summary>
-        /// 플레이모드 진입 시 첫 번째 씬으로 전환하고, 종료 시 이전 씬을 복원한다.
-        /// </summary>
         static void OnPlayModeStateChanged(PlayModeStateChange state)
         {
             if (!IsEnabled) return;

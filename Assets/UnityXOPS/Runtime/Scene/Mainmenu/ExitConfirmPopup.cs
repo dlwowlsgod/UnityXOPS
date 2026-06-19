@@ -21,47 +21,43 @@ namespace UnityXOPS
         private const string k_quitText = "QUIT";
         private const string k_abortText = "ABORT";
 
-        /// <summary>
-        /// 종료·취소 버튼 텍스트를 생성하고 클릭 이벤트를 등록한다.
-        /// </summary>
         private void Start()
         {
             Vector2 quitButtonSize = new Vector2(labelSize.x * k_quitText.Length, labelSize.y + 2);
             Vector2 abortButtonSize = new Vector2(labelSize.x * k_abortText.Length, labelSize.y + 2);
 
-            var labelShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
+            FontManager.CreateSpriteText<XOPSSpriteText>(
                 labelRoot, k_label, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
                 labelSize, labelSize, shadowColor, TextAnchor.MiddleCenter, 0);
-            var labelText = FontManager.CreateSpriteText<XOPSSpriteText>(
+            FontManager.CreateSpriteText<XOPSSpriteText>(
                 labelRoot, k_label, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
                 labelSize, labelSize, normalColor, TextAnchor.MiddleCenter, 0);
 
-            var quitShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                quitRoot, k_quitText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
-                quitButtonSize, buttonSize, shadowColor, TextAnchor.MiddleCenter, 0);
-            var quitButtonText = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
-                quitRoot, k_quitText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
-                quitButtonSize, buttonSize, normalColor, TextAnchor.MiddleCenter, 0);
-            quitButtonText.NormalColor = normalColor;
-            quitButtonText.HoverColor = hoverColor;
-            quitButtonText.PressedColor = pressedColor;
-            quitButtonText.MovePixelX = 1f;
-            quitButtonText.MovePixelY = -1f;
+            var quitButtonText = CreateButton(quitRoot, k_quitText, quitButtonSize);
+            var abortButtonText = CreateButton(abortRoot, k_abortText, abortButtonSize);
 
-            var abortShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                abortRoot, k_abortText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
-                abortButtonSize, buttonSize, shadowColor, TextAnchor.MiddleCenter, 0);
-            var abortButtonText = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
-                abortRoot, k_abortText, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
-                abortButtonSize, buttonSize, normalColor, TextAnchor.MiddleCenter, 0);
-            abortButtonText.NormalColor = normalColor;
-            abortButtonText.HoverColor = hoverColor;
-            abortButtonText.PressedColor = pressedColor;
-            abortButtonText.MovePixelX = 1f;
-            abortButtonText.MovePixelY = -1f;
+            quitButtonText.OnClick += OnQuitButtonPressed;
+            abortButtonText.OnClick += OnAbortButtonPressed;
+        }
 
-            quitButtonText.OnClick += () => OnQuitButtonPressed();
-            abortButtonText.OnClick += () => OnAbortButtonPressed();
+        /// <summary>
+        /// 지정 루트(parent)에 그림자+버튼 2겹 스프라이트 텍스트를 생성하고 색/오프셋을 설정해 버튼을 반환한다.
+        /// text=표시 문자열, buttonAreaSize=버튼 영역 크기.
+        /// </summary>
+        private XOPSSpriteTextButton CreateButton(Transform parent, string text, Vector2 buttonAreaSize)
+        {
+            FontManager.CreateSpriteText<XOPSSpriteText>(
+                parent, text, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(1, -1),
+                buttonAreaSize, buttonSize, shadowColor, TextAnchor.MiddleCenter, 0);
+            var button = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
+                parent, text, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
+                buttonAreaSize, buttonSize, normalColor, TextAnchor.MiddleCenter, 0);
+            button.NormalColor = normalColor;
+            button.HoverColor = hoverColor;
+            button.PressedColor = pressedColor;
+            button.MovePixelX = 1f;
+            button.MovePixelY = -1f;
+            return button;
         }
 
         /// <summary>

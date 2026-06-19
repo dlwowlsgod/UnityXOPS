@@ -21,7 +21,7 @@ namespace UnityXOPS
         public float farClippingPlane;
 
         // 안개 적용 여부 (false 면 fog 미적용). fogStart~fogEnd = Linear 안개 거리 구간.
-        public bool  fog;
+        public bool fog;
         public float fogStart;
         public float fogEnd;
     }

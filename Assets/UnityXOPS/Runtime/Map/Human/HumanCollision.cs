@@ -15,8 +15,8 @@ namespace UnityXOPS
     public class HumanCollision : MonoBehaviour
     {
         // 원본 GAMEFPS = 33.333. 분리 패스도 AI 와 동일하게 프레임 락(속도 가산 케이던스 일치).
-        private const float k_frameTime        = 1f / 33.3333f;
-        private const int   k_maxCatchupFrames = 4;
+        private const float k_frameTime = 1f / 33.3333f;
+        private const int k_maxCatchupFrames = 4;
 
         private readonly Dictionary<Human, HumanController> m_controllers = new Dictionary<Human, HumanController>();
         private float m_accum;
@@ -55,9 +55,9 @@ namespace UnityXOPS
         private void StepAll(IReadOnlyList<Human> humans)
         {
             HumanGeneralData gen = DataManager.Instance.HumanParameterData.humanGeneralData;
-            float R          = gen.controllerRadiusControllerToController; // 0.25 (원본 HUMAN_HUMANCOLLISION_R 2.5)
-            float H          = gen.controllerHeight;                       // 수직 겹침 판정용 (원본 원기둥 높이)
-            float minDist    = R + R;                                      // 두 반경 합 = 0.5
+            float R = gen.controllerRadiusControllerToController; // 0.25 (원본 HUMAN_HUMANCOLLISION_R 2.5)
+            float H = gen.controllerHeight; // 수직 겹침 판정용 (원본 원기둥 높이)
+            float minDist = R + R; // 두 반경 합 = 0.5
             float minDistSqr = minDist * minDist;
 
             int n = humans.Count;
@@ -82,7 +82,7 @@ namespace UnityXOPS
                     float distSqr = dx*dx + dz*dz;
                     if (distSqr >= minDistSqr) continue;
 
-                    float dist        = Mathf.Sqrt(distSqr);
+                    float dist = Mathf.Sqrt(distSqr);
                     float penetration = minDist - dist; // 겹친 깊이
 
                     // 분리 방향 (b → a). 거의 정확히 겹쳤으면 임의 방향(+X) — 원본 atan2(0,0)=0 과 동일.

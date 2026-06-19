@@ -23,9 +23,6 @@ namespace UnityXOPS
         [SerializeField]
         private TMP_Text textArea;
 
-        /// <summary>
-        /// 미션 이미지 수에 따라 단일/이중 레이아웃을 선택하고 이름·브리핑 텍스트를 설정한다.
-        /// </summary>
         private void Start()
         {
             if (string.IsNullOrEmpty(MapLoader.Instance.MissionImage1))

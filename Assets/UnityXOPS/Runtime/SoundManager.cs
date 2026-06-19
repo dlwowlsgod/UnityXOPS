@@ -20,7 +20,7 @@ namespace UnityXOPS
         [SerializeField] private int poolSize = 64;
 
         private AudioSource[] m_pool;
-        private int           m_next;
+        private int m_next;
 
         // 리스너(메인 카메라 AudioListener) 위치 캐시. 총알 통과음(hyu) closest-approach 판정 등 "카메라 기준" 거리 계산에 사용.
         // 씬 전환으로 리스너가 파괴되면 null → 다음 접근 시 재탐색 (lazy).
@@ -49,13 +49,13 @@ namespace UnityXOPS
                 obj.transform.SetParent(transform, false);
 
                 var src = obj.AddComponent<AudioSource>();
-                src.playOnAwake  = false;
-                src.spatialBlend = 1f;                       // 3D
-                src.rolloffMode  = AudioRolloffMode.Linear;  // 원본 선형 감쇠
-                src.minDistance  = k_minDistance;
-                src.maxDistance  = k_maxDistance;
-                src.dopplerLevel = 0f;                       // 도플러 없음
-                src.spread       = 180f;                     // 패닝 최소 (원본 pan=0)
+                src.playOnAwake = false;
+                src.spatialBlend = 1f; // 3D
+                src.rolloffMode = AudioRolloffMode.Linear; // 원본 선형 감쇠
+                src.minDistance = k_minDistance;
+                src.maxDistance = k_maxDistance;
+                src.dopplerLevel = 0f; // 도플러 없음
+                src.spread = 180f; // 패닝 최소 (원본 pan=0)
                 m_pool[i] = src;
             }
         }
@@ -72,8 +72,8 @@ namespace UnityXOPS
 
             AudioSource src = GetSource();
             src.transform.position = position;
-            src.clip             = clip;
-            src.volume           = Mathf.Clamp01(volume);
+            src.clip = clip;
+            src.volume = Mathf.Clamp01(volume);
             src.Play();
         }
 

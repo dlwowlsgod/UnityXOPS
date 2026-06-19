@@ -67,20 +67,22 @@ namespace UnityXOPS
             Screen.SetResolution(w, h, mode);
         }
 
-        // ScreenResolution → (width, height). 매핑되면 true. 미매핑(5~9 등)이면 false.
+        /// <summary>
+        /// ScreenResolution enum 을 (width, height) 픽셀로 변환한다. 매핑되면 out 설정 후 true, 미매핑(5~9 등)이면 640x480 설정 후 false.
+        /// </summary>
         private static bool TryGetResolutionSize(ScreenResolution res, out int width, out int height)
         {
             switch (res)
             {
-                case ScreenResolution.Res640x480:   width = 640;  height = 480;  return true;
-                case ScreenResolution.Res800x600:   width = 800;  height = 600;  return true;
-                case ScreenResolution.Res1024x768:  width = 1024; height = 768;  return true;
-                case ScreenResolution.Res1280x960:  width = 1280; height = 960;  return true;
+                case ScreenResolution.Res640x480: width = 640; height = 480; return true;
+                case ScreenResolution.Res800x600: width = 800; height = 600; return true;
+                case ScreenResolution.Res1024x768: width = 1024; height = 768; return true;
+                case ScreenResolution.Res1280x960: width = 1280; height = 960; return true;
                 case ScreenResolution.Res1600x1200: width = 1600; height = 1200; return true;
 
-                case ScreenResolution.Res960x540:   width = 960;  height = 540;  return true;
-                case ScreenResolution.Res1280x720:  width = 1280; height = 720;  return true;
-                case ScreenResolution.Res1600x900:  width = 1600; height = 900;  return true;
+                case ScreenResolution.Res960x540: width = 960; height = 540; return true;
+                case ScreenResolution.Res1280x720: width = 1280; height = 720; return true;
+                case ScreenResolution.Res1600x900: width = 1600; height = 900; return true;
                 case ScreenResolution.Res1920x1080: width = 1920; height = 1080; return true;
                 case ScreenResolution.Res2560x1440: width = 2560; height = 1440; return true;
                 case ScreenResolution.Res3840x2160: width = 3840; height = 2160; return true;

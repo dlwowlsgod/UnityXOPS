@@ -6,7 +6,7 @@ namespace UnityXOPS
     /// <summary>
     /// 게임 버전 문자열을 그림자와 함께 스프라이트 텍스트로 렌더링하는 컴포넌트.
     /// </summary>
-    public class GameVersionTex : MonoBehaviour
+    public class GameVersionText : MonoBehaviour
     {
         [SerializeField]
         private RectTransform root;
@@ -17,9 +17,6 @@ namespace UnityXOPS
         [SerializeField]
         private Color32 shadowColor;
 
-        /// <summary>
-        /// 버전 그림자 텍스트와 본문 텍스트를 생성하여 배치한다.
-        /// </summary>
         private void Start()
         {
             FontManager.CreateSpriteText<XOPSSpriteText>(

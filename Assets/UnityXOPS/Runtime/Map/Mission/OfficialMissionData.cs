@@ -7,7 +7,7 @@ namespace UnityXOPS
     /// JSON에서 로드되는 공식 미션의 경로 및 설정 데이터를 담는 클래스.
     /// </summary>
     [Serializable]
-    public class OfficialMissionData
+    public class OfficialMissionData : IMissionData
     {
         public string name;
         public string fullname;
@@ -16,5 +16,7 @@ namespace UnityXOPS
         public string txtPath;
         public bool adjustCollision;
         public bool darkScreen;
+
+        public string Name => name;
     }
 }

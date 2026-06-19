@@ -8,14 +8,14 @@ namespace UnityXOPS
     public enum EventType
     {
         MissionComplete = 10, // 任務達成 — 미션 성공 (종료)
-        MissionFailed   = 11, // 任務失敗 — 미션 실패 (종료)
-        WaitDeath       = 12, // 死亡待ち — 대상(param1) 사망 대기
-        WaitArrival     = 13, // 到着待ち — 대상(param1)이 노드 좌표 반경 도착 대기
-        ChangeToWalk    = 14, // 歩きに変更 — 대상 AI패스(param1) 이동모드를 걷기(0)로 변경
+        MissionFailed = 11, // 任務失敗 — 미션 실패 (종료)
+        WaitDeath = 12, // 死亡待ち — 대상(param1) 사망 대기
+        WaitArrival = 13, // 到着待ち — 대상(param1)이 노드 좌표 반경 도착 대기
+        ChangeToWalk = 14, // 歩きに変更 — 대상 AI패스(param1) 이동모드를 걷기(0)로 변경
         WaitBreakObject = 15, // 小物破壊待ち — 대상 소품(param1) 파괴 대기
-        WaitCase        = 16, // ケース待ち — 대상(param1) 도착 + 케이스 무기 소지 대기
-        WaitTime        = 17, // 時間待ち — param1 초 경과 대기
-        Message         = 18, // メッセージ — 메시지(param1=ID) 표시
-        ChangeTeam      = 19, // チーム変更 — 대상(param1) 팀번호를 0으로 변경
+        WaitCase = 16, // ケース待ち — 대상(param1) 도착 + 케이스 무기 소지 대기
+        WaitTime = 17, // 時間待ち — param1 초 경과 대기
+        Message = 18, // メッセージ — 메시지(param1=ID) 표시
+        ChangeTeam = 19, // チーム変更 — 대상(param1) 팀번호를 0으로 변경
     }
 }

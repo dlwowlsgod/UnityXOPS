@@ -35,9 +35,9 @@ namespace UnityXOPS
         public void Reset()
         {
             PlayTime = 0f;
-            Fire     = 0;
+            Fire = 0;
             OnTarget = 0f;
-            Kill     = 0;
+            Kill = 0;
             Headshot = 0;
         }
     }

@@ -21,31 +21,25 @@ namespace UnityXOPS
         public event Action<int> OnScrollIndexChanged;
 
         public RawImage ScrollAreaRawImage { get; private set; }
-        public RawImage ScrollbarRawImage  { get; private set; }
+        public RawImage ScrollbarRawImage { get; private set; }
 
         private RectTransform m_trackRect;
         private RectTransform m_scrollbarRect;
         private int m_maxIndex;
-        private int m_lastFiredIndex; 
-        private float m_floatPosition;  
+        private int m_lastFiredIndex;
+        private float m_floatPosition;
         private float m_trackHeight;
         private float m_barHeight;
         private float m_grabOffset;
 
-        /// <summary>
-        /// RawImage 및 RectTransform 참조를 캐싱한다.
-        /// </summary>
         private void Awake()
         {
             ScrollAreaRawImage = GetComponent<RawImage>();
-            ScrollbarRawImage  = outlineRawImage;
+            ScrollbarRawImage = outlineRawImage;
             m_trackRect = GetComponent<RectTransform>();
             m_scrollbarRect = outlineRawImage.GetComponent<RectTransform>();
         }
 
-        /// <summary>
-        /// 스크롤바 초기 색상을 설정한다.
-        /// </summary>
         private void Start()
         {
             outlineRawImage.color = outlineNormalColor;
@@ -53,7 +47,7 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// 아이템 총 수와 표시 수를 기반으로 스크롤바 크기와 최대 인덱스를 초기화한다.
+        /// 아이템 총 수(totalItems)와 표시 수(visibleItems)로 스크롤바 크기를 정하고 최대 인덱스(maxIndex)를 설정한다.
         /// </summary>
         public void Initialize(int totalItems, int visibleItems, int maxIndex)
         {
@@ -63,7 +57,6 @@ namespace UnityXOPS
             m_scrollbarRect.sizeDelta = new Vector2(m_scrollbarRect.sizeDelta.x, m_barHeight);
         }
 
-        // 외부(Up/Down 버튼)에서 정수 인덱스로 위치 지정
         /// <summary>
         /// 외부에서 정수 인덱스로 스크롤 위치를 직접 지정한다.
         /// </summary>
@@ -74,7 +67,6 @@ namespace UnityXOPS
             ApplyFloatPosition();
         }
 
-        // float 위치를 스크롤바 anchoredPosition에 반영
         /// <summary>
         /// 현재 float 스크롤 위치를 스크롤바 anchoredPosition에 반영한다.
         /// </summary>
@@ -88,7 +80,6 @@ namespace UnityXOPS
             );
         }
 
-        // 로컬 포인터 좌표 → 연속적인 float 위치
         /// <summary>
         /// 트랙 내 로컬 포인터 좌표를 연속적인 float 스크롤 위치 값으로 변환한다.
         /// </summary>
@@ -100,27 +91,18 @@ namespace UnityXOPS
             return normalized * m_maxIndex;
         }
 
-        /// <summary>
-        /// 포인터가 진입하면 호버 색상으로 변경한다.
-        /// </summary>
         public void OnPointerEnter(PointerEventData _)
         {
             outlineRawImage.color = outlineHoverColor;
             rawImage.color = hoverColor;
         }
 
-        /// <summary>
-        /// 포인터가 이탈하면 기본 색상으로 복귀한다.
-        /// </summary>
         public void OnPointerExit(PointerEventData _)
         {
             outlineRawImage.color = outlineNormalColor;
             rawImage.color = normalColor;
         }
 
-        /// <summary>
-        /// 포인터가 눌리면 눌린 색상을 적용하고 그랩 오프셋을 계산한 후 스크롤 위치를 갱신한다.
-        /// </summary>
         public void OnPointerDown(PointerEventData eventData)
         {
             outlineRawImage.color = outlinePressedColor;
@@ -139,9 +121,6 @@ namespace UnityXOPS
             UpdateFromLocal(local);
         }
 
-        /// <summary>
-        /// 포인터가 떼어지면 포인터 위치에 따라 색상을 결정한다.
-        /// </summary>
         public void OnPointerUp(PointerEventData eventData)
         {
             bool stillOver = eventData.pointerCurrentRaycast.gameObject == outlineRawImage.gameObject;
@@ -149,9 +128,6 @@ namespace UnityXOPS
             rawImage.color = stillOver ? hoverColor : normalColor;
         }
 
-        /// <summary>
-        /// 드래그 중 포인터 좌표로 스크롤 위치를 갱신한다.
-        /// </summary>
         public void OnDrag(PointerEventData eventData)
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(

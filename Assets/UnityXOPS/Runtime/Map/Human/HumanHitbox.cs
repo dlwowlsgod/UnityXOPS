@@ -10,7 +10,7 @@ namespace UnityXOPS
     {
         Head = 0,
         Body = 1,
-        Leg  = 2,
+        Leg = 2,
     }
 
     /// <summary>
@@ -22,10 +22,10 @@ namespace UnityXOPS
     public class HumanHitbox : MonoBehaviour
     {
         [SerializeField] private HumanHitPart part;
-        [SerializeField] private Human        human;
+        [SerializeField] private Human human;
 
-        public HumanHitPart Part  => part;
-        public Human        Human => human;
+        public HumanHitPart Part => part;
+        public Human Human => human;
 
         /// <summary>
         /// HumanGeneralData의 히트박스 치수를 CapsuleCollider에 적용하고 Y 위치를 누적 높이로 배치한다.
@@ -42,25 +42,25 @@ namespace UnityXOPS
                 case HumanHitPart.Head:
                     height = general.headHitboxHeight;
                     radius = general.headHitboxRadius;
-                    baseY  = general.legHitboxHeight + general.bodyHitboxHeight;
+                    baseY =general.legHitboxHeight + general.bodyHitboxHeight;
                     break;
                 case HumanHitPart.Body:
                     height = general.bodyHitboxHeight;
                     radius = general.bodyHitboxRadius;
-                    baseY  = general.legHitboxHeight;
+                    baseY =general.legHitboxHeight;
                     break;
                 case HumanHitPart.Leg:
                     height = general.legHitboxHeight;
                     radius = general.legHitboxRadius;
-                    baseY  = 0f;
+                    baseY =0f;
                     break;
                 default: return;
             }
 
-            capsule.direction       = 1;
-            capsule.height          = height;
-            capsule.radius          = radius;
-            capsule.center          = Vector3.zero;
+            capsule.direction = 1;
+            capsule.height = height;
+            capsule.radius = radius;
+            capsule.center = Vector3.zero;
             transform.localPosition = new Vector3(0f, baseY + height * 0.5f, 0f);
         }
 
@@ -80,8 +80,8 @@ namespace UnityXOPS
                 {
                     HumanHitPart.Head => type.headDamageMultiplier,
                     HumanHitPart.Body => type.bodyDamageMultiplier,
-                    HumanHitPart.Leg  => type.legDamageMultiplier,
-                    _                 => 1f,
+                    HumanHitPart.Leg => type.legDamageMultiplier,
+                    _ => 1f,
                 };
             }
             float damage = attacks * multiplier;
@@ -93,8 +93,8 @@ namespace UnityXOPS
             {
                 HumanHitPart.Head => gen.headHitReaction,
                 HumanHitPart.Body => gen.bodyHitReaction,
-                HumanHitPart.Leg  => gen.legHitReaction,
-                _                 => gen.bodyHitReaction,
+                HumanHitPart.Leg => gen.legHitReaction,
+                _ => gen.bodyHitReaction,
             });
 
             return damage; // 혈흔 분사 개수(데미지 비례)용

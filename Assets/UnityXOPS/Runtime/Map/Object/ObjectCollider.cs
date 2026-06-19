@@ -14,7 +14,7 @@ namespace UnityXOPS
 
         // 이 콜라이더들이 소속된 SmallObject. 총알/폭발 피격 시 GetComponentInParent<ObjectCollider>().Owner 로 역참조.
         private SmallObject m_owner;
-        public  SmallObject Owner => m_owner;
+        public SmallObject Owner => m_owner;
 
         /// <summary>
         /// ObjectColliderData.shapes 를 순회해 형상별 Collider 컴포넌트를 자식 Collider_{i} GameObject 에 부착한다.
@@ -37,19 +37,19 @@ namespace UnityXOPS
                 switch (shape.type)
                 {
                     case ColliderShapeType.Sphere:
-                        var sphere    = shapeObj.AddComponent<SphereCollider>();
+                        var sphere = shapeObj.AddComponent<SphereCollider>();
                         sphere.radius = shape.size.x;
                         break;
 
                     case ColliderShapeType.Box:
-                        var box  = shapeObj.AddComponent<BoxCollider>();
+                        var box = shapeObj.AddComponent<BoxCollider>();
                         box.size = shape.size;
                         break;
 
                     case ColliderShapeType.Capsule:
-                        var capsule       = shapeObj.AddComponent<CapsuleCollider>();
-                        capsule.radius    = shape.size.x;
-                        capsule.height    = shape.size.y;
+                        var capsule = shapeObj.AddComponent<CapsuleCollider>();
+                        capsule.radius = shape.size.x;
+                        capsule.height = shape.size.y;
                         capsule.direction = (int)shape.size.z;
                         break;
                 }

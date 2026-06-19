@@ -17,7 +17,7 @@ namespace UnityXOPS
 
         // OpenXOPS gamemain.cpp:764-765 고정 카메라 각도. 원본 rx=45°/ry=-25° → Unity yaw 45+180=225°, pitch -(-25)=25°(아래로).
         private const float k_pitch = 25f;
-        private const float k_yaw   = 225f;
+        private const float k_yaw = 225f;
 
         // OpenXOPS gamemain.cpp:782 VIEWANGLE_NORMAL = DegreeToRadian(65).
         private const float k_fieldOfView = 65f;

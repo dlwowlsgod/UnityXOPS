@@ -14,12 +14,10 @@ namespace UnityXOPS
         private void Start()
         {
             m_text = GetComponent<TMP_Text>();
-            if (m_text != null)
-            {
-                SetVisible(false);
-            }
+            if (m_text == null) return;
 
             m_text.font = FontManager.OSFont;
+            SetVisible(false);
         }
 
         private void Update()

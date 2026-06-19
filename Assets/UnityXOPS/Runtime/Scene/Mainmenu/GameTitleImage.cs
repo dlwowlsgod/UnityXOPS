@@ -19,15 +19,12 @@ namespace UnityXOPS
 
         private const string k_titlePath = "data/title.dds";
 
-        /// <summary>
-        /// 타이틀 이미지를 로드하고 RectTransform에 크기·위치를 적용한다.
-        /// </summary>
         private void Start()
         {
             var path = Path.Combine(Application.streamingAssetsPath, k_titlePath);
             var texture = ImageLoader.LoadTexture(path);
             titleImage.texture = texture;
-            
+
             var rect = titleImage.GetComponent<RectTransform>();
             rect.sizeDelta = size;
             rect.anchoredPosition = position;

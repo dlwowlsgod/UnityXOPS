@@ -14,10 +14,10 @@ namespace UnityXOPS
     public class BulletManager : SingletonBehavior<BulletManager>
     {
         [SerializeField] private GameObject bulletPrefab;
-        [SerializeField] private int        poolSize = 160;
+        [SerializeField] private int poolSize = 160;
 
-        private Bullet[]                     m_pool;
-        private Dictionary<string, Mesh>     m_meshCache     = new Dictionary<string, Mesh>();
+        private Bullet[] m_pool;
+        private Dictionary<string, Mesh> m_meshCache = new Dictionary<string, Mesh>();
         private Dictionary<string, Material> m_materialCache = new Dictionary<string, Material>();
 
         protected override void Awake()
@@ -66,7 +66,7 @@ namespace UnityXOPS
             Bullet slot = GetIdleSlot();
             if (slot == null) return null;
 
-            Mesh     mesh     = GetBulletMesh(data.modelPath);
+            Mesh mesh = GetBulletMesh(data.modelPath);
             Material material = GetBulletMaterial(data.texturePath);
 
             slot.gameObject.SetActive(true);
@@ -97,6 +97,9 @@ namespace UnityXOPS
             }
         }
 
+        /// <summary>
+        /// path 의 메시를 캐시에서 반환하거나 로드 후 캐시한다. path 가 비면 null.
+        /// </summary>
         public Mesh GetBulletMesh(string path)
         {
             if (string.IsNullOrEmpty(path)) return null;
@@ -108,19 +111,22 @@ namespace UnityXOPS
             return mesh;
         }
 
+        /// <summary>
+        /// texturePath 의 머티리얼을 캐시에서 반환하거나 로드 후 캐시한다. 비거나 로드 실패면 MainMaterial 폴백.
+        /// </summary>
         public Material GetBulletMaterial(string texturePath)
         {
             if (string.IsNullOrEmpty(texturePath)) return MaterialManager.Instance.MainMaterial;
             if (m_materialCache.TryGetValue(texturePath, out var cached)) return cached;
 
             string fullPath = SafePath.Combine(Application.streamingAssetsPath, texturePath);
-            Texture2D tex   = ImageLoader.LoadTexture(fullPath);
+            Texture2D tex = ImageLoader.LoadTexture(fullPath);
             if (tex == null) return MaterialManager.Instance.MainMaterial;
             tex.name = Path.GetFileName(fullPath);
 
-            Material mat   = new Material(MaterialManager.Instance.MainMaterial);
+            Material mat = new Material(MaterialManager.Instance.MainMaterial);
             mat.mainTexture = tex;
-            mat.name        = tex.name;
+            mat.name = tex.name;
 
             m_materialCache[texturePath] = mat;
             return mat;

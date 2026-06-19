@@ -18,7 +18,7 @@ namespace UnityXOPS
 
             var cam = GetComponent<Camera>();
             cam.nearClipPlane = skyData.nearClippingPlane;
-            cam.farClipPlane  = skyData.farClippingPlane;
+            cam.farClipPlane = skyData.farClippingPlane;
 
             // fog 는 RenderSettings(씬별)에 적용되므로 이 씬에서 직접 건다. skyIndex 는 이미 로드된 값 사용.
             MapLoader.ApplySkyFog(MapLoader.Instance.SkyIndex);

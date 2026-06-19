@@ -18,9 +18,6 @@ namespace UnityXOPS
 
         private bool m_exiting = false;
 
-        /// <summary>
-        /// 랜덤 데모 맵을 로드하고, 애드온 미션이 없을 경우 탭 전환 UI를 비활성화한다.
-        /// </summary>
         private void Start()
         {
             InputManager.MouseCursorMode(true, false, true);
@@ -51,9 +48,6 @@ namespace UnityXOPS
             }
         }
 
-        /// <summary>
-        /// ESC 키 입력을 처리한다.
-        /// </summary>
         private void Update()
         {
             if (InputManager.Keyboard.escapeKey.wasPressedThisFrame)
@@ -70,7 +64,6 @@ namespace UnityXOPS
                     exitCanvas.SetActive(true);
                     missionCanvas.SetActive(false);
                 }
-                
             }
         }
 

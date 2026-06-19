@@ -12,34 +12,30 @@ namespace UnityXOPS
         [SerializeField]
         private Transform root;
 
-        [SerializeField]
-        private List<XOPSSpriteTextFade> fadeTexts;
+        private List<XOPSSpriteTextFade> m_fadeTexts;
 
         private List<OpeningTextData> m_openingTextData;
         private float m_time;
 
-        /// <summary>
-        /// 오프닝 텍스트 데이터를 기반으로 스프라이트 텍스트를 생성하고 각 페이드 코루틴을 시작한다.
-        /// </summary>
         private void Start()
         {
             m_time = Time.time;
 
             m_openingTextData = GetComponent<OpeningScene>().OpeningData.openingTextData;
-            fadeTexts = new();
+            m_fadeTexts = new();
             foreach (var data in m_openingTextData)
             {
                 var text = FontManager.CreateSpriteText<XOPSSpriteTextFade>(root, data.text, Vector2.zero, Vector2.one, data.position, Vector2.zero, data.size, data.color, data.alignment, data.spacing);
                 text.name = data.text;
-                fadeTexts.Add(text);
+                m_fadeTexts.Add(text);
             }
 
-            for (int i = 0; i < fadeTexts.Count; i++)
-                StartCoroutine(TextRoutine(fadeTexts[i], m_openingTextData[i]));
+            for (int i = 0; i < m_fadeTexts.Count; i++)
+                StartCoroutine(TextRoutine(m_fadeTexts[i], m_openingTextData[i]));
         }
 
         /// <summary>
-        /// 지정된 타이밍에 따라 텍스트를 페이드 인 후 페이드 아웃하는 코루틴.
+        /// 인자 comp 텍스트를 데이터 d의 타이밍에 맞춰 페이드 인 후 페이드 아웃하는 코루틴.
         /// </summary>
         private IEnumerator TextRoutine(XOPSSpriteTextFade comp, OpeningTextData d)
         {

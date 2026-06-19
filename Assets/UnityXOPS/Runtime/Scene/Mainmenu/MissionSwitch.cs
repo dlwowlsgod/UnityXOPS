@@ -17,52 +17,42 @@ namespace UnityXOPS
         [SerializeField]
         private Color32 normalColor, hoverColor, pressedColor, shadowColor;
         [SerializeField]
-        private XOPSSpriteTextButton toAddonButton, toOfficialButton;
-        [SerializeField]
         private Vector2 fontSize;
 
-        /// <summary>
-        /// 탭 전환 버튼 텍스트를 생성하고 클릭 이벤트를 등록한 후 초기 탭 상태를 적용한다.
-        /// </summary>
         private void Start()
         {
-            var officialShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                officialSwitchTransform, k_toAddonText, new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, -1)
-                , Vector2.zero, fontSize, shadowColor, TextAnchor.UpperLeft, 0);
-            var officialButtonText = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
-                officialSwitchTransform, k_toAddonText, new Vector2(0, 1), new Vector2(0, 1), Vector2.zero
-                , new Vector2(340, 25), fontSize, normalColor, TextAnchor.UpperLeft, 0);
-            officialShadowText.name = "officialShadowText";
-            officialButtonText.name = "officialButtonText";
-            officialButtonText.color = officialButtonText.NormalColor = normalColor;
-            officialButtonText.HoverColor = hoverColor;
-            officialButtonText.PressedColor = pressedColor;
-            officialButtonText.MovePixelX = 1f;
-            officialButtonText.MovePixelY = -1f;
-            toAddonButton = officialButtonText;
+            var toAddonButton = CreateSwitchButton(officialSwitchTransform, k_toAddonText, "officialShadowText", "officialButtonText");
+            var toOfficialButton = CreateSwitchButton(addonSwitchTransform, k_toOfficialText, "addonShadowText", "addonButtonText");
 
-            var addonShadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
-                addonSwitchTransform, k_toOfficialText, new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, -1)
-                , Vector2.zero, fontSize, shadowColor, TextAnchor.UpperLeft, 0);
-            var addonButtonText = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
-                addonSwitchTransform, k_toOfficialText, new Vector2(0, 1), new Vector2(0, 1), Vector2.zero
-                , new Vector2(340, 25), fontSize, normalColor, TextAnchor.UpperLeft, 0);
-            addonShadowText.name = "addonShadowText";
-            addonButtonText.name = "addonButtonText";
-            addonButtonText.color = addonButtonText.NormalColor = normalColor;
-            addonButtonText.HoverColor = hoverColor;
-            addonButtonText.PressedColor = pressedColor;
-            addonButtonText.MovePixelX = 1f;
-            addonButtonText.MovePixelY = -1f;
-            toOfficialButton = addonButtonText;
-
-            toAddonButton.OnClick += () => ToAddonSwitchClicked();
-            toOfficialButton.OnClick += () => ToOfficialTextClicked();
+            toAddonButton.OnClick += ToAddonSwitchClicked;
+            toOfficialButton.OnClick += ToOfficialSwitchClicked;
 
             addonSwitchTransform.gameObject.SetActive(false);
 
             if (MainmenuScene.IsAddonTab)
                 ToAddonSwitchClicked();
+        }
+
+        /// <summary>
+        /// 지정 루트(parent)에 그림자+버튼 2겹 탭 전환 텍스트를 생성하고 색/오프셋을 설정해 버튼을 반환한다.
+        /// text=표시 문자열, shadowName/buttonName=각 오브젝트 이름.
+        /// </summary>
+        private XOPSSpriteTextButton CreateSwitchButton(Transform parent, string text, string shadowName, string buttonName)
+        {
+            var shadowText = FontManager.CreateSpriteText<XOPSSpriteText>(
+                parent, text, new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, -1),
+                Vector2.zero, fontSize, shadowColor, TextAnchor.UpperLeft, 0);
+            var buttonText = FontManager.CreateSpriteText<XOPSSpriteTextButton>(
+                parent, text, new Vector2(0, 1), new Vector2(0, 1), Vector2.zero,
+                new Vector2(340, 25), fontSize, normalColor, TextAnchor.UpperLeft, 0);
+            shadowText.name = shadowName;
+            buttonText.name = buttonName;
+            buttonText.color = buttonText.NormalColor = normalColor;
+            buttonText.HoverColor = hoverColor;
+            buttonText.PressedColor = pressedColor;
+            buttonText.MovePixelX = 1f;
+            buttonText.MovePixelY = -1f;
+            return buttonText;
         }
 
         /// <summary>
@@ -82,7 +72,7 @@ namespace UnityXOPS
         /// <summary>
         /// 공식 탭으로 전환하며 관련 UI를 활성화하고 애드온 탭 UI를 비활성화한다.
         /// </summary>
-        private void ToOfficialTextClicked()
+        private void ToOfficialSwitchClicked()
         {
             MainmenuScene.IsAddonTab = false;
 

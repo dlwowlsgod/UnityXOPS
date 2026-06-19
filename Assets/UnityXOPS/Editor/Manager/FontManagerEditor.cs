@@ -12,16 +12,13 @@ namespace UnityXOPSEditor
     [CustomEditor(typeof(FontManager))]
     public class FontManagerEditor : Editor
     {
-        /// <summary>
-        /// 현재 시스템 언어에 해당하는 OS 폰트 경로를 표시하고 폴더 열기 버튼을 렌더링한다.
-        /// </summary>
         public override void OnInspectorGUI()
         {
             string fieldName = Application.systemLanguage switch
             {
-                SystemLanguage.Korean   => "m_koreanOSFontPath",
+                SystemLanguage.Korean => "m_koreanOSFontPath",
                 SystemLanguage.Japanese => "m_japaneseOSFontPath",
-                _                       => "m_englishOSFontPath",
+                _ => "m_englishOSFontPath",
             };
 
             var field = typeof(FontManager).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);

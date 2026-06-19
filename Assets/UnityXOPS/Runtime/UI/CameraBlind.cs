@@ -11,7 +11,7 @@ namespace UnityXOPS
     /// </summary>
     public class CameraBlind : MonoBehaviour
     {
-        // near-clip 모서리 중점을 바깥쪽으로 살짝 확장해 경계에 아슬하게 닿는 케이스를 잡는다.
+        // near-clip 모서리 중점을 바깥쪽으로 살짝 확장하는 여유값 (기본 0 = 미사용).
         private const float k_edgeInflate = 0f;
 
         [SerializeField] private RawImage topImage;
@@ -20,7 +20,7 @@ namespace UnityXOPS
         [SerializeField] private RawImage rightImage;
 
         [SerializeField] private Camera playerCamera;
-        [SerializeField] private bool   enableBlind = true;
+        [SerializeField] private bool enableBlind = true;
 
         private void Update()
         {
@@ -38,34 +38,34 @@ namespace UnityXOPS
                 return;
             }
 
-            Transform t         = playerCamera.transform;
-            Vector3   cameraPos = t.position;
-            Vector3   forward   = t.forward;
-            Vector3   right     = t.right;
-            Vector3   up        = t.up;
+            Transform t = playerCamera.transform;
+            Vector3 cameraPos = t.position;
+            Vector3 forward = t.forward;
+            Vector3 right = t.right;
+            Vector3 up = t.up;
 
-            float near  = playerCamera.nearClipPlane;
+            float near = playerCamera.nearClipPlane;
             float halfH = near * Mathf.Tan(playerCamera.fieldOfView * 0.5f * Mathf.Deg2Rad) + k_edgeInflate;
             float halfW = halfH * playerCamera.aspect;
 
             Vector3 nearCenter = cameraPos + forward * near;
-            Vector3 topMid     = nearCenter + up    *  halfH;
-            Vector3 bottomMid  = nearCenter + up    * -halfH;
-            Vector3 leftMid    = nearCenter + right * -halfW;
-            Vector3 rightMid   = nearCenter + right *  halfW;
+            Vector3 topMid = nearCenter + up * halfH;
+            Vector3 bottomMid = nearCenter + up * -halfH;
+            Vector3 leftMid = nearCenter + right * -halfW;
+            Vector3 rightMid = nearCenter + right * halfW;
 
-            SetActive(topImage,    IsInsideAnyBlock(topMid,    colliders));
+            SetActive(topImage, IsInsideAnyBlock(topMid, colliders));
             SetActive(bottomImage, IsInsideAnyBlock(bottomMid, colliders));
-            SetActive(leftImage,   IsInsideAnyBlock(leftMid,   colliders));
-            SetActive(rightImage,  IsInsideAnyBlock(rightMid,  colliders));
+            SetActive(leftImage, IsInsideAnyBlock(leftMid, colliders));
+            SetActive(rightImage, IsInsideAnyBlock(rightMid, colliders));
         }
 
         private void DisableAll()
         {
-            SetActive(topImage,    false);
+            SetActive(topImage, false);
             SetActive(bottomImage, false);
-            SetActive(leftImage,   false);
-            SetActive(rightImage,  false);
+            SetActive(leftImage, false);
+            SetActive(rightImage, false);
         }
 
         private static bool IsInsideAnyBlock(Vector3 point, IReadOnlyList<Block> colliders)

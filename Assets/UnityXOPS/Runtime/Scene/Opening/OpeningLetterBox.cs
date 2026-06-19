@@ -13,9 +13,6 @@ namespace UnityXOPS
         [SerializeField]
         private RectTransform bottom;
 
-        /// <summary>
-        /// 오프닝 데이터에서 레터박스 높이를 읽어 상단·하단 RectTransform에 적용한다.
-        /// </summary>
         private void Start()
         {
             var height = GetComponent<OpeningScene>().OpeningData.letterBoxHeight;

@@ -12,14 +12,8 @@ namespace UnityXOPSEditor
     {
         private GUIStyle m_boolStyle;
 
-        /// <summary>
-        /// 플레이 중에는 인스펙터를 매 프레임 갱신하도록 true를 반환한다.
-        /// </summary>
         public override bool RequiresConstantRepaint() => Application.isPlaying;
 
-        /// <summary>
-        /// Look·Move 벡터 시각화와 버튼 입력 상태를 인스펙터에 렌더링한다.
-        /// </summary>
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -27,7 +21,7 @@ namespace UnityXOPSEditor
             m_boolStyle ??= new GUIStyle(EditorStyles.label)
             {
                 alignment = TextAnchor.MiddleCenter,
-                fontSize  = 11,
+                fontSize = 11,
             };
 
             DrawVector2Visualizer("Look", serializedObject.FindProperty("lookValue").vector2Value, Color.red);
@@ -36,22 +30,22 @@ namespace UnityXOPSEditor
             EditorGUILayout.Space(8);
 
             EditorGUILayout.BeginHorizontal();
-            DrawBoolLabel("Jump",     serializedObject.FindProperty("jumpValue").boolValue);
-            DrawBoolLabel("Walk",     serializedObject.FindProperty("walkValue").boolValue);
-            DrawBoolLabel("Drop",     serializedObject.FindProperty("dropValue").boolValue);
-            DrawBoolLabel("Fire",     serializedObject.FindProperty("fireValue").boolValue);
+            DrawBoolLabel("Jump", serializedObject.FindProperty("jumpValue").boolValue);
+            DrawBoolLabel("Walk", serializedObject.FindProperty("walkValue").boolValue);
+            DrawBoolLabel("Drop", serializedObject.FindProperty("dropValue").boolValue);
+            DrawBoolLabel("Fire", serializedObject.FindProperty("fireValue").boolValue);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            DrawBoolLabel("Zoom",     serializedObject.FindProperty("zoomValue").boolValue);
+            DrawBoolLabel("Zoom", serializedObject.FindProperty("zoomValue").boolValue);
             DrawBoolLabel("Previous", serializedObject.FindProperty("previousValue").boolValue);
-            DrawBoolLabel("Next",     serializedObject.FindProperty("nextValue").boolValue);
-            DrawBoolLabel("Reload",   serializedObject.FindProperty("reloadValue").boolValue);
+            DrawBoolLabel("Next", serializedObject.FindProperty("nextValue").boolValue);
+            DrawBoolLabel("Reload", serializedObject.FindProperty("reloadValue").boolValue);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            DrawBoolLabel("First",    serializedObject.FindProperty("firstValue").boolValue);
-            DrawBoolLabel("Second",   serializedObject.FindProperty("secondValue").boolValue);
+            DrawBoolLabel("First", serializedObject.FindProperty("firstValue").boolValue);
+            DrawBoolLabel("Second", serializedObject.FindProperty("secondValue").boolValue);
             DrawBoolLabel("Interact", serializedObject.FindProperty("interactValue").boolValue);
             EditorGUILayout.EndHorizontal();
         }
@@ -64,7 +58,7 @@ namespace UnityXOPSEditor
         /// <param name="dotColor">박스 안에 그릴 점의 색상.</param>
         private void DrawVector2Visualizer(string label, Vector2 value, Color dotColor)
         {
-            const float boxSize   = 80f;
+            const float boxSize = 80f;
             const float dotRadius = 4f;
 
             EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
@@ -73,19 +67,19 @@ namespace UnityXOPSEditor
 
             // 배경 및 테두리
             EditorGUI.DrawRect(rect, new Color(0.88f, 0.88f, 0.88f));
-            EditorGUI.DrawRect(new Rect(rect.x,        rect.y,        rect.width, 1),          Color.black);
-            EditorGUI.DrawRect(new Rect(rect.x,        rect.yMax - 1, rect.width, 1),          Color.black);
-            EditorGUI.DrawRect(new Rect(rect.x,        rect.y,        1,          rect.height), Color.black);
-            EditorGUI.DrawRect(new Rect(rect.xMax - 1, rect.y,        1,          rect.height), Color.black);
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, 1), Color.black);
+            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - 1, rect.width, 1), Color.black);
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, 1, rect.height), Color.black);
+            EditorGUI.DrawRect(new Rect(rect.xMax - 1, rect.y, 1, rect.height), Color.black);
 
             // 방향을 유지한 채 -1~1로 정규화
             Vector2 normalized = value.magnitude > 1f ? value.normalized : value;
 
-            float margin  = dotRadius + 2f;
-            float centerX = rect.x + rect.width  * 0.5f;
+            float margin = dotRadius + 2f;
+            float centerX = rect.x + rect.width * 0.5f;
             float centerY = rect.y + rect.height * 0.5f;
-            float dotX    = centerX + normalized.x * (rect.width  * 0.5f - margin);
-            float dotY    = centerY - normalized.y * (rect.height * 0.5f - margin); // Y축 반전
+            float dotX = centerX + normalized.x * (rect.width * 0.5f - margin);
+            float dotY = centerY - normalized.y * (rect.height * 0.5f - margin); // Y축 반전
 
             Handles.BeginGUI();
             Handles.color = dotColor;
@@ -104,10 +98,10 @@ namespace UnityXOPSEditor
         {
             // 다크 모드: 박스는 밝게(반대), 글자는 어둡게(같음)
             // 라이트 모드: 박스는 어둡게(반대), 글자는 밝게(같음)
-            bool   isDark      = EditorGUIUtility.isProSkin;
-            Color  boxColor    = isDark ? new Color(0.75f, 0.75f, 0.75f) : new Color(0.25f, 0.25f, 0.25f);
-            Color  textColor   = isDark ? Color.black                    : Color.white;
-            Color  outlineColor = value ? Color.green                    : Color.black;
+            bool isDark = EditorGUIUtility.isProSkin;
+            Color boxColor = isDark ? new Color(0.75f, 0.75f, 0.75f) : new Color(0.25f, 0.25f, 0.25f);
+            Color textColor = isDark ? Color.black : Color.white;
+            Color outlineColor = value ? Color.green : Color.black;
 
             m_boolStyle.normal.textColor = m_boolStyle.hover.textColor = textColor;
 

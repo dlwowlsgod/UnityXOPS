@@ -13,9 +13,9 @@ namespace UnityXOPS
         private Human m_player;
         private XOPSSpriteText m_stateText, m_hpText, m_ammoText, m_weaponNameText, m_simpleWeaponNameText;
 
-        private float  m_lastHP          = float.NaN;
-        private int    m_lastMagazine    = -1;
-        private int    m_lastReserveAmmo = -1;
+        private float m_lastHP = float.NaN;
+        private int m_lastMagazine = -1;
+        private int m_lastReserveAmmo = -1;
         private string m_lastWeaponName;
 
         private void Start()
@@ -61,10 +61,10 @@ namespace UnityXOPS
             FontManager.CreateSpriteText<XOPSSpriteText>(
                 change, "CHANGING", center, center, new Vector2(0, -60), new Vector2(0, 0), reloadChargeFontSize, Color.white, TextAnchor.MiddleCenter, 0f);
 
-            m_lastHP          = m_player.HP;
-            m_lastMagazine    = m_player.CurrentWeapon.CurrentMagazine;
+            m_lastHP = m_player.HP;
+            m_lastMagazine = m_player.CurrentWeapon.CurrentMagazine;
             m_lastReserveAmmo = m_player.CurrentWeapon.ReserveAmmo;
-            m_lastWeaponName  = m_player.CurrentWeapon.WeaponData.name;
+            m_lastWeaponName = m_player.CurrentWeapon.WeaponData.name;
 
             simpleUI.SetActive(false);
         }
@@ -78,10 +78,10 @@ namespace UnityXOPS
             normalUI.SetActive(!toSimple);
             simpleUI.SetActive(toSimple);
 
-            m_lastHP          = float.NaN;
-            m_lastMagazine    = -1;
+            m_lastHP = float.NaN;
+            m_lastMagazine = -1;
             m_lastReserveAmmo = -1;
-            m_lastWeaponName  = null;
+            m_lastWeaponName = null;
         }
 
         private void Update()
@@ -94,10 +94,10 @@ namespace UnityXOPS
             {
                 m_player = player;
                 // 교체 시 캐시 무효화 → 새 Player 의 HP/탄/무기명을 즉시 다시 칠함 (텍스트 오브젝트는 Start 생성분 그대로 사용).
-                m_lastHP          = float.NaN;
-                m_lastMagazine    = -1;
+                m_lastHP = float.NaN;
+                m_lastMagazine = -1;
                 m_lastReserveAmmo = -1;
-                m_lastWeaponName  = null;
+                m_lastWeaponName = null;
             }
 
             if (normalUI.activeSelf)
@@ -105,32 +105,32 @@ namespace UnityXOPS
                 float hp = m_player.HP;
                 if (hp != m_lastHP)
                 {
-                    Color32 stateColor    = SetStateColor(hp);
+                    Color32 stateColor = SetStateColor(hp);
                     m_stateText.FontColor = stateColor;
-                    m_hpText.FontColor    = stateColor;
-                    m_hpText.Text         = SetHPText(hp);
+                    m_hpText.FontColor = stateColor;
+                    m_hpText.Text = SetHPText(hp);
 
                     Vector2 hpPos = SetHPPosition(hp);
                     m_hpText.rectTransform.anchoredPosition = hpPos;
-                    m_hpText.rectTransform.sizeDelta        = new Vector2(hpPos.x * 5, hpPos.y);
+                    m_hpText.rectTransform.sizeDelta = new Vector2(hpPos.x * 5, hpPos.y);
                     m_lastHP = hp;
                 }
 
-                Weapon w   = m_player.CurrentWeapon;
-                int    mag = w.CurrentMagazine;
-                int    res = w.ReserveAmmo;
+                Weapon w = m_player.CurrentWeapon;
+                int mag = w.CurrentMagazine;
+                int res = w.ReserveAmmo;
                 if (mag != m_lastMagazine || res != m_lastReserveAmmo)
                 {
                     string reserveStr = res > 999 ? "999+" : res.ToString();
-                    m_ammoText.Text   = $"\u00BB{mag} \u00BA{reserveStr}";
-                    m_lastMagazine    = mag;
+                    m_ammoText.Text = $"\u00BB{mag} \u00BA{reserveStr}";
+                    m_lastMagazine = mag;
                     m_lastReserveAmmo = res;
                 }
 
                 string name = w.WeaponData.name;
                 if (name != m_lastWeaponName)
                 {
-                    m_weaponNameText.Text                    = name;
+                    m_weaponNameText.Text = name;
                     m_weaponNameText.rectTransform.sizeDelta = new Vector2(25 * name.Length, 98);
                     m_lastWeaponName = name;
                 }
@@ -142,10 +142,10 @@ namespace UnityXOPS
                 if (hp != m_lastHP)
                 {
                     Color32 stateColor = SetStateColor(hp);
-                    simpleHPLeft.color  = stateColor;
+                    simpleHPLeft.color = stateColor;
                     simpleHPRight.color = stateColor;
-                    simpleHPUp.color    = stateColor;
-                    simpleHPDown.color  = stateColor;
+                    simpleHPUp.color = stateColor;
+                    simpleHPDown.color = stateColor;
 
                     m_lastHP = hp;
                 }
@@ -154,7 +154,7 @@ namespace UnityXOPS
                 string name = w.WeaponData.name;
                 if (name != m_lastWeaponName)
                 {
-                    m_simpleWeaponNameText.Text                    = name;
+                    m_simpleWeaponNameText.Text = name;
                     m_simpleWeaponNameText.rectTransform.sizeDelta = new Vector2(25 * name.Length, 98);
                     m_lastWeaponName = name;
                 }
@@ -164,6 +164,9 @@ namespace UnityXOPS
             change.gameObject.SetActive(m_player.IsSwitchingWeapon);
         }
 
+        /// <summary>
+        /// HP 값을 상태 색(녹→황→적)으로 변환한다.
+        /// </summary>
         private Color32 SetStateColor(float hp)
         {
             return hp switch
@@ -175,6 +178,9 @@ namespace UnityXOPS
             };
         }
 
+        /// <summary>
+        /// HP 값을 상태 텍스트(FINE/CAUTION/DANGER/DEAD)로 변환한다.
+        /// </summary>
         private string SetHPText(float hp)
         {
             return hp switch
@@ -186,6 +192,9 @@ namespace UnityXOPS
             };
         }
 
+        /// <summary>
+        /// HP 상태 텍스트 길이에 맞춘 HP 텍스트 anchoredPosition 을 반환한다.
+        /// </summary>
         private Vector2 SetHPPosition(float hp)
         {
             return hp switch
@@ -197,6 +206,9 @@ namespace UnityXOPS
             };
         }
 
+        /// <summary>
+        /// 무기 이름이 limit 자를 넘으면 글자 폭만 비율로 축소한 폰트 크기를 반환한다(높이 유지). 이하면 baseFontSize 그대로.
+        /// </summary>
         private Vector2 SetWeaponNameFontSize(string name, int limit, Vector2 baseFontSize)
         {
             if (name.Length <= limit)

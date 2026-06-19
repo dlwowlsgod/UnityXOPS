@@ -11,7 +11,7 @@ namespace UnityXOPS
     [Serializable]
     public class EffectData
     {
-        public string              name;
+        public string name;
         public List<EffectEmitter> emitters;
     }
 
@@ -22,35 +22,35 @@ namespace UnityXOPS
     [Serializable]
     public class EffectEmitter
     {
-        public int          textureIndex;             // EffectGeneralData.texturePaths 인덱스
-        public EffectFlags  flags;                    // 빌보드/맵 충돌 동작 플래그
-        public int          spawnCount;               // 같은 emitter 를 N 번 발사 (랜덤 시드만 다름)
+        public int textureIndex; // EffectGeneralData.texturePaths 인덱스
+        public EffectFlags flags; // 빌보드/맵 충돌 동작 플래그
+        public int spawnCount; // 같은 emitter 를 N 번 발사 (랜덤 시드만 다름)
         // >0 이면 개수 = floor(트리거값 × 이 값) — spawnCount 무시. 원본 혈흔 분사 damage/10 대응(0.1).
         // 트리거값(데미지)이 0 이면 0개 → 폭발 혈흔(flowing=false)은 메인만, 분사 없음.
-        public float        countPerTrigger;
+        public float countPerTrigger;
 
-        public Vector3 positionOffset;                // 트리거 좌표 기준
-        public Vector3 positionRandomRange;           // ±range each axis
+        public Vector3 positionOffset; // 트리거 좌표 기준
+        public Vector3 positionRandomRange; // ±range each axis
 
         public Vector3 velocity;
         public Vector3 velocityRandomRange;
-        public float   gravityY;                      // m/s² (음수=낙하). 원본 addmove_y 대응
+        public float gravityY; // m/s² (음수=낙하). 원본 addmove_y 대응
 
         public float rotationDeg;
-        public float rotationRandomRange;             // ±deg
-        public float rotationRateDeg;                 // deg/sec
-        public float rotationRateRandomRange;         // ±deg/sec
+        public float rotationRandomRange; // ±deg
+        public float rotationRateDeg; // deg/sec
+        public float rotationRateRandomRange; // ±deg/sec
 
         public float size;
         public float sizeRandomRange;
-        public float sizeRate;                        // size/sec (수명 동안 선형 변화)
+        public float sizeRate; // size/sec (수명 동안 선형 변화)
 
-        public float alpha;                           // 0~1
-        public float alphaRate;                       // /sec (페이드아웃은 음수)
-        public float brightness;                      // 0~1 (원본 0~255 정규화)
-        public float brightnessRate;                  // /sec
+        public float alpha; // 0~1
+        public float alphaRate; // /sec (페이드아웃은 음수)
+        public float brightness; // 0~1 (원본 0~255 정규화)
+        public float brightnessRate; // /sec
 
-        public float lifetime;                        // sec
+        public float lifetime; // sec
     }
 
     /// <summary>
@@ -60,8 +60,8 @@ namespace UnityXOPS
     [Flags]
     public enum EffectFlags
     {
-        None        = 0,
-        NoBillboard = 1 << 0,                         // 빌보드 X — 벽 부착 데칼용
-        CollideMap  = 1 << 1,                         // 맵 충돌 검사 — 충돌 시 NoBillboard 데칼이 자동 생성됨 (혈흔)
+        None = 0,
+        NoBillboard = 1 << 0, // 빌보드 X — 벽 부착 데칼용
+        CollideMap = 1 << 1, // 맵 충돌 검사 — 충돌 시 NoBillboard 데칼이 자동 생성됨 (혈흔)
     }
 }

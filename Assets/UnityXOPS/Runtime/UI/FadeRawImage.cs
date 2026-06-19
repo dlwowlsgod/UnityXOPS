@@ -10,15 +10,12 @@ namespace UnityXOPS
     [RequireComponent(typeof(RawImage))]
     public class FadeRawImage : MonoBehaviour
     {
-        private RawImage _rawImage;
+        private RawImage m_rawImage;
 
-        /// <summary>
-        /// RawImage 참조를 캐싱하고 초기 색상을 검은색으로 설정한다.
-        /// </summary>
         private void Awake()
         {
-            _rawImage = GetComponent<RawImage>();
-            _rawImage.color = Color.black;
+            m_rawImage = GetComponent<RawImage>();
+            m_rawImage.color = Color.black;
         }
 
         /// <summary>
@@ -26,8 +23,8 @@ namespace UnityXOPS
         /// </summary>
         public void SetAlphaZero()
         {
-            var c = _rawImage.color;
-            _rawImage.color = new Color(c.r, c.g, c.b, 0f);
+            var c = m_rawImage.color;
+            m_rawImage.color = new Color(c.r, c.g, c.b, 0f);
         }
 
         /// <summary>
@@ -35,8 +32,8 @@ namespace UnityXOPS
         /// </summary>
         public void SetAlphaOne()
         {
-            var c = _rawImage.color;
-            _rawImage.color = new Color(c.r, c.g, c.b, 1f);
+            var c = m_rawImage.color;
+            m_rawImage.color = new Color(c.r, c.g, c.b, 1f);
         }
 
         /// <summary>
@@ -62,21 +59,21 @@ namespace UnityXOPS
         /// </summary>
         private IEnumerator FadeRoutine(float from, float to, float duration)
         {
-            var c = _rawImage.color;
-            _rawImage.color = new Color(c.r, c.g, c.b, from);
+            var c = m_rawImage.color;
+            m_rawImage.color = new Color(c.r, c.g, c.b, from);
 
             float elapsed = 0f;
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
-                c = _rawImage.color;
-                _rawImage.color = new Color(c.r, c.g, c.b, Mathf.Lerp(from, to, t));
+                c = m_rawImage.color;
+                m_rawImage.color = new Color(c.r, c.g, c.b, Mathf.Lerp(from, to, t));
                 yield return null;
             }
 
-            c = _rawImage.color;
-            _rawImage.color = new Color(c.r, c.g, c.b, to);
+            c = m_rawImage.color;
+            m_rawImage.color = new Color(c.r, c.g, c.b, to);
         }
     }
 }

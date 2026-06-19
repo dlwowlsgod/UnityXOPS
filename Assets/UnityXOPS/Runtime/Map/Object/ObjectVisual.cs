@@ -28,7 +28,7 @@ namespace UnityXOPS
             for (int i = 0; i < modelData.textures.Count; i++)
             {
                 string texturePath = modelData.textures[i];
-                string fullPath    = SafePath.Combine(Application.streamingAssetsPath, texturePath);
+                string fullPath = SafePath.Combine(Application.streamingAssetsPath, texturePath);
 
                 if (MapLoader.Instance.ObjectMaterialCache.TryGetValue(fullPath, out var cached))
                 {
@@ -46,7 +46,7 @@ namespace UnityXOPS
 
                 var material = new Material(MaterialManager.Instance.MainMaterial);
                 material.mainTexture = texture;
-                material.name        = texture.name;
+                material.name = texture.name;
 
                 MapLoader.Instance.ObjectMaterialCache[fullPath] = material;
                 m_objectMaterials.Add(material);

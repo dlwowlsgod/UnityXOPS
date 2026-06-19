@@ -19,9 +19,6 @@ namespace UnityXOPS
         private float briefingDuration, briefingStartAlpha, briefingEndAlpha, 
             clickToNextDuration, clickToNextStartAlpha, clickToNextEndAlpha;
 
-        /// <summary>
-        /// 브리핑 및 클릭 유도 텍스트를 생성하고 펄스 애니메이션 코루틴을 시작한다.
-        /// </summary>
         private void Start()
         {
             var briefingText = FontManager.CreateSpriteText<XOPSSpriteTextPulse>(
@@ -40,15 +37,16 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// 한 프레임 대기 후 브리핑 텍스트 펄스를 시작하는 코루틴.
+        /// 한 프레임 대기 후 인자 text 스프라이트에 브리핑 펄스를 시작하는 코루틴.
         /// </summary>
         private IEnumerator PulseRoutine(XOPSSpriteTextPulse text)
         {
             yield return null;
             text.StartPulse(briefingDuration, briefingStartAlpha, briefingEndAlpha);
         }
+
         /// <summary>
-        /// 한 프레임 대기 후 클릭 유도 텍스트 스프레드 펄스를 시작하는 코루틴.
+        /// 한 프레임 대기 후 인자 text 스프라이트에 클릭 유도 스프레드 펄스를 시작하는 코루틴.
         /// </summary>
         private IEnumerator PulseSpreadRoutine(XOPSSpriteTextPulseSpread text)
         {

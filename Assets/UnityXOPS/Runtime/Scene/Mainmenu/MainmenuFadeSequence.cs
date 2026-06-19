@@ -16,9 +16,6 @@ namespace UnityXOPS
 
         private float m_time;
 
-        /// <summary>
-        /// 페이드 및 클릭 허용 코루틴을 시작한다.
-        /// </summary>
         private void Start()
         {
             m_time = Time.time;
@@ -33,7 +30,7 @@ namespace UnityXOPS
         {
             fadeRawImage.SetAlphaOne();
 
-            yield return new WaitUntil(() => Time.time - m_time >= 0);
+            yield return null;
             fadeRawImage.FadeIn(fadeTime);
         }
 

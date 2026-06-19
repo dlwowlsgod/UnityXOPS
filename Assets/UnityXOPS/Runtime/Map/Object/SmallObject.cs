@@ -12,40 +12,40 @@ namespace UnityXOPS
     public class SmallObject : MonoBehaviour
     {
         [SerializeField]
-        private ObjectVisual   objectVisual;
+        private ObjectVisual objectVisual;
         [SerializeField]
         private ObjectCollider objectCollider;
-        public ObjectVisual   ObjectVisual   => objectVisual;
+        public ObjectVisual ObjectVisual => objectVisual;
         public ObjectCollider ObjectCollider => objectCollider;
 
-        private int                m_objectIndex;
-        private ObjectData         m_objectData;
-        private ObjectModelData    m_objectModelData;
+        private int m_objectIndex;
+        private ObjectData m_objectData;
+        private ObjectModelData m_objectModelData;
         private ObjectColliderData m_objectColliderData;
-        public  int                ObjectIndex        => m_objectIndex;
-        public  ObjectData         ObjectData         => m_objectData;
-        public  ObjectModelData    ObjectModelData    => m_objectModelData;
-        public  ObjectColliderData ObjectColliderData => m_objectColliderData;
+        public int ObjectIndex => m_objectIndex;
+        public ObjectData ObjectData => m_objectData;
+        public ObjectModelData ObjectModelData => m_objectModelData;
+        public ObjectColliderData ObjectColliderData => m_objectColliderData;
 
         private float m_hp;
-        private bool  m_isDestroyed;
-        private int   m_identifier;
-        public  float Hp           => m_hp;
-        public  bool  IsDestroyed  => m_isDestroyed;
-        public  int   Identifier   => m_identifier;
+        private bool m_isDestroyed;
+        private int m_identifier;
+        public float Hp => m_hp;
+        public bool IsDestroyed => m_isDestroyed;
+        public int Identifier => m_identifier;
 
         // 파괴 점프 — 원본 smallobject::Destruction/ProcessObject (object.cpp:2684-2751) 의 프레임 기반 물리를 시간 기반으로 변환.
         // 원본: move_rx=jump×0.04243(수평/frame), pos_y+=jump_cnt×0.1(수직, jump_cnt 매 프레임 -1 → 등가속 낙하), 34프레임(~1.02s) 후 소멸. 바운스/맵충돌 없음.
         // 좌표 ×0.1, 33.333fps 환산: 수평/초기상승 = ×0.1×33.333, 중력 = ×0.1×33.333².
-        private const float k_destroyFps          = 33.3333f;
-        private const float k_destroyHorizPerJump = 0.04243f * 0.1f * k_destroyFps;             // jump 당 수평 속도 (m/s)
-        private const float k_destroyVertPerJump  = 0.1f     * 0.1f * k_destroyFps;             // jump 당 초기 상승 속도 (m/s)
-        private const float k_destroyGravity      = 0.1f     * 0.1f * k_destroyFps * k_destroyFps; // 중력 (m/s²)
-        private const float k_destroyLifetime     = 34f / k_destroyFps;                         // 소멸 시간 (원본 cnt > 33)
+        private const float k_destroyFps = 33.3333f;
+        private const float k_destroyHorizPerJump = 0.04243f * 0.1f * k_destroyFps; // jump 당 수평 속도 (m/s)
+        private const float k_destroyVertPerJump = 0.1f * 0.1f * k_destroyFps; // jump 당 초기 상승 속도 (m/s)
+        private const float k_destroyGravity = 0.1f * 0.1f * k_destroyFps * k_destroyFps; // 중력 (m/s²)
+        private const float k_destroyLifetime = 34f / k_destroyFps; // 소멸 시간 (원본 cnt > 33)
 
         private Vector3 m_destroyVelocity;
-        private Vector3 m_destroyAngularVel;  // (x, y) deg/s
-        private float   m_destroyTimer;
+        private Vector3 m_destroyAngularVel; // (x, y) deg/s
+        private float m_destroyTimer;
 
         /// <summary>
         /// objectIndex 로 ObjectData/ObjectModelData/ObjectColliderData 를 조회해 Visual/Collider 컴포넌트를 빌드하고 HP 를 초기화한다.
@@ -64,8 +64,8 @@ namespace UnityXOPS
             }
 
             m_objectIndex = objectIndex;
-            m_objectData  = op.objectData[objectIndex];
-            m_identifier  = identifier;
+            m_objectData = op.objectData[objectIndex];
+            m_identifier = identifier;
 
             int modelIndex = m_objectData.modelIndex;
             if (modelIndex >= 0 && modelIndex < op.objectModelData.Count)
@@ -79,7 +79,7 @@ namespace UnityXOPS
                 m_objectColliderData = op.objectColliderData[colliderIndex];
             }
 
-            m_hp          = m_objectData.hp;
+            m_hp = m_objectData.hp;
             m_isDestroyed = false;
 
             if (m_objectModelData != null)
@@ -115,19 +115,19 @@ namespace UnityXOPS
             float groundY = origin.y - hitDist;
 
             // 다중 콜라이더 중 local y 최저점을 가진 shape 를 찾는다. shape 회전은 identity, colliderRoot Y -180° 회전은 y 축에 영향 없음.
-            float         lowestBottomY = 0f;
-            ColliderShape lowestShape   = null;
+            float lowestBottomY = 0f;
+            ColliderShape lowestShape = null;
 
             if (m_objectColliderData != null && m_objectColliderData.shapes != null)
             {
                 for (int i = 0; i < m_objectColliderData.shapes.Count; i++)
                 {
-                    ColliderShape shape   = m_objectColliderData.shapes[i];
-                    float         bottomY = shape.center.y - GetShapeHalfExtentY(shape);
+                    ColliderShape shape = m_objectColliderData.shapes[i];
+                    float bottomY = shape.center.y - GetShapeHalfExtentY(shape);
                     if (lowestShape == null || bottomY < lowestBottomY)
                     {
                         lowestBottomY = bottomY;
-                        lowestShape   = shape;
+                        lowestShape = shape;
                     }
                 }
             }
@@ -162,9 +162,9 @@ namespace UnityXOPS
                     return shape.size.y * 0.5f;
 
                 case ColliderShapeType.Capsule:
-                    int   direction = (int)shape.size.z;
-                    float radius    = shape.size.x;
-                    float height    = shape.size.y;
+                    int direction = (int)shape.size.z;
+                    float radius = shape.size.x;
+                    float height = shape.size.y;
                     if (direction == 1)
                     {
                         return Mathf.Max(height, 2f * radius) * 0.5f;
@@ -230,8 +230,8 @@ namespace UnityXOPS
             int jump = m_objectData != null ? m_objectData.jump : 0;
 
             float dirRad = UnityEngine.Random.Range(0, 36) * 10f * Mathf.Deg2Rad;  // 원본 10° × GetRand(36)
-            float horiz  = jump * k_destroyHorizPerJump;
-            float vert   = jump * k_destroyVertPerJump;
+            float horiz = jump * k_destroyHorizPerJump;
+            float vert = jump * k_destroyVertPerJump;
 
             // 원본: pos_x += cos(jump_rx)*move_rx, pos_z += sin(jump_rx)*move_rx
             m_destroyVelocity = new Vector3(Mathf.Cos(dirRad) * horiz, vert, Mathf.Sin(dirRad) * horiz);
@@ -245,10 +245,6 @@ namespace UnityXOPS
             m_destroyTimer = k_destroyLifetime;
         }
 
-        /// <summary>
-        /// 파괴 점프 물리 진행 — 원본 smallobject::ProcessObject (object.cpp:2713-2751) 의 시간 기반 변환.
-        /// 등가속 포물선 + 회전 누적, 맵 충돌/바운스 없음, 수명 종료 시 비활성화 (원본 EnableFlag=false).
-        /// </summary>
         private void Update()
         {
             if (!m_isDestroyed) return;
@@ -256,7 +252,7 @@ namespace UnityXOPS
             float dt = Time.deltaTime;
 
             m_destroyVelocity.y -= k_destroyGravity * dt;
-            transform.position  += m_destroyVelocity * dt;
+            transform.position += m_destroyVelocity * dt;
             transform.Rotate(m_destroyAngularVel.x * dt, m_destroyAngularVel.y * dt, 0f, Space.Self);
 
             m_destroyTimer -= dt;

@@ -40,13 +40,7 @@ namespace UnityXOPS
 
             if (!inputLocked && InputManager.Keyboard.escapeKey.wasPressedThisFrame)
             {
-                BulletManager.Instance.ClearPool();
-                SoundManager.Instance.ClearPool();
-                EffectManager.Instance.ClearPool();
-                MapLoader.UnloadBlockData();
-                MapLoader.UnloadPointData();
-                MapLoader.UnloadSkyData();
-                MapLoader.UnloadMissionData();
+                ClearPoolsAndUnloadMap(true);
                 HumanController.TickEnabled = false;
                 // StopMission 은 EventManager 가 sceneUnloaded 로 자동 처리 (어떤 이탈 경로든 누수 없음).
                 Camera.main.gameObject.SetActive(false);
@@ -87,13 +81,7 @@ namespace UnityXOPS
         /// </summary>
         private void LoadResult()
         {
-            BulletManager.Instance.ClearPool();
-            SoundManager.Instance.ClearPool();
-            EffectManager.Instance.ClearPool();
-            MapLoader.UnloadBlockData();
-            MapLoader.UnloadPointData();  // 사람/무기/소품 파괴 + m_humans 비움 (통계 m_stats 는 유지)
-            MapLoader.UnloadSkyData();
-            // UnloadMissionData 는 호출 안 함 — Result 가 미션 이름 등 표시에 사용.
+            ClearPoolsAndUnloadMap(false); // UnloadMissionData 는 호출 안 함 — Result 가 미션 이름 표시에 사용 (통계 m_stats 는 유지).
             HumanController.TickEnabled = false;
             // StopMission 은 EventManager 가 sceneUnloaded 로 자동 처리.
             SceneManager.LoadScene(5);
@@ -111,12 +99,7 @@ namespace UnityXOPS
             if (main != null && main.transform.parent != null) main.transform.SetParent(null, true);
 
             // 풀 회수 + 현재 맵 언로드 (미션 데이터는 유지 — 같은 미션 경로/스카이 재사용).
-            BulletManager.Instance.ClearPool();
-            SoundManager.Instance.ClearPool();
-            EffectManager.Instance.ClearPool();
-            MapLoader.UnloadBlockData();
-            MapLoader.UnloadPointData();   // 사람/무기/소품 파괴 + m_humans 비움
-            MapLoader.UnloadSkyData();
+            ClearPoolsAndUnloadMap(false);
 
             // AI/충돌 매니저 캐시 초기화 — 동기 재로드라 "Humans 빔" 자가정리 타이밍이 없어 명시적으로 비운다(stale brain/참조 방지).
             AIController ai = FindFirstObjectByType<AIController>();
@@ -135,13 +118,27 @@ namespace UnityXOPS
             m_inputLockTimer = k_inputLockSeconds; // 재시작 직후도 1초 잠금 (F12 연타·잔여 입력 방지)
 
             // 종료 시퀀스 상태 리셋 — 검은 화면 다시 페이드 인 + 이전 종료 텍스트 제거 (안 하면 재시작해도 화면이 검은 채 + 종료텍스트 잔존).
-            m_missionEnded  = false;
+            m_missionEnded = false;
             m_resultLoading = false;
             if (m_fadeSequence != null) m_fadeSequence.ResetForRestart();
         }
 
         /// <summary>
-        /// F1 = 1인칭, F2 = 3인칭(좌), F3 = 3인칭(우). 사망 중에는 입력 무시 (사망 카메라 유지).
+        /// 풀(탄/사운드/이펙트)을 회수하고 맵 시각물(블록/포인트/스카이)을 언로드한다. unloadMission=true면 미션 데이터까지 언로드.
+        /// </summary>
+        private void ClearPoolsAndUnloadMap(bool unloadMission)
+        {
+            BulletManager.Instance.ClearPool();
+            SoundManager.Instance.ClearPool();
+            EffectManager.Instance.ClearPool();
+            MapLoader.UnloadBlockData();
+            MapLoader.UnloadPointData(); // 사람/무기/소품 파괴 + m_humans 비움
+            MapLoader.UnloadSkyData();
+            if (unloadMission) MapLoader.UnloadMissionData();
+        }
+
+        /// <summary>
+        /// F2 = 1인칭, F1 = 3인칭(좌), F3 = 3인칭(우). 사망 중에는 입력 무시 (사망 카메라 유지).
         /// </summary>
         private void UpdateViewModeInput()
         {
@@ -150,7 +147,7 @@ namespace UnityXOPS
             Human player = MapLoader.Player;
             if (player == null || !player.Alive) return;
 
-            if      (InputManager.Keyboard.f2Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.FirstPerson);
+            if (InputManager.Keyboard.f2Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.FirstPerson);
             else if (InputManager.Keyboard.f1Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.ThirdPersonLeft);
             else if (InputManager.Keyboard.f3Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.ThirdPersonRight);
         }
@@ -166,8 +163,8 @@ namespace UnityXOPS
             Camera main = Camera.main;
             if (main == null) return;
 
-            float     height = DataManager.Instance.HumanParameterData.humanGeneralData.cameraAttachPosition;
-            Transform tr     = main.transform;
+            float height = DataManager.Instance.HumanParameterData.humanGeneralData.cameraAttachPosition;
+            Transform tr = main.transform;
 
             if (tr.parent != null) tr.SetParent(null, true);
             tr.SetPositionAndRotation(new Vector3(0f, height, 0f), Quaternion.identity);

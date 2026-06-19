@@ -10,6 +10,6 @@ namespace UnityXOPS
     public class EffectParameterData
     {
         public EffectGeneralData effectGeneralData;
-        public List<EffectData>  effectData;
+        public List<EffectData> effectData;
     }
 }

@@ -19,9 +19,6 @@ namespace UnityXOPS
         private float m_time;
         private float m_endTime = 0;
 
-        /// <summary>
-        /// 오프닝 데이터를 로드하고 맵 및 스카이 데이터를 초기화한다.
-        /// </summary>
         private void Start()
         {
             m_time = Time.time;
@@ -42,14 +39,11 @@ namespace UnityXOPS
             m_endTime = openingData.openingFadeData.fadeOutEnd + 1.1f;
         }
 
-        /// <summary>
-        /// 오프닝 종료 시간 초과 또는 입력 감지 시 씬을 전환한다.
-        /// </summary>
         private void Update()
         {
             float t = Time.time - m_time;
             bool pressed = InputManager.Keyboard.escapeKey.wasPressedThisFrame || InputManager.Mouse.leftButton.wasPressedThisFrame;
-            
+
             if (t > m_endTime || pressed)
             {
                 BulletManager.Instance.ClearPool();

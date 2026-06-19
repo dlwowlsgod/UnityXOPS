@@ -27,8 +27,8 @@ namespace UnityXOPS
         private Human m_player;
 
         private Camera m_camera;
-        private float  m_baseFov;
-        private bool   m_baseFovCaptured;
+        private float m_baseFov;
+        private bool m_baseFovCaptured;
 
         public bool HasPlayer => m_player != null;
 
@@ -51,8 +51,8 @@ namespace UnityXOPS
             // 좌우 오차 글리프를 crosshairErrorRoot 중앙에 앵커(중앙 기준 ±오프셋용). 실제 위치는 Update 에서 ±ErrorRange 로 갱신.
             // 원본 gamemain.cpp:3195-3198 — 0xBD("ｽ")=왼쪽, 0xBE("ｾ")=오른쪽, 32×32, 흰색 alpha 0.5, 수직 화면 중앙 정렬.
             Vector2 center = new Vector2(0.5f, 0.5f);
-            Vector2 size   = new Vector2(32f, 32f);
-            Color   col    = new Color(1f, 1f, 1f, 0.5f);
+            Vector2 size = new Vector2(32f, 32f);
+            Color col = new Color(1f, 1f, 1f, 0.5f);
 
             m_crosshairLeft = FontManager.CreateSpriteText<XOPSSpriteText>(
                 crosshairErrorRoot, "½", center, center, Vector2.zero, size, size, col, TextAnchor.MiddleCenter, 0f);
@@ -81,15 +81,15 @@ namespace UnityXOPS
 
             // 두 글리프를 화면 중앙에서 좌우로 ±ErrorRange (640×480 기준 픽셀 1:1). y 오프셋은 0 (수직 중앙 정렬).
             float er = ErrorRange;
-            m_crosshairLeft .rectTransform.anchoredPosition = new Vector2(-er, 0f);
-            m_crosshairRight.rectTransform.anchoredPosition = new Vector2( er, 0f);
+            m_crosshairLeft.rectTransform.anchoredPosition = new Vector2(-er, 0f);
+            m_crosshairRight.rectTransform.anchoredPosition = new Vector2(er, 0f);
         }
 
         // 스코프 오버레이 텍스처/표시 + 카메라 FOV + 레티클(인덱스 일치분만)을 현재 스코프 상태에 맞춰 적용.
         private void ApplyScope()
         {
-            bool      scoping = m_player != null && m_player.IsScoping;
-            ScopeData scope   = scoping ? m_player.ActiveScope : null;
+            bool scoping = m_player != null && m_player.IsScoping;
+            ScopeData scope = scoping ? m_player.ActiveScope : null;
 
             if (scopeImage != null)
             {
@@ -101,23 +101,23 @@ namespace UnityXOPS
                 scopeRoot.gameObject.SetActive(scoping && scope != null);
 
                 float aspect = Screen.width / (float)Screen.height;
-                
+
                 if (aspect >= 1.3333333333f)
                 {
                     // 가로가 더 긺 → 스코프는 높이 기준 4:3(폭=높이×4/3) 중앙, 남는 좌우 갭을 검정 박스로.
                     float gap = Mathf.Max(0f, (Screen.width - Screen.height * (4f / 3f)) / 2f);
-                    leftBox.sizeDelta  = new Vector2(gap, leftBox.sizeDelta.y);
+                    leftBox.sizeDelta = new Vector2(gap, leftBox.sizeDelta.y);
                     rightBox.sizeDelta = new Vector2(gap, rightBox.sizeDelta.y);
-                    upBox.sizeDelta    = new Vector2(upBox.sizeDelta.x, 0f);     // 반대 쌍 리셋 (가로↔세로 전환 잔상 방지)
-                    downBox.sizeDelta  = new Vector2(downBox.sizeDelta.x, 0f);
+                    upBox.sizeDelta = new Vector2(upBox.sizeDelta.x, 0f); // 반대 쌍 리셋 (가로↔세로 전환 잔상 방지)
+                    downBox.sizeDelta = new Vector2(downBox.sizeDelta.x, 0f);
                 }
                 else
                 {
                     // 세로가 더 긺 → 스코프는 폭 기준 4:3(높이=폭×3/4) 중앙, 남는 상하 갭을 검정 박스로.
                     float gap = Mathf.Max(0f, (Screen.height - Screen.width * (3f / 4f)) / 2f);
-                    upBox.sizeDelta    = new Vector2(upBox.sizeDelta.x, gap);
-                    downBox.sizeDelta  = new Vector2(downBox.sizeDelta.x, gap);
-                    leftBox.sizeDelta  = new Vector2(0f, leftBox.sizeDelta.y);   // 반대 쌍 리셋
+                    upBox.sizeDelta = new Vector2(upBox.sizeDelta.x, gap);
+                    downBox.sizeDelta = new Vector2(downBox.sizeDelta.x, gap);
+                    leftBox.sizeDelta = new Vector2(0f, leftBox.sizeDelta.y); // 반대 쌍 리셋
                     rightBox.sizeDelta = new Vector2(0f, rightBox.sizeDelta.y);
                 }
             }
@@ -136,12 +136,12 @@ namespace UnityXOPS
             {
                 if (!m_baseFovCaptured && !scoping)
                 {
-                    m_baseFov         = m_camera.fieldOfView;
+                    m_baseFov = m_camera.fieldOfView;
                     m_baseFovCaptured = true;
                 }
 
-                if (scoping && scope != null)          m_camera.fieldOfView = scope.fovDegrees;
-                else if (m_baseFovCaptured)            m_camera.fieldOfView = m_baseFov;
+                if (scoping && scope != null) m_camera.fieldOfView = scope.fovDegrees;
+                else if (m_baseFovCaptured) m_camera.fieldOfView = m_baseFov;
             }
         }
 
@@ -153,8 +153,9 @@ namespace UnityXOPS
             var list = DataManager.Instance.WeaponParameterData.scopeData;
             if (list == null) return;
 
-            RectTransform parent = scopeLineRoot != null ? scopeLineRoot
-                                 : (scopeImage != null ? scopeImage.rectTransform : null);
+            RectTransform parent = scopeLineRoot != null
+                ? scopeLineRoot
+                : (scopeImage != null ? scopeImage.rectTransform : null);
             if (parent == null) return;
 
             for (int i = 0; i < list.Count; i++)
@@ -164,7 +165,7 @@ namespace UnityXOPS
                 crt.SetParent(parent, false);
                 crt.anchorMin = crt.anchorMax = crt.pivot = new Vector2(0.5f, 0.5f);
                 crt.anchoredPosition = Vector2.zero;
-                crt.sizeDelta        = Vector2.zero;
+                crt.sizeDelta = Vector2.zero;
 
                 var lines = list[i].lines;
                 if (lines != null)
@@ -182,20 +183,20 @@ namespace UnityXOPS
         private void CreateScopeLine(RectTransform parent, ScopeLine line)
         {
             Vector2 diff = line.end - line.start;
-            float   len  = diff.magnitude;
-            float   ang  = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
+            float len = diff.magnitude;
+            float ang = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
 
             var go = new GameObject("Line", typeof(RectTransform), typeof(RawImage));
             var rt = go.GetComponent<RectTransform>();
             rt.SetParent(parent, false);
-            rt.anchorMin        = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = (line.start + line.end) * 0.5f;
-            rt.sizeDelta        = new Vector2(len, Mathf.Max(1f, line.width));
-            rt.localRotation    = Quaternion.Euler(0f, 0f, ang);
+            rt.sizeDelta = new Vector2(len, Mathf.Max(1f, line.width));
+            rt.localRotation = Quaternion.Euler(0f, 0f, ang);
 
             var img = go.GetComponent<RawImage>();
-            img.texture       = Texture2D.whiteTexture;
-            img.color         = line.color;
+            img.texture = Texture2D.whiteTexture;
+            img.color = line.color;
             img.raycastTarget = false;
         }
     }

@@ -15,9 +15,6 @@ namespace UnityXOPS
         private float m_time;
         private OpeningCameraData m_data;
 
-        /// <summary>
-        /// 카메라 초기 위치와 회전값을 설정하고 애니메이션 상태를 초기화한다.
-        /// </summary>
         private void Start()
         {
             m_time = Time.time;
@@ -29,9 +26,6 @@ namespace UnityXOPS
             m_addEuler = Vector3.zero;
         }
 
-        /// <summary>
-        /// 매 프레임마다 카메라의 위치와 회전 오프셋을 갱신한다.
-        /// </summary>
         private void Update()
         {
             float t = Time.time - m_time;
@@ -45,9 +39,9 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// 경과 시간에 따라 가속·등속·감쇠 구간을 적용하여 단일 축의 속도 벡터를 갱신한다.
+        /// 경과 시간 t에 따라 가속·등속·감쇠 구간을 적용해 단일 축 속도 벡터 add를 anim 설정으로 갱신한다. dt는 프레임 시간.
         /// </summary>
-        void UpdateAxis(ref Vector3 add, OpeningCameraAnimation anim, float t, float dt)
+        private void UpdateAxis(ref Vector3 add, OpeningCameraAnimation anim, float t, float dt)
         {
             // 감쇠 계수: 원본의 0.8/frame을 프레임레이트 독립으로 변환
             float decay = Mathf.Pow(anim.smoothFactor, dt * 33.333f);

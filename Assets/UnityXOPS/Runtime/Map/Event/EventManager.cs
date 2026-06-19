@@ -11,8 +11,8 @@ namespace UnityXOPS
     public enum MissionResult
     {
         InProgress = 0,
-        Complete   = 1,
-        Failed     = 2,
+        Complete = 1,
+        Failed = 2,
     }
 
     /// <summary>
@@ -25,30 +25,30 @@ namespace UnityXOPS
     /// </summary>
     public class EventManager : SingletonBehavior<EventManager>
     {
-        private const float k_gameFps         = 33.3333f;        // 원본 GAMEFPS
-        private const float k_frameTime       = 1f / k_gameFps;
-        private const int   k_maxCatchup      = 4;
-        private const int   k_maxFrameStep    = 6;               // 원본 TOTAL_EVENTFRAMESTEP (액션 무한연쇄 방지 상한)
-        private const float k_showMsgSec      = 5.0f;            // 원본 TOTAL_EVENTENT_SHOWMESSEC
-        private const float k_msgFadeSec      = 0.2f;            // 메시지 페이드 인/아웃 시간 (원본 gamemain.cpp:3141-3144, 0.2초)
-        private const float k_arrivalDist     = 2.5f;            // 원본 DISTANCE_CHECKPOINT 25.0 × 0.1
+        private const float k_gameFps = 33.3333f; // 원본 GAMEFPS
+        private const float k_frameTime = 1f / k_gameFps;
+        private const int k_maxCatchup = 4;
+        private const int k_maxFrameStep = 6; // 원본 TOTAL_EVENTFRAMESTEP (액션 무한연쇄 방지 상한)
+        private const float k_showMsgSec = 5.0f; // 원본 TOTAL_EVENTENT_SHOWMESSEC
+        private const float k_msgFadeSec = 0.2f; // 메시지 페이드 인/아웃 시간 (원본 gamemain.cpp:3141-3144, 0.2초)
+        private const float k_arrivalDist = 2.5f; // 원본 DISTANCE_CHECKPOINT 25.0 × 0.1
 
         // 원본 이벤트 라인 진입 식별번호 -100/-110/-120 (signed char). PD1 을 unsigned byte 로 읽으므로 156/146/136.
         private static readonly int[] k_lineEntryId = { 156, 146, 136 };
 
-        private readonly int[] m_cursor  = new int[3]; // 라인별 현재 노드 식별번호 (원본 nextp4)
+        private readonly int[] m_cursor = new int[3]; // 라인별 현재 노드 식별번호 (원본 nextp4)
         private readonly int[] m_waitcnt = new int[3]; // 라인별 시간 대기(17) 프레임 카운터
 
         private MissionResult m_result = MissionResult.InProgress;
-        private int   m_messageId = -1; // 현재 표시 메시지 ID (-1 = 없음)
-        private int   m_messageCnt;     // 메시지 표시 경과 프레임
-        private bool  m_running;
+        private int m_messageId = -1; // 현재 표시 메시지 ID (-1 = 없음)
+        private int m_messageCnt; // 메시지 표시 경과 프레임
+        private bool m_running;
         private float m_accum;
 
-        public MissionResult Result             => m_result;
-        public int           CurrentMessageId   => m_messageId;
-        public string        CurrentMessageText => m_messageId >= 0 ? MapLoader.GetMessageText(m_messageId) : string.Empty;
-        public bool          IsRunning          => m_running;
+        public MissionResult Result => m_result;
+        public int CurrentMessageId => m_messageId;
+        public string CurrentMessageText => m_messageId >= 0 ? MapLoader.GetMessageText(m_messageId) : string.Empty;
+        public bool IsRunning => m_running;
 
         /// <summary>
         /// 현재 메시지의 페이드 알파(0~1). 메시지 없으면 0. 표시 시작 0.2초 페이드인 → 유지 → 종료 0.2초 페이드아웃.
@@ -59,11 +59,11 @@ namespace UnityXOPS
             get
             {
                 if (m_messageId < 0) return 0f;
-                float fadeFrames  = k_msgFadeSec  * k_gameFps; // ≈6.7프레임
-                float totalFrames = k_showMsgSec  * k_gameFps; // ≈167프레임
-                if (m_messageCnt < fadeFrames)                 return Mathf.Clamp01(m_messageCnt / fadeFrames);                  // 페이드 인
-                if (m_messageCnt > totalFrames - fadeFrames)   return Mathf.Clamp01((totalFrames - m_messageCnt) / fadeFrames);  // 페이드 아웃
-                return 1f;                                                                                                       // 완전 표시
+                float fadeFrames = k_msgFadeSec * k_gameFps; // ≈6.7프레임
+                float totalFrames = k_showMsgSec * k_gameFps; // ≈167프레임
+                if (m_messageCnt < fadeFrames) return Mathf.Clamp01(m_messageCnt / fadeFrames); // 페이드 인
+                if (m_messageCnt > totalFrames - fadeFrames) return Mathf.Clamp01((totalFrames - m_messageCnt) / fadeFrames); // 페이드 아웃
+                return 1f; // 완전 표시
             }
         }
 
@@ -211,7 +211,7 @@ namespace UnityXOPS
 
         private void AdvanceCursor(int line, int nextId)
         {
-            m_cursor[line]  = nextId;
+            m_cursor[line] = nextId;
             m_waitcnt[line] = 0; // 새 노드로 이동 — 시간 대기 카운터 초기화
         }
 

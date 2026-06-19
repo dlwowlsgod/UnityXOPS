@@ -17,12 +17,9 @@ namespace UnityXOPSEditor
             m_missionAddonObjectPath, m_missionImage0, m_missionImage1, m_skyIndex, m_missionBriefing,
             m_adjustCollision, m_darkScreen;
 
-        private bool     m_missionFoldout = true;
+        private bool m_missionFoldout = true;
         private GUIStyle m_wrapStyle;
 
-        /// <summary>
-        /// 직렬화 프로퍼티 참조를 초기화한다.
-        /// </summary>
         private void OnEnable()
         {
             m_blockRoot = serializedObject.FindProperty("blockRoot");
@@ -59,9 +56,6 @@ namespace UnityXOPSEditor
             m_darkScreen = serializedObject.FindProperty("darkScreen");
         }
 
-        /// <summary>
-        /// 플레이 중에는 블록·미션 데이터를, 편집 중에는 머티리얼 레퍼런스를 인스펙터에 렌더링한다.
-        /// </summary>
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -96,9 +90,11 @@ namespace UnityXOPSEditor
             EditorGUILayout.LabelField($"Blocks: {m_blockCount.intValue}");
             EditorGUILayout.PropertyField(m_blockMaterials, new GUIContent("Block Materials"));
             EditorGUILayout.PropertyField(m_blockColliders, new GUIContent("Block Colliders"));
-            EditorGUI.indentLevel--;
         }
 
+        /// <summary>
+        /// 포인트·휴먼·무기·오브젝트 수와 메시지 목록을 인스펙터에 렌더링한다.
+        /// </summary>
         private void DrawPointData()
         {
             EditorGUILayout.LabelField("Point Data", new GUIStyle(EditorStyles.boldLabel));
@@ -115,7 +111,6 @@ namespace UnityXOPSEditor
                 EditorGUILayout.PropertyField(msgProp, new GUIContent($"[{i}]"));
             }
             EditorGUI.indentLevel--;
-
         }
 
         /// <summary>
@@ -146,7 +141,7 @@ namespace UnityXOPSEditor
 
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUILayout.Toggle("AdjustCollision", m_adjustCollision.boolValue);
-                EditorGUILayout.Toggle("DarkScreen",      m_darkScreen.boolValue);
+                EditorGUILayout.Toggle("DarkScreen", m_darkScreen.boolValue);
                 EditorGUI.EndDisabledGroup();
                 EditorGUI.indentLevel--;
             }

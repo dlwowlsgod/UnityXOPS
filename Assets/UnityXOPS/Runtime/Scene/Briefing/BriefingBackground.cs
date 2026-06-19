@@ -13,9 +13,6 @@ namespace UnityXOPS
         [SerializeField]
         private RawImage titleImage;
 
-        /// <summary>
-        /// 타이틀 DDS 이미지를 로드하여 RawImage 텍스처로 설정한다.
-        /// </summary>
         private void Start()
         {
             titleImage.texture = ImageLoader.LoadTexture(Path.Combine(Application.streamingAssetsPath, "data/title.dds"));

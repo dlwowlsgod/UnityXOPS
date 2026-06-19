@@ -9,9 +9,6 @@ namespace UnityXOPS
     /// </summary>
     public class InitScene : MonoBehaviour
     {
-        /// <summary>
-        /// 매 프레임마다 모든 매니저의 로드 완료 여부를 확인하고, 완료 시 씬을 전환한다.
-        /// </summary>
         private void Update()
         {
             if (!ImageLoader.Loaded || !ModelLoader.Loaded || !MapLoader.Loaded)

@@ -19,8 +19,8 @@ namespace UnityXOPS
         // 벽 데칼을 표면에서 살짝 띄워 z-fighting 방지 (원본 1.0 unit × 0.1 = 0.1 보다 보수적으로).
         private const float k_decalSurfaceOffset = 0.05f;
 
-        private Effect[]                  m_pool;
-        private Mesh                      m_quadMesh;
+        private Effect[] m_pool;
+        private Mesh m_quadMesh;
         private Dictionary<int, Material> m_materialCache = new Dictionary<int, Material>();
 
         protected override void Awake()
@@ -66,7 +66,7 @@ namespace UnityXOPS
 
                 MeshRenderer mr = obj.AddComponent<MeshRenderer>();
                 mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                mr.receiveShadows    = false;
+                mr.receiveShadows = false;
 
                 m_pool[i] = obj.AddComponent<Effect>();
                 obj.SetActive(false);
@@ -77,9 +77,9 @@ namespace UnityXOPS
         {
             if (m_pool == null) return;
 
-            Camera  cam    = Camera.main;
+            Camera cam = Camera.main;
             Vector3 camPos = cam != null ? cam.transform.position : Vector3.zero;
-            float   dt     = Time.deltaTime;
+            float dt = Time.deltaTime;
 
             for (int i = 0; i < m_pool.Length; i++)
             {
@@ -121,8 +121,8 @@ namespace UnityXOPS
 
             for (int e = 0; e < emitters.Count; e++)
             {
-                EffectEmitter em  = emitters[e];
-                Material      mat = GetMaterial(em.textureIndex);
+                EffectEmitter em = emitters[e];
+                Material mat = GetMaterial(em.textureIndex);
                 if (mat == null) continue;
 
                 // countPerTrigger>0 면 개수 = floor(트리거값 × 계수) (원본 혈흔 분사 damage/10). 0 이면 분사 없음. 그 외엔 고정 spawnCount.
@@ -140,9 +140,9 @@ namespace UnityXOPS
                                 + orientation * (em.positionOffset + RandomVector(em.positionRandomRange));
                     Vector3 vel = orientation * (em.velocity + RandomVector(em.velocityRandomRange))
                                 + worldExtraVelocity;
-                    float rot     = em.rotationDeg     + RandomRange(em.rotationRandomRange);
+                    float rot = em.rotationDeg + RandomRange(em.rotationRandomRange);
                     float rotRate = em.rotationRateDeg + RandomRange(em.rotationRateRandomRange);
-                    float size    = (em.size + RandomRange(em.sizeRandomRange)) * sizeScale;
+                    float size = (em.size + RandomRange(em.sizeRandomRange)) * sizeScale;
 
                     slot.Init(mat, pos, vel, em.gravityY, rot, rotRate, size, em.sizeRate,
                               em.alpha, em.alphaRate, em.lifetime, em.flags, orientation);
@@ -204,14 +204,14 @@ namespace UnityXOPS
                 return null;
             }
 
-            string    fullPath = SafePath.Combine(Application.streamingAssetsPath, general.texturePaths[textureIndex]);
-            Texture2D tex      = ImageLoader.LoadTexture(fullPath);
+            string fullPath = SafePath.Combine(Application.streamingAssetsPath, general.texturePaths[textureIndex]);
+            Texture2D tex = ImageLoader.LoadTexture(fullPath);
             if (tex == null) return null;
             tex.name = Path.GetFileName(fullPath);
 
             Material mat = new Material(baseMat);
             mat.mainTexture = tex;
-            mat.name        = tex.name;
+            mat.name = tex.name;
 
             m_materialCache[textureIndex] = mat;
             return mat;
