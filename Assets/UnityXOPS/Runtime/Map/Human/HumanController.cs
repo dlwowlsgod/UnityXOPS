@@ -7,13 +7,13 @@ namespace UnityXOPS
     [Flags]
     public enum HumanMoveFlag
     {
-        None    = 0,
+        None = 0,
         Forward = 1 << 0,
-        Back    = 1 << 1,
-        Left    = 1 << 2,
-        Right   = 1 << 3,
-        Walk    = 1 << 4,
-        Jump    = 1 << 5,
+        Back = 1 << 1,
+        Left = 1 << 2,
+        Right = 1 << 3,
+        Walk = 1 << 4,
+        Jump = 1 << 5,
     }
 
     /// <summary>
@@ -27,21 +27,21 @@ namespace UnityXOPS
         public static bool TickEnabled;
 
         // 원본 OpenXOPS object.h 상수 × 0.1 (Unity scale)
-        private const float k_climbHeight         = 0.32f;   // HUMAN_MAPCOLLISION_CLIMBHEIGHT
-        private const float k_climbForwardDist    = 0.2f;    // 원본 dir*2.0f (Step climb 전방 체크)
-        private const float k_groundHeight        = -0.05f;  // HUMAN_MAPCOLLISION_GROUND_HEIGHT
-        private const float k_groundR1            = 0.015f;  // 플레이어 접지 반경 1
-        private const float k_groundR2            = 0.05f;   // 플레이어 접지 반경 2
-        private const float k_groundR3            = 0.03f;   // NPC 접지 반경
-        private const float k_collisionAddSize    = 0.001f;  // COLLISION_ADDSIZE
-        private const int   k_moveYUpperCooldown  = 8;       // 경사 slide 후 점프/climb 금지 프레임
+        private const float k_climbHeight = 0.32f; // HUMAN_MAPCOLLISION_CLIMBHEIGHT
+        private const float k_climbForwardDist = 0.2f; // 원본 dir*2.0f (Step climb 전방 체크)
+        private const float k_groundHeight = -0.05f; // HUMAN_MAPCOLLISION_GROUND_HEIGHT
+        private const float k_groundR1 = 0.015f; // 플레이어 접지 반경 1
+        private const float k_groundR2 = 0.05f; // 플레이어 접지 반경 2
+        private const float k_groundR3 = 0.03f; // NPC 접지 반경
+        private const float k_collisionAddSize = 0.001f; // COLLISION_ADDSIZE
+        private const int k_moveYUpperCooldown = 8; // 경사 slide 후 점프/climb 금지 프레임
 
         // 원본 AddCollisionFlag 추가 허리 체크 높이 (SCHOOL 맵 좁은 통로 대응, 항상 적용)
-        private const float k_addHeightA          = 0.9f;
-        private const float k_addHeightB          = 1.3f;
+        private const float k_addHeightA = 0.9f;
+        private const float k_addHeightB = 1.3f;
 
         // Step climb 최소 이동 속도 (원본: |move| > 0.2/frame = 0.666 m/s)
-        private const float k_climbMinSpeed       = 0.666f;
+        private const float k_climbMinSpeed = 0.666f;
 
         // 경사 미끄러짐 예측 시간 (원본: move*3f @ 33fps = 90ms)
         private const float k_slidePredictionTime = 0.09f;
@@ -49,43 +49,43 @@ namespace UnityXOPS
         // 사망 상태머신 상수 (원본 33.33fps 기준 → 시간 기반 변환).
         // OpenXOPS HUMAN_DEADADDRY = 0.75°/frame²: 매 프레임 회전속도가 0.75°씩 증가.
         // 시간 단위 변환: 0.75 × 33.33² ≈ 833 deg/s² 각가속도.
-        private const float k_deadFps                 = 33.3333f;
-        private const float k_deadRotationAccel       = 0.75f * k_deadFps * k_deadFps;
-        private const float k_deadFlatLayPitch        = 90f;   // 평지 누움 각 (원본 deadstate 1→3 진입 후 이 각에서 안착)
-        private const float k_deadFreeFallEntryPitch  = 135f;  // 머리가 빈 공간 → HeadStuck (자유낙하) 진입각 (원본 ±135°)
-        private const float k_deadPopupHeight         = 0.1f;  // 사망 진입 시 시체 함몰 방지 (원본 pos_y += 1.0f × 0.1)
+        private const float k_deadFps = 33.3333f;
+        private const float k_deadRotationAccel = 0.75f * k_deadFps * k_deadFps;
+        private const float k_deadFlatLayPitch = 90f; // 평지 누움 각 (원본 deadstate 1→3 진입 후 이 각에서 안착)
+        private const float k_deadFreeFallEntryPitch = 135f; // 머리가 빈 공간 → HeadStuck (자유낙하) 진입각 (원본 ±135°)
+        private const float k_deadPopupHeight = 0.1f; // 사망 진입 시 시체 함몰 방지 (원본 pos_y += 1.0f × 0.1)
 
-        private Human       m_human;
+        private Human m_human;
         private HumanVisual m_humanVisual;
 
         private float m_rotationX;
         private float m_armRotationY;
 
-        private Vector3       m_moveVelocity;
+        private Vector3 m_moveVelocity;
         private HumanMoveFlag m_moveFlag;
         private HumanMoveFlag m_moveFlagLt;
-        private int           m_moveYUpper;
+        private int m_moveYUpper;
 
         // 접지 여부 — 원본 OpenXOPS move_y_flag 의 반전 (접지=true). 정확도 airborne 페널티에 사용.
         // 스폰 직후 첫 FixedUpdate 전까지는 접지로 간주 (대부분 지면에서 시작).
         private bool          m_grounded = true;
 
         // 사망 상태머신 누적값
-        private float m_deadAddRy;         // 사망 회전 각속도 (deg/s), 부호 있음. Falling/LegSliding 단계 누적
-        private float m_deadPitchAngle;    // 사망 회전 각도 (deg), 부호 있음. +면 앞으로 엎어짐, -면 뒤로 자빠짐
-        private float m_deadDirection;     // +1 (앞으로 엎어짐) / -1 (뒤로 자빠짐). 사망 진입 시 1회 결정 후 고정
-        private int   m_settlingFrames;    // Settling 단계 FixedUpdate 카운터
+        private float m_deadAddRy; // 사망 회전 각속도 (deg/s), 부호 있음. Falling/LegSliding 단계 누적
+        private float m_deadPitchAngle; // 사망 회전 각도 (deg), 부호 있음. +면 앞으로 엎어짐, -면 뒤로 자빠짐
+        private float m_deadDirection; // +1 (앞으로 엎어짐) / -1 (뒤로 자빠짐). 사망 진입 시 1회 결정 후 고정
+        private int m_settlingFrames; // Settling 단계 FixedUpdate 카운터
 
-        public float         Yaw          => m_rotationX;
-        public float         Pitch        => m_armRotationY;
-        public Vector3       MoveVelocity => m_moveVelocity;
-        public HumanMoveFlag MoveFlag     => m_moveFlag;
-        public HumanMoveFlag MoveFlagLt   => m_moveFlagLt;
-        public bool          Grounded     => m_grounded;
+        public float Yaw => m_rotationX;
+        public float Pitch => m_armRotationY;
+        public Vector3 MoveVelocity => m_moveVelocity;
+        public HumanMoveFlag MoveFlag => m_moveFlag;
+        public HumanMoveFlag MoveFlagLt => m_moveFlagLt;
+        public bool Grounded => m_grounded;
 
         private void Awake()
         {
-            m_human       = GetComponent<Human>();
+            m_human = GetComponent<Human>();
             m_humanVisual = m_human.HumanVisual;
         }
 
@@ -102,13 +102,13 @@ namespace UnityXOPS
 
         public void SetYawPitch(float yaw, float pitch)
         {
-            m_rotationX    = yaw;
+            m_rotationX = yaw;
             m_armRotationY = pitch;
         }
 
         public void AddYawPitch(float deltaYaw, float deltaPitch)
         {
-            m_rotationX    += deltaYaw;
+            m_rotationX += deltaYaw;
             m_armRotationY += deltaPitch;
         }
 
@@ -141,7 +141,7 @@ namespace UnityXOPS
             // Tick 자체는 계속 돌려야 중력/지면/deadlineY 클램프가 시체에 적용됨.
             if (!m_human.Alive)
             {
-                m_moveFlag   = HumanMoveFlag.None;
+                m_moveFlag = HumanMoveFlag.None;
                 m_moveFlagLt = HumanMoveFlag.None;
             }
 
@@ -151,7 +151,7 @@ namespace UnityXOPS
             TickDeadState();
 
             m_moveFlagLt = m_moveFlag;
-            m_moveFlag   = HumanMoveFlag.None;
+            m_moveFlag = HumanMoveFlag.None;
 
             EmitFootstep(); // 달리기 발소리 월드사운드 — 근처 적 AI 경계 트리거 (원본 ObjectManager::Process 足音)
 
@@ -171,13 +171,13 @@ namespace UnityXOPS
 
             HumanMoveFlag f = m_moveFlagLt;
             bool moving = (f & (HumanMoveFlag.Forward | HumanMoveFlag.Back |
-                                HumanMoveFlag.Left    | HumanMoveFlag.Right)) != 0;
+                                HumanMoveFlag.Left | HumanMoveFlag.Right)) != 0;
             if (!moving || (f & HumanMoveFlag.Walk) != 0) return; // 정지/걷기 = 발소리 인식 안 됨, 달리기만
 
             HumanGeneralData gen = DataManager.Instance.HumanParameterData.humanGeneralData;
             float dist = (f & HumanMoveFlag.Forward) != 0 ? gen.aiHearFootstepForward
-                       : (f & HumanMoveFlag.Back)    != 0 ? gen.aiHearFootstepBack
-                       :                                    gen.aiHearFootstepSide;
+                       : (f & HumanMoveFlag.Back) != 0 ? gen.aiHearFootstepBack
+                       : gen.aiHearFootstepSide;
 
             // 음원=발 위치(transform.position), 적(다른 팀)만 들음(allyDist=0 → 같은 팀 무시). 방향은 안 씀 — CAUTION 트리거만.
             WorldSound.EmitPointSound(transform.position, m_human.Team, dist, 0f);
@@ -189,12 +189,12 @@ namespace UnityXOPS
             if (type == null) return;
 
             HumanGeneralData gen = DataManager.Instance.HumanParameterData.humanGeneralData;
-            float            dt  = Time.fixedDeltaTime;
+            float dt = Time.fixedDeltaTime;
 
             ApplyAcceleration(type, dt);
 
             Vector3 pos2 = transform.position;
-            Vector3 pos  = pos2;
+            Vector3 pos = pos2;
 
             // 1. XZ 이동 반영 (원본: pos_x += move_x; pos_z += move_z;)
             pos.x += m_moveVelocity.x * dt;
@@ -206,16 +206,16 @@ namespace UnityXOPS
             m_moveVelocity.z *= decay;
 
             // 3. 이동 벡터 정규화
-            float dx    = pos.x - pos2.x;
-            float dz    = pos.z - pos2.z;
+            float dx = pos.x - pos2.x;
+            float dz = pos.z - pos2.z;
             float speed = Mathf.Sqrt(dx*dx + dz*dz);
-            float dirX  = 0f;
-            float dirZ  = 0f;
+            float dirX = 0f;
+            float dirZ = 0f;
             if (speed > 1e-6f) { dirX = dx / speed; dirZ = dz / speed; }
 
-            float R          = gen.controllerRadiusControllerToMap;
-            float H          = gen.controllerHeight;
-            float waistY     = H * 0.5f;  // 원본 HUMAN_MAPCOLLISION_HEIGHT=10.0 → 허리
+            float R = gen.controllerRadiusControllerToMap;
+            float H = gen.controllerHeight;
+            float waistY = H * 0.5f; // 원본 HUMAN_MAPCOLLISION_HEIGHT=10.0 → 허리
             float slopeLimit = gen.controllerSlopeLimit * Mathf.Deg2Rad;
 
             IReadOnlyList<Block> blocks = MapLoader.BlockColliders;
@@ -352,17 +352,17 @@ namespace UnityXOPS
                 {
                     // Alive: 플레이어 8점 접지 체크 (NPC 분기는 추후). 4 R1 또는 4 R2 모두 블록 내부면 접지.
                     int cnt = 0;
-                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang)*k_groundR1,                   gy, pos.z + Mathf.Sin(ang)*k_groundR1)) cnt++;
-                    if (AnyBlockContains(blocks, pos.x - Mathf.Cos(ang)*k_groundR1,                   gy, pos.z - Mathf.Sin(ang)*k_groundR1)) cnt++;
-                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang + Mathf.PI*0.5f)*k_groundR1,   gy, pos.z + Mathf.Sin(ang + Mathf.PI*0.5f)*k_groundR1)) cnt++;
-                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang - Mathf.PI*0.5f)*k_groundR1,   gy, pos.z + Mathf.Sin(ang - Mathf.PI*0.5f)*k_groundR1)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang)*k_groundR1, gy, pos.z + Mathf.Sin(ang)*k_groundR1)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x - Mathf.Cos(ang)*k_groundR1, gy, pos.z - Mathf.Sin(ang)*k_groundR1)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang + Mathf.PI*0.5f)*k_groundR1, gy, pos.z + Mathf.Sin(ang + Mathf.PI*0.5f)*k_groundR1)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang - Mathf.PI*0.5f)*k_groundR1, gy, pos.z + Mathf.Sin(ang - Mathf.PI*0.5f)*k_groundR1)) cnt++;
                     if (cnt == 4) { fallFlag = true; break; }
 
                     cnt = 0;
-                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang)*k_groundR2,                   gy, pos.z + Mathf.Sin(ang)*k_groundR2)) cnt++;
-                    if (AnyBlockContains(blocks, pos.x - Mathf.Cos(ang)*k_groundR2,                   gy, pos.z - Mathf.Sin(ang)*k_groundR2)) cnt++;
-                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang + Mathf.PI*0.5f)*k_groundR2,   gy, pos.z + Mathf.Sin(ang + Mathf.PI*0.5f)*k_groundR2)) cnt++;
-                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang - Mathf.PI*0.5f)*k_groundR2,   gy, pos.z + Mathf.Sin(ang - Mathf.PI*0.5f)*k_groundR2)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang)*k_groundR2, gy, pos.z + Mathf.Sin(ang)*k_groundR2)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x - Mathf.Cos(ang)*k_groundR2, gy, pos.z - Mathf.Sin(ang)*k_groundR2)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang + Mathf.PI*0.5f)*k_groundR2, gy, pos.z + Mathf.Sin(ang + Mathf.PI*0.5f)*k_groundR2)) cnt++;
+                    if (AnyBlockContains(blocks, pos.x + Mathf.Cos(ang - Mathf.PI*0.5f)*k_groundR2, gy, pos.z + Mathf.Sin(ang - Mathf.PI*0.5f)*k_groundR2)) cnt++;
                     if (cnt == 4) { fallFlag = true; break; }
                 }
                 else
@@ -421,9 +421,9 @@ namespace UnityXOPS
                         {
                             // 원본: move_x = nx*1.2, move_y = ny*-0.5, move_z = nz*1.2 (프레임당)
                             // Unity: × 33.33 fps × 0.1 scale = ×3.333
-                            m_moveVelocity.x = n.x *  4.0f;
+                            m_moveVelocity.x = n.x * 4.0f;
                             m_moveVelocity.y = n.y * -1.667f;
-                            m_moveVelocity.z = n.z *  4.0f;
+                            m_moveVelocity.z = n.z * 4.0f;
 
                             // 다음 예상 위치 클램프 (원본: pos + move*3.0f = 3프레임 후 ≈ 90ms)
                             Vector3 pred = pos + m_moveVelocity * k_slidePredictionTime;
@@ -476,13 +476,13 @@ namespace UnityXOPS
             // 원본 object.cpp:1213-1222 — Hit_rx 와 본인 yaw 차이로 앞/뒤 분기.
             // |Δyaw| < 90° (등 뒤에서 맞음) → 앞으로 엎어짐 (+pitch),
             // 그 외 (앞/옆에서 맞음) → 뒤로 자빠짐 (-pitch). 정확히 ±90° 는 else (뒤로) 분기.
-            float deltaYaw  = Mathf.DeltaAngle(m_human.HitYaw, m_rotationX);
+            float deltaYaw = Mathf.DeltaAngle(m_human.HitYaw, m_rotationX);
             m_deadDirection = (Mathf.Abs(deltaYaw) < 90f) ? +1f : -1f;
 
-            m_deadAddRy      = 0f;
+            m_deadAddRy = 0f;
             m_deadPitchAngle = 0f;
             m_settlingFrames = 0;
-            pos.y           += k_deadPopupHeight;
+            pos.y += k_deadPopupHeight;
 
             // 원본 OpenXOPS object.cpp:1228-1237 사망 진입 루프 — noneWeapon 이외 슬롯의 무기를 무작위로 흩뿌림.
             m_human.DropAllWeaponsOnDeath();
@@ -503,10 +503,10 @@ namespace UnityXOPS
         {
             if (m_human.Alive) return;
 
-            float            dt        = Time.fixedDeltaTime;
-            HumanGeneralData gen       = DataManager.Instance.HumanParameterData.humanGeneralData;
-            float            deadlineY = gen.deadlineY;
-            Vector3          curPos    = transform.position;
+            float dt = Time.fixedDeltaTime;
+            HumanGeneralData gen = DataManager.Instance.HumanParameterData.humanGeneralData;
+            float deadlineY = gen.deadlineY;
+            Vector3 curPos = transform.position;
 
             switch (m_human.DeadState)
             {
@@ -518,7 +518,7 @@ namespace UnityXOPS
                     if (curPos.y <= deadlineY + 1.0f && Mathf.Abs(m_deadPitchAngle) >= k_deadFlatLayPitch)
                     {
                         m_deadPitchAngle = k_deadFlatLayPitch * m_deadDirection;
-                        m_deadAddRy      = 0f;
+                        m_deadAddRy = 0f;
                         m_human.SetDeadState(HumanDeadState.Settling);
                         break;
                     }
@@ -561,7 +561,7 @@ namespace UnityXOPS
                         {
                             // 지면 박힘 (90° 통과) → Settling 직행, 90° 클램프 (부호 보존)
                             m_deadPitchAngle = k_deadFlatLayPitch * m_deadDirection;
-                            m_deadAddRy      = 0f;
+                            m_deadAddRy = 0f;
                             m_human.SetDeadState(HumanDeadState.Settling);
                         }
                         else
@@ -599,26 +599,26 @@ namespace UnityXOPS
                     if (Mathf.Abs(m_deadPitchAngle) >= k_deadFlatLayPitch)
                     {
                         m_deadPitchAngle = k_deadFlatLayPitch * m_deadDirection;
-                        m_deadAddRy      = 0f;
+                        m_deadAddRy = 0f;
                         m_human.SetDeadState(HumanDeadState.Settling);
                         break;
                     }
 
                     m_deadAddRy += k_deadRotationAccel * dt * m_deadDirection;
-                    float thisDeltaPitch    = m_deadAddRy * dt;
-                    float thisDeltaRad      = thisDeltaPitch * Mathf.Deg2Rad;
-                    float predictedPitch    = m_deadPitchAngle + thisDeltaPitch;
+                    float thisDeltaPitch = m_deadAddRy * dt;
+                    float thisDeltaRad = thisDeltaPitch * Mathf.Deg2Rad;
+                    float predictedPitch = m_deadPitchAngle + thisDeltaPitch;
                     float predictedPitchRad = predictedPitch * Mathf.Deg2Rad;
 
                     float H = gen.controllerHeight;
 
                     // Body fall direction (forward) / slide direction (-forward = back).
-                    Quaternion yawQ     = Quaternion.Euler(0, m_rotationX, 0);
-                    Vector3    slideDir = yawQ * Vector3.back;
+                    Quaternion yawQ = Quaternion.Euler(0, m_rotationX, 0);
+                    Vector3 slideDir = yawQ * Vector3.back;
 
                     // 이번 프레임 슬라이드 (원본 pos -= sin(add_ry)*H 와 동일 패턴).
                     Vector3 thisFrameSlide = slideDir * (Mathf.Sin(thisDeltaRad) * H);
-                    Vector3 nextPos        = transform.position + thisFrameSlide;
+                    Vector3 nextPos = transform.position + thisFrameSlide;
 
                     // 슬라이드 후 발/머리 예측. body local up 이 pitch 회전 후 (0, cos, sin)Z.
                     Vector3 nextHeadOffset = yawQ * new Vector3(0f, H * Mathf.Cos(predictedPitchRad), H * Mathf.Sin(predictedPitchRad));
@@ -646,7 +646,7 @@ namespace UnityXOPS
 
                     // 슬라이드 + 회전 커밋
                     transform.position += thisFrameSlide;
-                    m_deadPitchAngle    = predictedPitch;
+                    m_deadPitchAngle = predictedPitch;
                     break;
                 }
 
@@ -676,22 +676,22 @@ namespace UnityXOPS
 
             Vector3 posBackup = pos;
 
-            Vector3 v    = pos - posOld;
-            float   dist = v.magnitude;
+            Vector3 v = pos - posOld;
+            float dist = v.magnitude;
             if (dist < 1e-6f) return false;
             v /= dist;
 
             // 시작점: inV - v*dist (프레임 시작 시의 체크 포인트)
             // rayStart를 살짝 뒤로 밀고 maxDist를 그만큼 늘려, 경계 위에서 시작하는 경우도 안전하게 면 감지.
             const float k_rayStartMargin = 1e-4f;
-            Vector3     rayStart         = inV - v * (dist + k_rayStartMargin);
+            Vector3 rayStart = inV - v * (dist + k_rayStartMargin);
 
             if (!block.IntersectRay(rayStart, v, dist + k_rayStartMargin, out int face, out _))
                 return false;
 
             // 면과 이동 벡터의 각도 = acos(dot(v, n)). dot이 음수여야 정면 충돌.
-            Vector3 n    = block.faceNormals[face];
-            float   dot  = Vector3.Dot(v, n);
+            Vector3 n = block.faceNormals[face];
+            float dot = Vector3.Dot(v, n);
             if (dot >= 0f) return false;
             float faceAngle = Mathf.Acos(Mathf.Clamp(dot, -1f, 1f));
 
@@ -710,7 +710,7 @@ namespace UnityXOPS
             if (Mathf.Abs(vBlend.x) < 1e-6f && Mathf.Abs(vBlend.z) < 1e-6f)
                 vBlend = n;
 
-            float   temp   = per * dist;
+            float temp = per * dist;
             Vector3 newPos = vBlend * temp + posOld;
 
             // 최종 위치가 여전히 블록 내부면 롤백
@@ -718,7 +718,7 @@ namespace UnityXOPS
 
             // 모드별 Y 보정
             if (mode == 0x01 && newPos.y > posBackup.y) newPos.y = posBackup.y;
-            if (mode == 0x02)                            newPos.y = posBackup.y;
+            if (mode == 0x02) newPos.y = posBackup.y;
 
             pos = newPos;
             return true;
@@ -743,10 +743,10 @@ namespace UnityXOPS
         private bool IsHeadInsideBlock(float pitchDeg)
         {
             HumanGeneralData gen = DataManager.Instance.HumanParameterData.humanGeneralData;
-            Quaternion deathRot  = Quaternion.Euler(0, m_rotationX, 0)
-                                 * Quaternion.Euler(pitchDeg, 0, 0);
-            Vector3 headOffset   = deathRot * new Vector3(0f, gen.controllerHeight, 0f);
-            Vector3 headPos      = transform.position + headOffset;
+            Quaternion deathRot = Quaternion.Euler(0, m_rotationX, 0)
+                                * Quaternion.Euler(pitchDeg, 0, 0);
+            Vector3 headOffset = deathRot * new Vector3(0f, gen.controllerHeight, 0f);
+            Vector3 headPos = transform.position + headOffset;
 
             IReadOnlyList<Block> blocks = MapLoader.BlockColliders;
             for (int i = 0; i < blocks.Count; i++)
@@ -760,43 +760,43 @@ namespace UnityXOPS
         {
             HumanMoveFlag moveMask = m_moveFlag & (
                 HumanMoveFlag.Forward | HumanMoveFlag.Back |
-                HumanMoveFlag.Left    | HumanMoveFlag.Right);
+                HumanMoveFlag.Left | HumanMoveFlag.Right);
             bool walk = (m_moveFlag & HumanMoveFlag.Walk) != 0;
 
             Vector3 localDir = Vector3.zero;
-            float   accel    = 0f;
+            float accel = 0f;
 
             if (walk)
             {
                 localDir = Vector3.forward;
-                accel    = type.progressWalkAcceleration;
+                accel = type.progressWalkAcceleration;
             }
             else
             {
                 const float k_invSqrt2 = 0.7071068f;
-                float runForward  = type.progressRunAcceleration;
-                float runSide     = type.sidewaysRunAcceleration;
-                float runBack     = type.regressRunAcceleration;
+                float runForward = type.progressRunAcceleration;
+                float runSide = type.sidewaysRunAcceleration;
+                float runBack = type.regressRunAcceleration;
                 float diagForward = (runForward + runSide) * 0.5f;
 
                 switch (moveMask)
                 {
                     case HumanMoveFlag.Forward:
-                        localDir = Vector3.forward;                              accel = runForward;  break;
+                        localDir = Vector3.forward; accel = runForward; break;
                     case HumanMoveFlag.Back:
-                        localDir = Vector3.back;                                 accel = runBack;     break;
+                        localDir = Vector3.back; accel = runBack; break;
                     case HumanMoveFlag.Left:
-                        localDir = Vector3.left;                                 accel = runSide;     break;
+                        localDir = Vector3.left; accel = runSide; break;
                     case HumanMoveFlag.Right:
-                        localDir = Vector3.right;                                accel = runSide;     break;
+                        localDir = Vector3.right; accel = runSide; break;
                     case HumanMoveFlag.Forward | HumanMoveFlag.Left:
-                        localDir = new Vector3(-k_invSqrt2, 0,  k_invSqrt2);     accel = diagForward; break;
+                        localDir = new Vector3(-k_invSqrt2, 0, k_invSqrt2); accel = diagForward; break;
                     case HumanMoveFlag.Forward | HumanMoveFlag.Right:
-                        localDir = new Vector3( k_invSqrt2, 0,  k_invSqrt2);     accel = diagForward; break;
+                        localDir = new Vector3(k_invSqrt2, 0, k_invSqrt2); accel = diagForward; break;
                     case HumanMoveFlag.Back | HumanMoveFlag.Left:
-                        localDir = new Vector3(-k_invSqrt2, 0, -k_invSqrt2);     accel = runBack;     break;
+                        localDir = new Vector3(-k_invSqrt2, 0, -k_invSqrt2); accel = runBack; break;
                     case HumanMoveFlag.Back | HumanMoveFlag.Right:
-                        localDir = new Vector3( k_invSqrt2, 0, -k_invSqrt2);     accel = runBack;     break;
+                        localDir = new Vector3(k_invSqrt2, 0, -k_invSqrt2); accel = runBack; break;
                 }
             }
 

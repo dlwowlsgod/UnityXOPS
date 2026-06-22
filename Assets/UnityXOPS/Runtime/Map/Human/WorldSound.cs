@@ -13,9 +13,13 @@ namespace UnityXOPS
     public static class WorldSound
     {
         /// <summary>
-        /// 한 지점에서 난 소리. 청취자 팀에 따라 거리 임계가 다르다 (적=enemyDist, 아군=allyDist; allyDist≤0 이면 아군은 못 들음).
+        /// 한 지점에서 난 소리를 청취 범위 내 비플레이어 Human 에게 위협 신호로 전달한다.
         /// 발포음: enemyDist=일반/소음, allyDist=가까이만. 폭발: 팀 무관(enemyDist==allyDist).
         /// </summary>
+        /// <param name="pos">소리가 발생한 월드 좌표.</param>
+        /// <param name="sourceTeam">음원(발포·폭발 등)의 팀.</param>
+        /// <param name="enemyDist">적 팀 청취 임계 거리.</param>
+        /// <param name="allyDist">아군 팀 청취 임계 거리. 0 이하이면 아군은 듣지 못한다.</param>
         public static void EmitPointSound(Vector3 pos, int sourceTeam, float enemyDist, float allyDist)
         {
             // 게임플레이(Maingame)에서만 — 원본 demomode==false 게이트. 메뉴/브리핑 데모에서는 AI 가 없으므로 무시.

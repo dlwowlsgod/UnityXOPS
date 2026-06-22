@@ -15,9 +15,8 @@ namespace UnityXOPS
     /// </summary>
     public class AIController : MonoBehaviour
     {
-        // 원본 GAMEFPS = 33.333. Tick 한 번 = 원본 1프레임.
-        private const float k_frameTime        = 1f / 33.3333f;
-        private const int   k_maxCatchupFrames = 4; // 프레임 폭주 방지 (긴 프레임에 누산이 몰려도 최대 4프레임만 따라잡음)
+        private const float k_frameTime = 1f / 33.3333f;
+        private const int k_maxCatchupFrames = 4; // 프레임 폭주 방지 (긴 프레임에 누산이 몰려도 최대 4프레임만 따라잡음)
 
         private readonly Dictionary<Human, AIBrain> m_brains = new Dictionary<Human, AIBrain>();
         private float m_accum;
@@ -32,7 +31,7 @@ namespace UnityXOPS
         // 수동 조작 주체(PlayerController). 씬에 존재하면 MapLoader.Player 를 AI 에서 제외하고, 없으면(Mainmenu/Opening 데모)
         // 플레이어 Human 도 AI 가 구동한다. per-scene MonoBehaviour 이므로 씬 로드 시점에 1회만 resolve.
         private PlayerController m_playerController;
-        private bool            m_playerControllerResolved;
+        private bool m_playerControllerResolved;
 
         private void FixedUpdate()
         {

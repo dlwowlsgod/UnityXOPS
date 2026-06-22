@@ -30,6 +30,8 @@ namespace UnityXOPS
         /// modelData 의 textures/modelData 를 순회해 parent 아래에 머티리얼/메시(Part_{i})를 빌드한다.
         /// CreateWeaponVisual(장착 무기 visualRoot) 과 HUDWeaponDisplay(HUD 모델) 가 공유한다.
         /// </summary>
+        /// <param name="parent">머티리얼/메시(Part_{i})를 부착할 부모 Transform.</param>
+        /// <param name="modelData">빌드 대상 무기 모델 데이터.</param>
         /// <returns>textureIndex 매핑용으로 생성/캐시된 머티리얼 리스트.</returns>
         public static List<Material> BuildModelParts(Transform parent, WeaponModelData modelData)
         {

@@ -8,12 +8,11 @@ namespace UnityXOPS
     /// </summary>
     public class XOPSSpriteTextPulseSpread : XOPSSpriteText
     {
-        // 스프레드 펄스 시작
         /// <summary>
         /// 알파값과 문자 크기가 함께 변화하는 스프레드 펄스 애니메이션을 시작한다.
         /// </summary>
         public void StartPulseSpread(float duration, float alphaFrom, float alphaTo,
-                                     float startWidth,  float endWidth,
+                                     float startWidth, float endWidth,
                                      float startHeight, float endHeight)
         {
             StopAllCoroutines();
@@ -24,13 +23,13 @@ namespace UnityXOPS
         /// 알파와 문자 크기를 시작값에서 끝값으로 duration마다 반복 보간하는 코루틴.
         /// </summary>
         private IEnumerator PulseSpreadRoutine(float duration, float alphaFrom, float alphaTo,
-                                               float startWidth,  float endWidth,
+                                               float startWidth, float endWidth,
                                                float startHeight, float endHeight)
         {
             while (true)
             {
-                color      = new Color(color.r, color.g, color.b, alphaFrom);
-                CharWidth  = startWidth;
+                color = new Color(color.r, color.g, color.b, alphaFrom);
+                CharWidth = startWidth;
                 CharHeight = startHeight;
 
                 float elapsed = 0f;
@@ -38,8 +37,8 @@ namespace UnityXOPS
                 {
                     elapsed += Time.deltaTime;
                     float t = Mathf.Clamp01(elapsed / duration);
-                    color      = new Color(color.r, color.g, color.b, Mathf.Lerp(alphaFrom, alphaTo, t));
-                    CharWidth  = Mathf.Lerp(startWidth,  endWidth,  t);
+                    color = new Color(color.r, color.g, color.b, Mathf.Lerp(alphaFrom, alphaTo, t));
+                    CharWidth = Mathf.Lerp(startWidth, endWidth, t);
                     CharHeight = Mathf.Lerp(startHeight, endHeight, t);
                     yield return null;
                 }

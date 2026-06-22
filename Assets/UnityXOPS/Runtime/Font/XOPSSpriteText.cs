@@ -9,62 +9,60 @@ namespace UnityXOPS
     [RequireComponent(typeof(CanvasRenderer))]
     public class XOPSSpriteText : MaskableGraphic
     {
-        [SerializeField] 
-        private Texture2D _charTexture;
-        [SerializeField] 
-        private string _text = "";
-        [SerializeField] 
-        private float _charWidth = 32f;
-        [SerializeField] 
-        private float _charHeight = 32f;
-        [SerializeField] 
-        private float _spacing = 0f;
-        [SerializeField] 
-        private TextAnchor _alignment = TextAnchor.LowerLeft;
+        [SerializeField]
+        private Texture2D charTexture;
+        [SerializeField]
+        private string text = "";
+        [SerializeField]
+        private float charWidth = 32f;
+        [SerializeField]
+        private float charHeight = 32f;
+        [SerializeField]
+        private float spacing = 0f;
+        [SerializeField]
+        private TextAnchor alignment = TextAnchor.LowerLeft;
 
-        public override Texture mainTexture => _charTexture != null ? _charTexture : base.mainTexture;
+        public override Texture mainTexture => charTexture != null ? charTexture : base.mainTexture;
 
         public Texture2D CharTexture
         {
             get => (Texture2D)mainTexture;
-            set { _charTexture = value; }
+            set { charTexture = value; }
         }
 
         public string Text
         {
-            get => _text;
-            set { _text = value; SetVerticesDirty(); }
+            get => text;
+            set { text = value; SetVerticesDirty(); }
         }
         public float CharWidth
         {
-            get => _charWidth;
-            set { _charWidth = value; SetVerticesDirty(); }
+            get => charWidth;
+            set { charWidth = value; SetVerticesDirty(); }
         }
         public float CharHeight
         {
-            get => _charHeight;
-            set { _charHeight = value; SetVerticesDirty(); }
+            get => charHeight;
+            set { charHeight = value; SetVerticesDirty(); }
         }
-        public float Spacing 
+        public float Spacing
         {
-            get => _spacing;
-            set { _spacing = value; SetVerticesDirty(); }
+            get => spacing;
+            set { spacing = value; SetVerticesDirty(); }
         }
         public TextAnchor Alignment
         {
-            get => _alignment;
-            set { _alignment = value; SetVerticesDirty(); }
+            get => alignment;
+            set { alignment = value; SetVerticesDirty(); }
         }
         public Color32 FontColor
         {
             get => color;
-            set { color = value; SetVerticesDirty(); }    
+            set { color = value; SetVerticesDirty(); }
         }
 
 #if UNITY_EDITOR
-        /// <summary>
-        /// 에디터에서 프로퍼티 변경 시 메시를 재생성한다. Graphic.OnValidate 가 에디터 전용이라 빌드에선 override 대상이 없다.
-        /// </summary>
+        // Graphic.OnValidate가 에디터 전용이라 #if로 격리한다(빌드에선 override 대상이 없음).
         protected override void OnValidate()
         {
             base.OnValidate();
@@ -72,37 +70,33 @@ namespace UnityXOPS
         }
 #endif //UNITY_EDITOR
 
-        /// <summary>
-        /// 문자별 UV를 계산해 쿼드 버텍스와 삼각형을 생성한다.
-        /// </summary>
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
 
-            if (_charTexture == null || string.IsNullOrEmpty(_text))
+            if (charTexture == null || string.IsNullOrEmpty(text))
                 return;
 
             // 전체 텍스트 폭: 마지막 글자 뒤 간격 제외
-            float totalWidth  = _text.Length * _charWidth + (_text.Length - 1) * _spacing;
-            float totalHeight = _charHeight;
+            float totalWidth = text.Length * charWidth + (text.Length - 1) * spacing;
+            float totalHeight = charHeight;
 
-            // 정렬 기준으로 원점 오프셋 계산
-            float ox = _alignment switch
+            float ox = alignment switch
             {
-                TextAnchor.LowerCenter or TextAnchor.MiddleCenter or TextAnchor.UpperCenter => -totalWidth  * 0.5f,
-                TextAnchor.LowerRight  or TextAnchor.MiddleRight  or TextAnchor.UpperRight  => -totalWidth,
+                TextAnchor.LowerCenter or TextAnchor.MiddleCenter or TextAnchor.UpperCenter => -totalWidth * 0.5f,
+                TextAnchor.LowerRight or TextAnchor.MiddleRight or TextAnchor.UpperRight => -totalWidth,
                 _ => 0f,
             };
-            float oy = _alignment switch
+            float oy = alignment switch
             {
                 TextAnchor.MiddleLeft or TextAnchor.MiddleCenter or TextAnchor.MiddleRight => -totalHeight * 0.5f,
-                TextAnchor.UpperLeft  or TextAnchor.UpperCenter  or TextAnchor.UpperRight  => -totalHeight,
+                TextAnchor.UpperLeft or TextAnchor.UpperCenter or TextAnchor.UpperRight => -totalHeight,
                 _ => 0f,
             };
 
-            for (int i = 0; i < _text.Length; i++)
+            for (int i = 0; i < text.Length; i++)
             {
-                int charCode = _text[i];
+                int charCode = text[i];
                 int col = charCode % 16;
                 int row = charCode / 16;
 
@@ -112,10 +106,10 @@ namespace UnityXOPS
                 float u1 = u0 + 1f / 16f;
                 float v1 = v0 + 1f / 16f;
 
-                float x0 = ox + i * (_charWidth + _spacing);
-                float x1 = x0 + _charWidth;
+                float x0 = ox + i * (charWidth + spacing);
+                float x1 = x0 + charWidth;
                 float y0 = oy;
-                float y1 = oy + _charHeight;
+                float y1 = oy + charHeight;
 
                 int vertIndex = i * 4;
                 vh.AddVert(new Vector3(x0, y0), color, new Vector2(u0, v0));

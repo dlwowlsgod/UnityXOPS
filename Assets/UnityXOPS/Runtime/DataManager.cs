@@ -41,10 +41,7 @@ namespace UnityXOPS
         private const string k_skyDataPath = "unitydata/sky_data.json";
         private const string k_missionDataPath = "unitydata/mission_data.json";
 
-        /// <summary>
-        /// 스카이 데이터와 미션 데이터를 로드한다.
-        /// </summary>
-        public void Start()
+        private void Start()
         {
             LoadHumanParameterData();
             LoadWeaponParameterData();
@@ -64,7 +61,7 @@ namespace UnityXOPS
         private void LoadWeaponParameterData()
         {
             string fullPath = Path.Combine(Application.streamingAssetsPath, k_weaponParameterDataPath);
-            string json = File.ReadAllText (fullPath);
+            string json = File.ReadAllText(fullPath);
             weaponParameterData = JsonUtility.FromJson<WeaponParameterData>(json);
         }
 
@@ -82,9 +79,6 @@ namespace UnityXOPS
             effectParameterData = JsonUtility.FromJson<EffectParameterData>(json);
         }
 
-        /// <summary>
-        /// StreamingAssets에서 스카이 데이터 JSON을 읽어 skyData에 역직렬화한다.
-        /// </summary>
         private void LoadSkyData()
         {
             string fullPath = Path.Combine(Application.streamingAssetsPath, k_skyDataPath);
@@ -92,9 +86,6 @@ namespace UnityXOPS
             skyData = JsonUtility.FromJson<SkyData>(json);
         }
 
-        /// <summary>
-        /// StreamingAssets에서 미션 데이터 JSON을 읽고, addon 폴더의 .mif 파일도 스캔해 추가한다.
-        /// </summary>
         private void LoadMissionData()
         {
             string fullPath = Path.Combine(Application.streamingAssetsPath, k_missionDataPath);
@@ -109,9 +100,9 @@ namespace UnityXOPS
                 foreach (var path in mifPaths)
                 {
                     var addonData = new AddonMissionData();
-                    string mifFullPath = SafePath.Combine(addonPath, path);
-                    addonData.mifPath = mifFullPath;
-                    var name = File.ReadAllLines(addonData.mifPath)[0];
+                    addonData.mifPath = path;
+                    var lines = File.ReadAllLines(addonData.mifPath);
+                    var name = lines.Length > 0 ? lines[0] : string.Empty;
                     addonData.name = string.IsNullOrEmpty(name) ? string.Empty : name;
                     missionData.addonMissions.Add(addonData);
                 }

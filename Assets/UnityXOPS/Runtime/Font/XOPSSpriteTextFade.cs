@@ -8,7 +8,6 @@ namespace UnityXOPS
     /// </summary>
     public class XOPSSpriteTextFade : XOPSSpriteText
     {
-        // alpha를 0으로 설정
         /// <summary>
         /// 텍스트 알파값을 즉시 0으로 설정한다.
         /// </summary>
@@ -17,7 +16,6 @@ namespace UnityXOPS
             color = new Color(color.r, color.g, color.b, 0f);
         }
 
-        // alpha를 1로 설정
         /// <summary>
         /// 텍스트 알파값을 즉시 1로 설정한다.
         /// </summary>
@@ -26,7 +24,6 @@ namespace UnityXOPS
             color = new Color(color.r, color.g, color.b, 1f);
         }
 
-        // alpha 0 → 1 (페이드 인)
         /// <summary>
         /// 지정 시간 동안 알파를 0에서 1로 서서히 증가시킨다(페이드 인).
         /// </summary>
@@ -36,7 +33,6 @@ namespace UnityXOPS
             StartCoroutine(FadeRoutine(0f, 1f, duration));
         }
 
-        // alpha 1 → 0 (페이드 아웃)
         /// <summary>
         /// 지정 시간 동안 알파를 1에서 0으로 서서히 감소시킨다(페이드 아웃).
         /// </summary>

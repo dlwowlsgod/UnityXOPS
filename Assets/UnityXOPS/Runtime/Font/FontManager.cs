@@ -23,26 +23,23 @@ namespace UnityXOPS
         private TMP_FontAsset osFont;
 
         [SerializeField]
-        private Texture2D SpriteFontTexture;
+        private Texture2D spriteFontTexture;
 
-        /// <summary>
-        /// 스프라이트 폰트 텍스처와 시스템 언어에 맞는 OS TMP 폰트 에셋을 초기화한다.
-        /// </summary>
         private void Start()
         {
             var spriteFontTexturePath = SafePath.Combine(Application.streamingAssetsPath, "data/char.dds");
-            SpriteFontTexture = ImageLoader.LoadTexture(spriteFontTexturePath);
+            spriteFontTexture = ImageLoader.LoadTexture(spriteFontTexturePath);
 
             string[] fontPathList = Font.GetPathsToOSFonts();
-            m_koreanOSFontPath   = fontPathList.FirstOrDefault(path => path.EndsWith(k_koreanOSFontPath));
+            m_koreanOSFontPath = fontPathList.FirstOrDefault(path => path.EndsWith(k_koreanOSFontPath));
             m_japaneseOSFontPath = fontPathList.FirstOrDefault(path => path.EndsWith(k_japaneseOSFontPath));
-            m_englishOSFontPath  = fontPathList.FirstOrDefault(path => path.EndsWith(k_englishOSFontPath));
+            m_englishOSFontPath = fontPathList.FirstOrDefault(path => path.EndsWith(k_englishOSFontPath));
 
             string selectedPath = Application.systemLanguage switch
             {
-                SystemLanguage.Korean   => m_koreanOSFontPath,
+                SystemLanguage.Korean => m_koreanOSFontPath,
                 SystemLanguage.Japanese => m_japaneseOSFontPath,
-                _                       => m_englishOSFontPath,
+                _ => m_englishOSFontPath,
             };
 
             if (string.IsNullOrEmpty(selectedPath))
@@ -58,11 +55,13 @@ namespace UnityXOPS
         }
 
         public static TMP_FontAsset OSFont => Instance.osFont;
-        
+        public static Texture2D SpriteFont => Instance.spriteFontTexture;
+
         /// <summary>
         /// 지정된 파라미터로 XOPSSpriteText 파생 컴포넌트를 생성하고 RectTransform을 설정한 뒤 반환한다.
         /// </summary>
         /// <typeparam name="T">생성할 XOPSSpriteText 파생 타입.</typeparam>
+        /// <returns>생성되어 RectTransform과 텍스트 속성이 설정된 XOPSSpriteText 파생 컴포넌트.</returns>
         public static T CreateSpriteText<T>(Transform root, string text, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size, Vector2 fontSize, Color32 color, TextAnchor alignment, float spacing) where T : XOPSSpriteText
         {
             var obj = new GameObject();
@@ -72,22 +71,22 @@ namespace UnityXOPS
             var rectTransform = obj.GetComponent<RectTransform>();
             rectTransform.pivot = alignment switch
             {
-                TextAnchor.LowerLeft   => new Vector2(0f,   0f),
+                TextAnchor.LowerLeft => new Vector2(0f, 0f),
                 TextAnchor.LowerCenter => new Vector2(0.5f, 0f),
-                TextAnchor.LowerRight  => new Vector2(1f,   0f),
-                TextAnchor.MiddleLeft  => new Vector2(0f,   0.5f),
-                TextAnchor.MiddleCenter=> new Vector2(0.5f, 0.5f),
-                TextAnchor.MiddleRight => new Vector2(1f,   0.5f),
-                TextAnchor.UpperLeft   => new Vector2(0f,   1f),
+                TextAnchor.LowerRight => new Vector2(1f, 0f),
+                TextAnchor.MiddleLeft => new Vector2(0f, 0.5f),
+                TextAnchor.MiddleCenter => new Vector2(0.5f, 0.5f),
+                TextAnchor.MiddleRight => new Vector2(1f, 0.5f),
+                TextAnchor.UpperLeft => new Vector2(0f, 1f),
                 TextAnchor.UpperCenter => new Vector2(0.5f, 1f),
-                TextAnchor.UpperRight  => new Vector2(1f,   1f),
-                _                      => new Vector2(0f,   0f),
+                TextAnchor.UpperRight => new Vector2(1f, 1f),
+                _ => new Vector2(0f, 0f),
             };
             rectTransform.anchoredPosition = position;
             rectTransform.anchorMin = anchorMin;
             rectTransform.anchorMax = anchorMax;
             rectTransform.sizeDelta = size;
-            spriteText.CharTexture = Instance.SpriteFontTexture;
+            spriteText.CharTexture = SpriteFont;
             spriteText.Text = text;
             spriteText.CharWidth = fontSize.x;
             spriteText.CharHeight = fontSize.y;

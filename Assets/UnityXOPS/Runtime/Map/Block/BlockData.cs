@@ -1,4 +1,5 @@
 using JJLUtility;
+using JJLUtility.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,6 +23,177 @@ namespace UnityXOPS
 
     public partial class MapLoader
     {
+        [SerializeField]
+        private Transform blockRoot;
+        [SerializeField]
+        private int blockCount;
+        [SerializeField]
+        private List<Material> blockMaterials;
+        public List<Material> BlockMaterials => blockMaterials;
+        [SerializeField]
+        private List<Block> blockColliders;
+        public static IReadOnlyList<Block> BlockColliders => Instance.blockColliders;
+
+        private static int blockLayerMask = 7;
+        private static int blockLayer = 0;
+        public static int BlockLayerMask => blockLayerMask;
+        public static int BlockLayer => blockLayer;
+
+        private void Start()
+        {
+            blockLayerMask = LayerMask.GetMask("Block");
+            blockLayer = LayerMask.NameToLayer("Block");
+        }
+
+        /// <summary>
+        /// BD1 파일을 파싱해 블록 메시와 머티리얼을 생성하고 씬에 배치한다.
+        /// </summary>
+        /// <param name="filepath">BD1 파일 경로.</param>
+        public static void LoadBlockData(string filepath)
+        {
+            if (string.IsNullOrEmpty(filepath))
+            {
+                Debugger.LogError("BD1 path is empty.", Instance, nameof(MapLoader));
+                return;
+            }
+
+            if (!File.Exists(filepath))
+            {
+                Debugger.LogError($"BD1 file not exists: {filepath}", Instance, nameof(MapLoader));
+                return;
+            }
+
+            BlockData blockData = LoadBD1File(filepath);
+            if (blockData == null)
+            {
+                return;
+            }
+
+            Instance.blockCount = blockData.rawBlockData.Length;
+            blockData.blocks = BuildBlocks(blockData.rawBlockData, Instance.darkScreen);
+
+            Instance.blockColliders = new List<Block>();
+            Instance.blockMaterials = new List<Material>();
+            string bd1Dir = Path.GetDirectoryName(filepath);
+            for (int i = 0; i < blockData.texturePaths.Length; i++)
+            {
+                string texturePath = blockData.texturePaths[i];
+
+                if (string.IsNullOrEmpty(texturePath))
+                {
+                    Instance.blockMaterials.Add(MaterialManager.Instance.BlockMaterial);
+                    continue;
+                }
+
+                string extension = Path.GetExtension(texturePath).ToLower();
+                Material baseMaterial = MaterialManager.Instance.BlockMaterial;
+
+                string fullTexturePath = SafePath.Combine(bd1Dir, texturePath);
+                Texture2D blockTexture = ImageLoader.LoadTexture(fullTexturePath);
+
+                if (blockTexture == null)
+                {
+                    Instance.blockMaterials.Add(baseMaterial);
+                    continue;
+                }
+
+                Material blockMaterial = new Material(baseMaterial);
+                blockMaterial.name = Path.GetFileName(texturePath);
+                blockMaterial.mainTexture = blockTexture;
+
+                Instance.blockMaterials.Add(blockMaterial);
+            }
+
+            // 원본 OpenXOPS 는 맵 블록을 먼저(RenderMapdata), 소물/오브젝트를 나중(ObjMgr.Render)에 그린다.
+            // 블록과 addon(소물)이 같은 셰이더·같은 queue(2450)면 Unity 가 카메라 거리순으로 정렬해 순서가 뒤집히며
+            // 동일 평면에서 Z-fighting(회전 시 깜빡임)이 난다. 블록 queue 를 2449 로 내려 addon(2450) 보다 항상 먼저
+            // 그려지게 하면, ZTest LEqual 상 동일 깊이서 나중에 그린 addon 이 이겨 블록을 덮는다 = 원본 그리기 순서와 동일.
+            // BlockMaterial 은 MainMaterial 과 별도 에셋이고 여기선 블록용 런타임 인스턴스만 바꾸므로 오브젝트 렌더엔 영향 없음.
+            const int k_blockRenderQueue = 2449;
+            for (int i = 0; i < Instance.blockMaterials.Count; i++)
+                Instance.blockMaterials[i].renderQueue = k_blockRenderQueue;
+
+            for (int i = 0; i < blockData.blocks.Length; i++)
+            {
+                Block block = blockData.blocks[i];
+                GameObject blockObj = new GameObject($"Block_{i}");
+                blockObj.transform.SetParent(Instance.blockRoot, false);
+
+                MeshFilter meshFilter = blockObj.AddComponent<MeshFilter>();
+                meshFilter.sharedMesh = block.mesh;
+
+                MeshRenderer meshRenderer = blockObj.AddComponent<MeshRenderer>();
+                Material[] materials = new Material[block.subMeshTextureIndices.Length];
+                for (int j = 0; j < block.subMeshTextureIndices.Length; j++)
+                {
+                    int textureIndex = block.subMeshTextureIndices[j];
+                    if (textureIndex >= 0 && textureIndex < Instance.blockMaterials.Count)
+                    {
+                        materials[j] = Instance.blockMaterials[textureIndex];
+                    }
+                    else
+                    {
+                        //투명벽 처리
+                        materials[j] = MaterialManager.Instance.TransparentMaterial;
+                    }
+                }
+                meshRenderer.sharedMaterials = materials;
+
+                blockObj.transform.localPosition = block.position;
+
+                if (block.collider)
+                {
+                    blockObj.layer = LayerMask.NameToLayer("Block");
+                    MeshCollider mc = blockObj.AddComponent<MeshCollider>();
+                    mc.sharedMesh = block.mesh;
+                    Instance.blockColliders.Add(block);
+                }
+            }
+
+            Physics.SyncTransforms();
+        }
+
+        // CheckALLBlockIntersectRay 대응 — 두꺼운 블록과 레이 교차 여부 반환
+        public static bool RaycastBlock(Vector3 origin, Vector3 direction, float maxDist, out float dist)
+        {
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, maxDist, blockLayerMask))
+            {
+                dist = hit.distance;
+                return true;
+            }
+            dist = 0f;
+            return false;
+        }
+
+        // CheckALLBlockInside 대응 — point가 두꺼운 블록 내부이면 true 반환
+        public static bool IsInsideBlock(Vector3 point)
+        {
+            var colliders = Instance.blockColliders;
+            for (int i = 0; i < colliders.Count; i++)
+            {
+                if (colliders[i].Contains(point)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 씬에 생성된 모든 블록 오브젝트와 머티리얼을 제거한다.
+        /// </summary>
+        public static void UnloadBlockData()
+        {
+            foreach (Transform child in Instance.blockRoot)
+            {
+                Destroy(child.gameObject);
+            }
+            // blockMaterials는 공유 머티리얼(BlockMaterial)과 런타임 복제본이 섞여 있음
+            for (int i = 0; i < Instance.blockMaterials.Count; i++)
+            {
+                DestroyIfRuntimeMaterial(Instance.blockMaterials[i]);
+            }
+            Instance.blockMaterials.Clear();
+            Instance.blockColliders.Clear();
+        }
+
         // openxops.net/filesystem-bd1.php 기준
         private static readonly int[][] FaceVertexIndices = new int[][]
         {
@@ -131,9 +303,9 @@ namespace UnityXOPS
         // 원본 datafile.cpp:181-268 fake lighting 광원 방향.
         // OpenXOPS: L = (cos(190°), sin(120°), sin(190°)) — 정규화되지 않음(‖L‖≈1.312), 원본 그대로 사용.
         // BD1 로드 시 정점이 (-xs, ys, -zs)로 X/Z 반전됐으므로 광원도 동일하게 반전.
-        private const float k_lightX =  0.98480775f;  // -cos(190°)
-        private const float k_lightY =  0.86602540f;  //  sin(120°)
-        private const float k_lightZ =  0.17364818f;  // -sin(190°)
+        private const float k_lightX = 0.98480775f; // -cos(190°)
+        private const float k_lightY = 0.86602540f; // sin(120°)
+        private const float k_lightZ = 0.17364818f; // -sin(190°)
 
         // 평평한 블록의 degenerate(부피 0) bounds 로 인한 프러스텀 컬링 오작동 방지용 최소 두께 (Unity 단위, = 1 OpenXOPS 단위).
         private const float k_minBoundsThickness = 0.1f;
@@ -151,7 +323,7 @@ namespace UnityXOPS
             Vector3[] faceCenters = new Vector3[6];
             for (int f = 0; f < 6; f++)
             {
-                int[]   fi = FaceVertexIndices[f];
+                int[] fi = FaceVertexIndices[f];
                 Vector3 v0 = raw.vertices[fi[0]];
                 Vector3 v1 = raw.vertices[fi[1]];
                 Vector3 v2 = raw.vertices[fi[2]];
@@ -161,7 +333,7 @@ namespace UnityXOPS
                 // 경사 블록의 면이 비평면 quad여도 유효한 법선을 얻을 수 있다.
                 Vector3 c1 = Vector3.Cross(v3 - v2, v0 - v2);
                 Vector3 c2 = Vector3.Cross(v1 - v0, v2 - v0);
-                Vector3 n  = (c1.sqrMagnitude > c2.sqrMagnitude ? c1 : c2).normalized;
+                Vector3 n = (c1.sqrMagnitude > c2.sqrMagnitude ? c1 : c2).normalized;
 
                 Vector3 fc = (v0 + v1 + v2 + v3) * 0.25f;
                 // 원본 CalculationBlockdata(datafile.cpp:222-250) 와 동일하게 winding 으로 구한 법선을 그대로 쓴다.
@@ -239,16 +411,16 @@ namespace UnityXOPS
             // 평평한 블록(바닥/천장 등 한 축 두께 0)은 degenerate AABB(부피 0)가 되어, Unity 프러스텀 컬링이
             // 특정 카메라 각도에서 "프러스텀 밖"으로 잘못 판정해 통째로 사라진다. 두께 0 축에 최소 두께를 부여해 막는다.
             // 컬링 자체는 유지되고, 메시 지오메트리·MeshCollider(삼각형 기반)·렌더링에는 영향이 없다.
-            Bounds   mb   = mesh.bounds;
-            Vector3  size = mb.size;
+            Bounds mb = mesh.bounds;
+            Vector3 size = mb.size;
             size.x = Mathf.Max(size.x, k_minBoundsThickness);
             size.y = Mathf.Max(size.y, k_minBoundsThickness);
             size.z = Mathf.Max(size.z, k_minBoundsThickness);
-            mb.size     = size;
+            mb.size = size;
             mesh.bounds = mb;
 
             Vector3[] expanded = ExpandVertices(raw.vertices);
-            bool isBoardBlock  = HasDuplicateExpandedVertices(expanded)
+            bool isBoardBlock = HasDuplicateExpandedVertices(expanded)
                               || IsCenterVisibleFromAnyFace(center, faceNormals, faceCenters);
 
             return new Block

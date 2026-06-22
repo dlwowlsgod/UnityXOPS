@@ -4,39 +4,39 @@ namespace UnityXOPS
 {
     public enum ViewMode
     {
-        FirstPerson      = 0,
+        FirstPerson = 0,
         ThirdPersonRight = 1,
-        ThirdPersonLeft  = 2,
+        ThirdPersonLeft = 2,
     }
 
     public class PlayerController : MonoBehaviour
     {
-        [SerializeField] private Camera    playerCamera;
-        [SerializeField] private float     pitchLimit               = 70f;
-        [SerializeField] private ViewMode  viewMode                 = ViewMode.FirstPerson;
+        [SerializeField] private Camera playerCamera;
+        [SerializeField] private float pitchLimit = 70f;
+        [SerializeField] private ViewMode viewMode = ViewMode.FirstPerson;
         [SerializeField] private LayerMask thirdPersonCollisionMask = ~0;
-        [SerializeField] private LayerMask aimMask                  = ~0;   // 조준 표적점 ray 대상 (블록/사람/소품). 자기 자신 hitbox 는 코드에서 제외.
-        [SerializeField] private MaingameUIDynamicLayout uiLayout;          // F4 로 Normal ↔ Simple UI 토글
+        [SerializeField] private LayerMask aimMask = ~0; // 조준 표적점 ray 대상 (블록/사람/소품). 자기 자신 hitbox 는 코드에서 제외.
+        [SerializeField] private MaingameUIDynamicLayout uiLayout; // F4 로 Normal ↔ Simple UI 토글
 
         // 카메라 중앙 ray 가 아무것도 안 맞을 때 쓰는 먼 표적 거리.
         private const float k_aimRayMaxDist = 1000f;
 
         // OpenXOPS gamemain.cpp:2651-2678 외부 3인칭 공식 상수 (원본 × 0.1)
-        private const float k_thirdPersonPivotBack      = 0.30f;  // 원본 3.0f
-        private const float k_thirdPersonMaxDist        = 1.40f;  // 원본 VIEW_F1MODE_DIST 14.0f
-        private const float k_thirdPersonHeightBias     = 0.25f;  // 원본 2.5f
-        private const float k_thirdPersonSphereRadius   = 0.10f;
-        private const float k_thirdPersonShoulderOffset = 0.40f;  // UnityXOPS 추가: over-the-shoulder 가로 오프셋
+        private const float k_thirdPersonPivotBack = 0.30f; // 원본 3.0f
+        private const float k_thirdPersonMaxDist = 1.40f; // 원본 VIEW_F1MODE_DIST 14.0f
+        private const float k_thirdPersonHeightBias = 0.25f; // 원본 2.5f
+        private const float k_thirdPersonSphereRadius = 0.10f;
+        private const float k_thirdPersonShoulderOffset = 0.40f; // UnityXOPS 추가: over-the-shoulder 가로 오프셋
 
         // OpenXOPS gamemain.cpp:2633-2647 사망 카메라 상수 (원본 33.33fps 기준 → 시간 기반 변환).
-        private const float k_deathCamFps             = 33.3333f;
-        private const float k_deathCamYawRate         = 1f * k_deathCamFps; // 1°/frame × 33.33fps = 33.33 deg/s orbit yaw
-        private const float k_deathCamPitchTarget     = 89f;     // 원본 -89° down → Unity는 +X 회전이 down
-        private const float k_deathCamPitchBlendBase  = 0.95f;   // 매 프레임 95% 유지 → 시간 기반 1 - 0.95^(dt × 33.33)
-        private const float k_deathCamRadius          = 0.312f;  // 원본 r = 3.12 × 0.1
-        private const float k_deathCamHeight          = 3.33f;   // 원본 33.3 × 0.1
+        private const float k_deathCamFps = 33.3333f;
+        private const float k_deathCamYawRate = 1f * k_deathCamFps; // 1°/frame × 33.33fps = 33.33 deg/s orbit yaw
+        private const float k_deathCamPitchTarget = 89f; // 원본 -89° down → Unity는 +X 회전이 down
+        private const float k_deathCamPitchBlendBase = 0.95f; // 매 프레임 95% 유지 → 시간 기반 1 - 0.95^(dt × 33.33)
+        private const float k_deathCamRadius = 0.312f; // 원본 r = 3.12 × 0.1
+        private const float k_deathCamHeight = 3.33f; // 원본 33.3 × 0.1
 
-        private Human           m_player;
+        private Human m_player;
         private HumanController m_controller;
 
         // 사용자가 고른 시점(F1/F2/F3). 스코프 조준 중에는 viewMode 가 1인칭으로 강제되지만 이 값은 유지 → 해제 시 복원.
@@ -53,10 +53,10 @@ namespace UnityXOPS
 
         private float m_deathCamYaw;
         private float m_deathCamPitch;
-        private bool  m_deathCamInitialized;
+        private bool m_deathCamInitialized;
 
         public ViewMode ViewMode => viewMode;
-        public bool     FirstPerson => viewMode == ViewMode.FirstPerson;
+        public bool FirstPerson => viewMode == ViewMode.FirstPerson;
 
         /// <summary>
         /// 사용자 시점 선택(F1/F2/F3). 스코프 조준 중이면 1인칭이 유지되고 이 선택은 해제 후 복원된다.
@@ -117,9 +117,9 @@ namespace UnityXOPS
 
             float sensitivity = ConfigManager.Instance.MouseSensitivity; // 외부 config(0~1) 감도
             Vector2 look = input.Look.ReadValue<Vector2>();
-            m_yaw   += look.x * sensitivity;
+            m_yaw += look.x * sensitivity;
             m_pitch -= look.y * sensitivity;
-            m_pitch  = Mathf.Clamp(m_pitch, -pitchLimit, pitchLimit);
+            m_pitch = Mathf.Clamp(m_pitch, -pitchLimit, pitchLimit);
             m_controller.SetYawPitch(m_yaw, m_pitch);
 
             Vector2 move = input.Move.ReadValue<Vector2>();
@@ -128,17 +128,17 @@ namespace UnityXOPS
             if (move.x < 0f) m_controller.SetMoveFlag(HumanMoveFlag.Left);
             if (move.x > 0f) m_controller.SetMoveFlag(HumanMoveFlag.Right);
 
-            if (input.Walk.IsPressed())           m_controller.SetMoveFlag(HumanMoveFlag.Walk);
+            if (input.Walk.IsPressed()) m_controller.SetMoveFlag(HumanMoveFlag.Walk);
             if (input.Jump.WasPressedThisFrame()) m_controller.SetMoveFlag(HumanMoveFlag.Jump);
 
             // 무기 슬롯 직접 선택: First → 보조(0), Second → 주(1)
-            if (input.First .WasPressedThisFrame()) m_player.SetSelectWeapon(0);
+            if (input.First.WasPressedThisFrame()) m_player.SetSelectWeapon(0);
             if (input.Second.WasPressedThisFrame()) m_player.SetSelectWeapon(1);
 
-            if (input.Drop    .WasPressedThisFrame()) m_player.DropCurrentWeapon();
+            if (input.Drop.WasPressedThisFrame()) m_player.DropCurrentWeapon();
             if (input.Previous.WasPressedThisFrame()) m_player.SwitchWeaponPrevious();
-            if (input.Next    .WasPressedThisFrame()) m_player.SwitchWeaponNext();
-            if (input.Reload  .WasPressedThisFrame()) m_player.ReloadCurrentWeapon();
+            if (input.Next.WasPressedThisFrame()) m_player.SwitchWeaponNext();
+            if (input.Reload.WasPressedThisFrame()) m_player.ReloadCurrentWeapon();
 
             // 발사 — burstMode 에 따라 입력 폴링 방식 분기. FullAuto = 누르고 있으면 연사, 그 외 = 1회 입력당 1발.
             // Weapon.Shoot 자체가 fireRate 쿨다운으로 연사 속도 제한.
@@ -160,7 +160,7 @@ namespace UnityXOPS
 
             // 발사 시 무기가 컨트롤러 시점각에 누적한 에임 킥을 마우스 누적값으로 되읽어 영구 반영.
             // 원본 OpenXOPS gamemain.cpp:2240-2245 — ShotWeapon 후 GetRxRy 역동기화. 킥이 없으면 무변화(no-op).
-            m_yaw   = m_controller.Yaw;
+            m_yaw = m_controller.Yaw;
             m_pitch = Mathf.Clamp(m_controller.Pitch, -pitchLimit, pitchLimit);
         }
 
@@ -203,8 +203,8 @@ namespace UnityXOPS
         {
             if (!m_deathCamInitialized)
             {
-                m_deathCamYaw         = m_yaw;
-                m_deathCamPitch       = m_pitch;
+                m_deathCamYaw = m_yaw;
+                m_deathCamPitch = m_pitch;
                 m_deathCamInitialized = true;
 
                 // 사망 카메라는 3인칭 뷰이므로 1인칭이었더라도 body/leg를 강제 표시.
@@ -214,12 +214,12 @@ namespace UnityXOPS
 
             float dt = Time.deltaTime;
 
-            m_deathCamYaw  += k_deathCamYawRate * dt;
-            float blend     = 1f - Mathf.Pow(k_deathCamPitchBlendBase, dt * k_deathCamFps);
+            m_deathCamYaw += k_deathCamYawRate * dt;
+            float blend = 1f - Mathf.Pow(k_deathCamPitchBlendBase, dt * k_deathCamFps);
             m_deathCamPitch = Mathf.Lerp(m_deathCamPitch, k_deathCamPitchTarget, blend);
 
             Vector3 playerPos = m_player.transform.position;
-            float   yawRad    = m_deathCamYaw * Mathf.Deg2Rad;
+            float yawRad = m_deathCamYaw * Mathf.Deg2Rad;
 
             // Unity yaw 0 = +Z, yaw 90 = +X 이므로 X = sin, Z = cos 으로 orbit.
             Vector3 cameraPos = new Vector3(
@@ -238,21 +238,21 @@ namespace UnityXOPS
         /// </summary>
         private void ApplyThirdPersonCamera()
         {
-            float   eyeHeight = DataManager.Instance.HumanParameterData.humanGeneralData.cameraAttachPosition;
+            float eyeHeight = DataManager.Instance.HumanParameterData.humanGeneralData.cameraAttachPosition;
             Vector3 playerPos = m_player.transform.position;
 
-            Quaternion viewRot   = Quaternion.Euler(m_pitch, m_yaw, 0f);
-            Vector3    viewBack  = viewRot * Vector3.back;
-            Vector3    viewRight = viewRot * Vector3.right;
-            float      pitchRad  = m_pitch * Mathf.Deg2Rad;
+            Quaternion viewRot = Quaternion.Euler(m_pitch, m_yaw, 0f);
+            Vector3 viewBack = viewRot * Vector3.back;
+            Vector3 viewRight = viewRot * Vector3.right;
+            float pitchRad = m_pitch * Mathf.Deg2Rad;
 
             float shoulderSign = viewMode == ViewMode.ThirdPersonLeft ? -1f : 1f;
 
             Vector3 pivot = playerPos;
             pivot.y += eyeHeight;
-            pivot   += viewBack  * k_thirdPersonPivotBack;
+            pivot += viewBack * k_thirdPersonPivotBack;
             pivot.y += Mathf.Sin(-pitchRad) * k_thirdPersonHeightBias;
-            pivot   += viewRight * (k_thirdPersonShoulderOffset * shoulderSign);
+            pivot += viewRight * (k_thirdPersonShoulderOffset * shoulderSign);
 
             float dist = k_thirdPersonMaxDist;
             if (Physics.SphereCast(pivot, k_thirdPersonSphereRadius, viewBack,
@@ -276,7 +276,7 @@ namespace UnityXOPS
             if (playerCamera == null) return;
 
             Vector3 origin = playerCamera.transform.position;
-            Vector3 fwd    = playerCamera.transform.forward;
+            Vector3 fwd = playerCamera.transform.forward;
             Vector3 target = origin + fwd * k_aimRayMaxDist;
 
             RaycastHit[] hits = Physics.RaycastAll(origin, fwd, k_aimRayMaxDist, aimMask, QueryTriggerInteraction.Ignore);
@@ -300,11 +300,13 @@ namespace UnityXOPS
 
             if (player != m_player)
             {
-                m_player     = player;
+                m_player = player;
                 m_controller = player.GetComponent<HumanController>();
-                m_yaw        = player.transform.eulerAngles.y;
-                m_pitch      = 0f;
-                m_fireReady  = false; // 조작권 획득 시 비무장 — Fire 를 한 번 떼야 발사 (씬 전환 클릭 누수 차단)
+                if (m_controller == null) return false;
+
+                m_yaw = player.transform.eulerAngles.y;
+                m_pitch = 0f;
+                m_fireReady = false; // 조작권 획득 시 비무장 — Fire 를 한 번 떼야 발사 (씬 전환 클릭 누수 차단)
                 m_controller.SetYawPitch(m_yaw, m_pitch);
 
                 ApplyViewpoint();

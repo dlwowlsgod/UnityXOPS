@@ -5,8 +5,8 @@ using UnityEngine;
 namespace UnityXOPS
 {
     /// <summary>
-    /// Human 슬롯에 장착되는 무기의 데이터/동적 상태와 시각 표현을 보관하는 컴포넌트.
-    /// 1차 골격: 발사/장전 로직은 미포함. WeaponData/WeaponModelData 와 슬롯 상태 필드만 보유.
+    /// Human 슬롯에 장착되는 무기의 데이터/동적 상태와 발사·장전·낙하 로직을 담당하는 코어 컴포넌트.
+    /// 시각 표현은 WeaponVisual 에 위임하고, 발사 시 BulletManager 로 탄을 spawn 한다.
     /// </summary>
     public class Weapon : MonoBehaviour
     {
@@ -17,28 +17,28 @@ namespace UnityXOPS
         private WeaponVisual weaponVisual;
         public WeaponVisual WeaponVisual => weaponVisual;
 
-        private int             m_weaponIndex;
-        private WeaponData      m_weaponData;
+        private int m_weaponIndex;
+        private WeaponData m_weaponData;
         private WeaponModelData m_weaponModelData;
-        public  int             WeaponIndex     => m_weaponIndex;
-        public  WeaponData      WeaponData      => m_weaponData;
-        public  WeaponModelData WeaponModelData => m_weaponModelData;
+        public int WeaponIndex => m_weaponIndex;
+        public WeaponData WeaponData => m_weaponData;
+        public WeaponModelData WeaponModelData => m_weaponModelData;
 
-        private int   m_currentMagazine;
-        private int   m_reserveAmmo;
-        private bool  m_isReloading;
-        public  int   CurrentMagazine => m_currentMagazine;
-        public  int   ReserveAmmo     => m_reserveAmmo;
-        public  bool  IsReloading     => m_isReloading;
+        private int m_currentMagazine;
+        private int m_reserveAmmo;
+        private bool m_isReloading;
+        public int CurrentMagazine => m_currentMagazine;
+        public int ReserveAmmo => m_reserveAmmo;
+        public bool IsReloading => m_isReloading;
 
-        private bool  m_isFalling;
+        private bool m_isFalling;
         private float m_velocityX;
         private float m_velocityY;
         private float m_velocityZ;
-        public  bool  IsFalling => m_isFalling;
+        public bool IsFalling => m_isFalling;
 
         private float m_fireRateTimer;
-        public  float FireRateTimer => m_fireRateTimer;
+        public float FireRateTimer => m_fireRateTimer;
 
         // 격발음 clip (캐싱). soundVolume 0 무기(NONE/GRENADE/CASE)는 null.
         private AudioClip m_fireSound;
@@ -65,7 +65,7 @@ namespace UnityXOPS
             }
 
             m_weaponIndex = weaponIndex;
-            m_weaponData  = wp.weaponData[weaponIndex];
+            m_weaponData = wp.weaponData[weaponIndex];
 
             int modelIndex = m_weaponData.modelIndex;
             if (modelIndex >= 0 && modelIndex < wp.weaponModelData.Count)
@@ -80,10 +80,10 @@ namespace UnityXOPS
 
             int magazineSize = m_weaponData.magazineSize;
             if (magazine < 0) magazine = magazineSize;
-            if (reserve  < 0) reserve  = magazineSize * 2;
+            if (reserve < 0) reserve = magazineSize * 2;
             m_currentMagazine = Mathf.Clamp(magazine, 0, magazineSize);
-            m_reserveAmmo     = reserve;
-            m_isReloading     = false;
+            m_reserveAmmo = reserve;
+            m_isReloading = false;
 
             if (m_weaponModelData != null)
             {
@@ -119,14 +119,14 @@ namespace UnityXOPS
         public void Shoot(Human owner)
         {
             if (owner == null || !owner.Alive) return;
-            if (owner.IsChanging)              return;
-            if (m_isFalling)                   return;
-            if (m_fireRateTimer > 0f)          return;
-            if (m_isReloading)                 return;
-            if (m_currentMagazine <= 0)        return;
-            if (m_weaponData.fireRate <= 0f)   return; // noneWeapon 등 발사 불가능 무기
+            if (owner.IsChanging) return;
+            if (m_isFalling) return;
+            if (m_fireRateTimer > 0f) return;
+            if (m_isReloading) return;
+            if (m_currentMagazine <= 0) return;
+            if (m_weaponData.fireRate <= 0f) return; // noneWeapon 등 발사 불가능 무기
 
-            var wp        = DataManager.Instance.WeaponParameterData;
+            var wp = DataManager.Instance.WeaponParameterData;
             int bulletIdx = m_weaponData.bulletIndex;
             if (bulletIdx < 0 || bulletIdx >= wp.bulletData.Count) return;
 
@@ -147,16 +147,16 @@ namespace UnityXOPS
 
             // 에임 킥 — 실제 시점이 움직임 (영구 누적, 자동 복원 없음). 원본 human::ShotWeapon (object.cpp:710-728).
             // recoilAimHorizontal=좌우(대칭), recoilAimVertical=상하(양수 저장=위로 → Unity 적용 시 부호 반전).
-            float yawKick   = UnityEngine.Random.Range(m_weaponData.recoilAimHorizontal.min, m_weaponData.recoilAimHorizontal.max);
-            float pitchKick = UnityEngine.Random.Range(m_weaponData.recoilAimVertical.min,   m_weaponData.recoilAimVertical.max);
+            float yawKick = UnityEngine.Random.Range(m_weaponData.recoilAimHorizontal.min, m_weaponData.recoilAimHorizontal.max);
+            float pitchKick = UnityEngine.Random.Range(m_weaponData.recoilAimVertical.min, m_weaponData.recoilAimVertical.max);
 
             // 스코프 조준 중이면 ScopeData 반동을 추가 가산 (원본 object.cpp:710-728, 대체가 아닌 += 가산).
             // PSG1 은 WeaponData 에, AUG 는 ScopeData 에 반동값이 들어있어 — 둘 다 같은 조준 킥으로 합쳐짐.
             ScopeData scope = owner.ActiveScope;
             if (scope != null)
             {
-                yawKick   += UnityEngine.Random.Range(scope.recoilAimHorizontalAdjust.min, scope.recoilAimHorizontalAdjust.max);
-                pitchKick += UnityEngine.Random.Range(scope.recoilAimVerticalAdjust.min,   scope.recoilAimVerticalAdjust.max);
+                yawKick += UnityEngine.Random.Range(scope.recoilAimHorizontalAdjust.min, scope.recoilAimHorizontalAdjust.max);
+                pitchKick += UnityEngine.Random.Range(scope.recoilAimVerticalAdjust.min, scope.recoilAimVerticalAdjust.max);
             }
 
             if (yawKick != 0f || pitchKick != 0f)
@@ -170,7 +170,7 @@ namespace UnityXOPS
             // 음원은 사수 머리 높이 (원본 WEAPONSHOT_HEIGHT). AI 는 청취 범위 안이면 경계 전환.
             if (m_weaponData.soundVolume > 0f)
             {
-                var humanGen   = DataManager.Instance.HumanParameterData.humanGeneralData;
+                var humanGen = DataManager.Instance.HumanParameterData.humanGeneralData;
                 float enemyDist = m_weaponData.suppressor ? humanGen.aiHearGunfireSilencerDist : humanGen.aiHearGunfireDist;
                 Vector3 shotPos = owner.transform.position + Vector3.up * humanGen.cameraAttachPosition;
                 WorldSound.EmitPointSound(shotPos, owner.Team, enemyDist, humanGen.aiHearGunfireAllyDist);
@@ -200,10 +200,10 @@ namespace UnityXOPS
         /// </summary>
         public bool StartReload()
         {
-            if (m_isReloading)                          return false;
-            if (m_isFalling)                            return false;
-            if (m_weaponData.magazineSize <= 0)         return false; // noneWeapon
-            if (m_reserveAmmo <= 0)                     return false; // 예비탄 없음
+            if (m_isReloading) return false;
+            if (m_isFalling) return false;
+            if (m_weaponData.magazineSize <= 0) return false; // noneWeapon
+            if (m_reserveAmmo <= 0) return false; // 예비탄 없음
             if (m_currentMagazine >= m_weaponData.magazineSize) return false; // 매거진 풀
 
             m_isReloading = true;
@@ -224,32 +224,25 @@ namespace UnityXOPS
             {
                 case WeaponReloadStyle.DiscardAndReload:
                     // 매거진 잔탄 폐기 + 예비에서 풀까지 채움. 원본 OpenXOPS 동작.
-                    int loadD         = Mathf.Min(m_reserveAmmo, magSize);
+                    int loadD = Mathf.Min(m_reserveAmmo, magSize);
                     m_currentMagazine = loadD;
-                    m_reserveAmmo    -= loadD;
+                    m_reserveAmmo -= loadD;
                     break;
 
                 case WeaponReloadStyle.RetainAndReload:
                 case WeaponReloadStyle.AutoReload:
                 case WeaponReloadStyle.ShellByShellReload:
                     // 잔탄 보존 + 부족분만 채움. AutoReload (GRENADE 등) 도 reserve 정상 차감.
-                    int needed         = magSize - m_currentMagazine;
-                    int loadR          = Mathf.Min(m_reserveAmmo, needed);
+                    int needed = magSize - m_currentMagazine;
+                    int loadR = Mathf.Min(m_reserveAmmo, needed);
                     m_currentMagazine += loadR;
-                    m_reserveAmmo     -= loadR;
+                    m_reserveAmmo -= loadR;
                     break;
             }
 
             m_isReloading = false;
         }
 
-        /// <summary>
-        /// owner 시점 위치 + yaw/pitch + 조준 오차로 pelletCount 발 BulletManager.Spawn 호출.
-        /// 원본 OpenXOPS ObjectManager::ShotWeapon (objectmanager.cpp:1966-2026) 의 탄도 오차 로직 재현:
-        ///  1. 실효 오차 = max(owner.GunsightErrorRange(상태+반동), errorRange.min). pitch/yaw 각각 독립 box 분포 × 0.15° — 펠릿 루프 밖 1회 계산해 모든 펠릿이 공유.
-        ///  2. 산탄(pelletCount>1) 은 펠릿마다 폴라 추가 확산 (방향 0~350° 10°단위, 반경 {5,7,9,11,13}) × 0.15° (objectmanager.cpp:2005-2009).
-        /// 발사 위치: 사람 머리(owner.position + cameraAttachPosition) — 1인칭/3인칭/AI 모두 동일 (objectmanager.cpp:2026 그대로).
-        /// </summary>
         /// <summary>
         /// 이 무기로 owner 가 지금 발사할 때의 실효 조준 오차 (ErrorRange 정수 단위). 상태+반동 오차(owner.GunsightErrorRange)에
         /// errorRange.min 하한을 적용하고, ignoreAimError(투척) 면 0. 탄도(SpawnBullets)와 크로스헤어 UI 가 공유하는 단일 소스.
@@ -294,7 +287,11 @@ namespace UnityXOPS
             }
         }
 
-        // 무기 머즐플래시 월드 위치 — Bullet visual 게이팅 기준점. 모델 데이터/부착 루트 없으면 fallback(시점 위치).
+        /// <summary>
+        /// 무기 머즐플래시 월드 위치 — Bullet visual 게이팅 기준점. 모델 데이터/부착 루트 없으면 fallback 을 반환.
+        /// </summary>
+        /// <param name="fallback">모델 데이터/부착 루트가 없을 때 반환할 대체 위치(보통 시점 위치).</param>
+        /// <returns>머즐플래시 오프셋을 부착 루트로 변환한 월드 좌표, 또는 fallback.</returns>
         private Vector3 MuzzleWorldPosition(Vector3 fallback)
         {
             Transform attach = transform.parent;
@@ -302,11 +299,20 @@ namespace UnityXOPS
             return attach.TransformPoint(m_weaponModelData.muzzleFlashOffset);
         }
 
+        /// <summary>
+        /// owner 시점 위치 + yaw/pitch + 조준 오차로 pelletCount 발 BulletManager.Spawn 호출.
+        /// 원본 OpenXOPS ObjectManager::ShotWeapon (objectmanager.cpp:1966-2026) 의 탄도 오차 로직 재현:
+        ///  1. 실효 오차 = max(owner.GunsightErrorRange(상태+반동), errorRange.min). pitch/yaw 각각 독립 box 분포 × 0.15° — 펠릿 루프 밖 1회 계산해 모든 펠릿이 공유.
+        ///  2. 산탄(pelletCount>1) 은 펠릿마다 폴라 추가 확산 (방향 0~350° 10°단위, 반경 {5,7,9,11,13}) × 0.15° (objectmanager.cpp:2005-2009).
+        /// 발사 위치: 사람 머리(owner.position + cameraAttachPosition) — 1인칭/3인칭/AI 모두 동일 (objectmanager.cpp:2026 그대로).
+        /// </summary>
+        /// <param name="owner">발사 주체 Human.</param>
+        /// <param name="bulletData">발사할 탄 데이터.</param>
         private void SpawnBullets(Human owner, BulletData bulletData)
         {
             var humanGen = DataManager.Instance.HumanParameterData.humanGeneralData;
-            Vector3 spawnPos     = owner.transform.position + Vector3.up * humanGen.cameraAttachPosition;
-            Vector3 visualOrigin = MuzzleWorldPosition(spawnPos);  // 총알 visual 은 이 지점에서 bulletBoundAdjust 만큼 멀어진 후 표시
+            Vector3 spawnPos = owner.transform.position + Vector3.up * humanGen.cameraAttachPosition;
+            Vector3 visualOrigin = MuzzleWorldPosition(spawnPos); // 총알 visual 은 이 지점에서 bulletBoundAdjust 만큼 멀어진 후 표시
 
             HumanController controller = owner.GetComponent<HumanController>();
 
@@ -315,49 +321,52 @@ namespace UnityXOPS
             if (owner.AimPoint.HasValue)
             {
                 Vector3 baseDir = (owner.AimPoint.Value - spawnPos).normalized;
-                yaw   =  Mathf.Atan2(baseDir.x, baseDir.z) * Mathf.Rad2Deg;
+                yaw = Mathf.Atan2(baseDir.x, baseDir.z) * Mathf.Rad2Deg;
                 pitch = -Mathf.Asin(Mathf.Clamp(baseDir.y, -1f, 1f)) * Mathf.Rad2Deg;
             }
             else
             {
-                yaw   = controller.Yaw;
+                yaw = controller.Yaw;
                 pitch = controller.Pitch;
             }
 
             // 기본 탄도 오차 (모든 펠릿 공유). 실효 오차 공식은 GetEffectiveErrorRange 단일 소스 (크로스헤어와 공유).
-            float effError     = GetEffectiveErrorRange(owner);
+            float effError = GetEffectiveErrorRange(owner);
             float basePitchErr = 0f;
-            float baseYawErr   = 0f;
+            float baseYawErr = 0f;
             if (effError > 0f)
             {
                 basePitchErr = UnityEngine.Random.Range(-effError, effError) * ErrorRangeUnitDegrees;
-                baseYawErr   = UnityEngine.Random.Range(-effError, effError) * ErrorRangeUnitDegrees;
+                baseYawErr = UnityEngine.Random.Range(-effError, effError) * ErrorRangeUnitDegrees;
             }
 
             int pellets = Mathf.Max(1, m_weaponData.pelletCount);
-            // 명중 가중 — 산탄은 펠릿당 2/pellet(전탄 명중 시 합 2.0), 단발=1.0. 원본 objectmanager.cpp:1998-2014 ontargetcnt.
+            // 산탄은 펠릿당 데미지/명중가중을 (pellet/2) 로 나눠 전탄 명중 시 합이 단발의 2배가 되게 함. 원본 objectmanager.cpp:1998-2014.
             float onTargetWeight = pellets > 1 ? 2f / pellets : 1f;
+            int perPelletDamage = pellets > 1
+                ? (int)(m_weaponData.damage / (pellets / 2f))
+                : (int)m_weaponData.damage;
             for (int i = 0; i < pellets; i++)
             {
                 float pitchErr = basePitchErr;
-                float yawErr   = baseYawErr;
+                float yawErr = baseYawErr;
                 if (pellets > 1)
                 {
-                    float a   = UnityEngine.Random.Range(0, 36) * 10f * Mathf.Deg2Rad;  // 방향 0~350°, 10° 단위
-                    float len = UnityEngine.Random.Range(0, 5) * 2 + 5;                 // 반경 {5,7,9,11,13}
+                    float a = UnityEngine.Random.Range(0, 36) * 10f * Mathf.Deg2Rad; // 방향 0~350°, 10° 단위
+                    float len = UnityEngine.Random.Range(0, 5) * 2 + 5; // 반경 {5,7,9,11,13}
                     pitchErr += Mathf.Cos(a) * len * ErrorRangeUnitDegrees;
-                    yawErr   += Mathf.Sin(a) * len * ErrorRangeUnitDegrees;
+                    yawErr += Mathf.Sin(a) * len * ErrorRangeUnitDegrees;
                 }
 
-                Quaternion rot      = Quaternion.Euler(pitch + pitchErr, yaw + yawErr, 0f);
-                Vector3    velocity = rot * Vector3.forward * m_weaponData.bulletSpeed;
+                Quaternion rot = Quaternion.Euler(pitch + pitchErr, yaw + yawErr, 0f);
+                Vector3 velocity = rot * Vector3.forward * m_weaponData.bulletSpeed;
 
                 Bullet b = BulletManager.Instance.Spawn(
                     bulletData, owner, owner.Team,
-                    attacks:      (int)m_weaponData.damage,
-                    penetration:  m_weaponData.penetration,
-                    position:     spawnPos,
-                    velocity:     velocity,
+                    attacks: perPelletDamage,
+                    penetration: m_weaponData.penetration,
+                    position: spawnPos,
+                    velocity: velocity,
                     visualOrigin: visualOrigin);
                 if (b != null) b.SetOnTargetWeight(onTargetWeight); // 명중 통계용 가중치 — 펠릿마다 동일
             }

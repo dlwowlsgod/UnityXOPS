@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
 
 namespace UnityXOPS
 {
@@ -17,8 +16,8 @@ namespace UnityXOPS
         private Transform bodyRoot, fixedArmRoot, dynamicArmRoot, leftArmRoot, rightArmRoot, legRoot;
         [SerializeField]
         private Transform fixedWeaponAttachRoot, dynamicWeaponAttachRoot;
-        public  Transform FixedWeaponAttachRoot   => fixedWeaponAttachRoot;
-        public  Transform DynamicWeaponAttachRoot => dynamicWeaponAttachRoot;
+        public Transform FixedWeaponAttachRoot => fixedWeaponAttachRoot;
+        public Transform DynamicWeaponAttachRoot => dynamicWeaponAttachRoot;
 
         private MeshFilter m_leftArmMeshFilter, m_rightArmMeshFilter, m_legMeshFilter;
         private MeshRenderer m_leftArmMeshRenderer, m_rightArmMeshRenderer, m_legMeshRenderer;
@@ -37,11 +36,10 @@ namespace UnityXOPS
         private HumanAnimation m_walkAnimation;
         private HumanAnimation m_runAnimation;
 
-        // 원본 HumanMotionControl 상태
-        private float  m_legAnimationTime;
+        private float m_legAnimationTime;
         private string m_legAnimationName;
-        private float  m_legRotationX;
-        private bool   m_legRotationInitialized;
+        private float m_legRotationX;
+        private bool m_legRotationInitialized;
 
         // 원본 reaction_y/slowarm — dynamicArmRoot 의 X 축 추가 offset (도).
         // 세 모드: (1) slowarm 보간 — duration 동안 0 으로 선형 복원 (슬롯 持ち替え/픽업).
@@ -50,7 +48,7 @@ namespace UnityXOPS
         private float m_armReactionDeg;
         private float m_armReactionRecoverySpeed;
         private float m_armReactionHoldTimer;
-        private bool  m_armReactionExponential;
+        private bool m_armReactionExponential;
         private float m_armPitchDeg;
 
         /// <summary>
@@ -236,7 +234,7 @@ namespace UnityXOPS
         /// <param name="weaponScale">WeaponGeneralData.weaponScale (OpenXOPS → Unity 스케일 비율).</param>
         public void ApplyWeaponAttachScale(float weaponScale)
         {
-            ApplyAttachScale(fixedWeaponAttachRoot,   weaponScale);
+            ApplyAttachScale(fixedWeaponAttachRoot, weaponScale);
             ApplyAttachScale(dynamicWeaponAttachRoot, weaponScale);
         }
 
@@ -244,7 +242,7 @@ namespace UnityXOPS
         {
             if (target == null) return;
             Transform parent = target.parent;
-            Vector3   pl     = parent != null ? parent.lossyScale : Vector3.one;
+            Vector3 pl = parent != null ? parent.lossyScale : Vector3.one;
             target.localScale = new Vector3(weaponScale / pl.x, weaponScale / pl.y, weaponScale / pl.z);
         }
 
@@ -284,6 +282,13 @@ namespace UnityXOPS
             return m_human != null && m_human.Alive && m_human.UnarmedArmDynamic;
         }
 
+        /// <summary>
+        /// 좌/우 팔 메시를 인덱스로 교체하고, 고정 여부에 따라 팔 루트를 fixedArmRoot 또는 dynamicArmRoot 에 부착한다.
+        /// </summary>
+        /// <param name="leftIndex">좌팔 메시 인덱스. 범위 밖이면 메시 제거(null).</param>
+        /// <param name="rightIndex">우팔 메시 인덱스. 범위 밖이면 메시 제거(null).</param>
+        /// <param name="fixLeft">true 면 좌팔을 fixedArmRoot 에 부착(카메라 피치 미반영).</param>
+        /// <param name="fixRight">true 면 우팔을 fixedArmRoot 에 부착(카메라 피치 미반영).</param>
         public void SetArmModel(int leftIndex, int rightIndex, bool fixLeft, bool fixRight)
         {
             if (m_humanArmModelData == null)
@@ -333,6 +338,10 @@ namespace UnityXOPS
             }
         }
 
+        /// <summary>
+        /// 몸통(bodyRoot)과 다리(legRoot) 렌더링 표시를 토글한다. 1인칭은 false, 3인칭/사망캠은 true.
+        /// </summary>
+        /// <param name="visible">true 면 몸통/다리 표시, false 면 숨김.</param>
         public void SetBodyVisible(bool visible)
         {
             bodyRoot.gameObject.SetActive(visible);
@@ -370,15 +379,15 @@ namespace UnityXOPS
             m_armReactionExponential = false;
             if (duration <= 0f)
             {
-                m_armReactionDeg           = 0f;
+                m_armReactionDeg = 0f;
                 m_armReactionRecoverySpeed = 0f;
-                m_armReactionHoldTimer     = 0f;
+                m_armReactionHoldTimer = 0f;
                 ApplyArmRotation();
                 return;
             }
-            m_armReactionDeg           = startDeg;
+            m_armReactionDeg = startDeg;
             m_armReactionRecoverySpeed = Mathf.Abs(startDeg) / duration;
-            m_armReactionHoldTimer     = 0f;
+            m_armReactionHoldTimer = 0f;
             ApplyArmRotation();
         }
 
@@ -395,12 +404,12 @@ namespace UnityXOPS
             if (duration <= 0f)
             {
                 // duration 이 0 이면 hold 효과 자체 없음. 이전 reaction 상태가 남아 slowarm 으로 fallback 되지 않도록 0 으로 클리어.
-                m_armReactionDeg       = 0f;
+                m_armReactionDeg = 0f;
                 m_armReactionHoldTimer = 0f;
                 ApplyArmRotation();
                 return;
             }
-            m_armReactionDeg       = holdDeg;
+            m_armReactionDeg = holdDeg;
             m_armReactionHoldTimer = duration;
             ApplyArmRotation();
         }
@@ -414,8 +423,8 @@ namespace UnityXOPS
         public void BeginArmShotReaction(float startDeg)
         {
             m_armReactionExponential = true;
-            m_armReactionDeg         = startDeg;
-            m_armReactionHoldTimer   = 0f;
+            m_armReactionDeg = startDeg;
+            m_armReactionHoldTimer = 0f;
             ApplyArmRotation();
         }
 
@@ -432,7 +441,7 @@ namespace UnityXOPS
                 {
                     // 홀드 종료 → 즉시 스냅이 아니라 지수 감쇠로 부드럽게 복구.
                     // 원본 OpenXOPS: ReloadCnt/ChangeWeaponIDCnt=0 후 slowarm=false 분기의 reaction_y *= 0.5 (object.cpp:3401-3411).
-                    m_armReactionHoldTimer   = 0f;
+                    m_armReactionHoldTimer = 0f;
                     m_armReactionExponential = true;
                 }
                 return;
@@ -453,6 +462,10 @@ namespace UnityXOPS
             ApplyArmRotation();
         }
 
+        /// <summary>
+        /// 다리 메시를 인덱스로 교체한다. legRoot 가 비활성(1인칭)이면 무시.
+        /// </summary>
+        /// <param name="legIndex">다리 메시 인덱스. 범위 밖이면 메시 제거(null).</param>
         public void SetLegModel(int legIndex)
         {
             if (!legRoot.gameObject.activeSelf)
@@ -491,12 +504,12 @@ namespace UnityXOPS
             // 1. 애니메이션 선택 (원본 object.cpp:3519-3538)
             //    Walk 플래그는 방향 플래그 유무와 상관없이 전진 이동 → Walk 애니메이션 우선.
             bool moving = (moveFlag & (HumanMoveFlag.Forward | HumanMoveFlag.Back |
-                                       HumanMoveFlag.Left    | HumanMoveFlag.Right)) != 0;
+                                       HumanMoveFlag.Left | HumanMoveFlag.Right)) != 0;
             HumanAnimation anim;
-            if (!alive)                                         anim = m_idleAnimation;
-            else if ((moveFlag & HumanMoveFlag.Walk) != 0)      anim = m_walkAnimation;
-            else if (moving)                                    anim = m_runAnimation;
-            else                                                anim = m_idleAnimation;
+            if (!alive) anim = m_idleAnimation;
+            else if ((moveFlag & HumanMoveFlag.Walk) != 0) anim = m_walkAnimation;
+            else if (moving) anim = m_runAnimation;
+            else anim = m_idleAnimation;
             if (anim == null) anim = m_idleAnimation;
             if (anim == null || anim.index == null || anim.index.Count == 0) return;
 
@@ -510,10 +523,10 @@ namespace UnityXOPS
             // 3. 방향별 사이클 시간 선택 (JSON forward/strafe/backwardSpeed = 초 단위 한 사이클 길이).
             //    Walk는 방향 플래그 무시하고 항상 전진 속도 사용 (원본 3465).
             float cycle;
-            if      ((moveFlag & HumanMoveFlag.Walk) != 0)                                    cycle = anim.forwardSpeed;
-            else if ((moveFlag & HumanMoveFlag.Back) != 0)                                    cycle = anim.backwardSpeed;
-            else if ((moveFlag & (HumanMoveFlag.Left | HumanMoveFlag.Right)) != 0)            cycle = anim.strafeSpeed;
-            else                                                                              cycle = anim.forwardSpeed;
+            if ((moveFlag & HumanMoveFlag.Walk) != 0) cycle = anim.forwardSpeed;
+            else if ((moveFlag & HumanMoveFlag.Back) != 0) cycle = anim.backwardSpeed;
+            else if ((moveFlag & (HumanMoveFlag.Left | HumanMoveFlag.Right)) != 0) cycle = anim.strafeSpeed;
+            else cycle = anim.forwardSpeed;
 
             int frameCount = anim.index.Count;
             int frameIdx;
@@ -535,33 +548,33 @@ namespace UnityXOPS
             if (alive && (moveFlag & HumanMoveFlag.Walk) == 0)
             {
                 HumanMoveFlag dir = moveFlag & (HumanMoveFlag.Forward | HumanMoveFlag.Back |
-                                                HumanMoveFlag.Left    | HumanMoveFlag.Right);
+                                                HumanMoveFlag.Left | HumanMoveFlag.Right);
                 switch (dir)
                 {
-                    case HumanMoveFlag.Forward:                        moveRxDeg =    0f; break;
-                    case HumanMoveFlag.Back:                           moveRxDeg =  180f; break;
-                    case HumanMoveFlag.Left:                           moveRxDeg =   90f; break;
-                    case HumanMoveFlag.Right:                          moveRxDeg =  -90f; break;
-                    case HumanMoveFlag.Forward | HumanMoveFlag.Left:   moveRxDeg =   45f; break;
-                    case HumanMoveFlag.Back    | HumanMoveFlag.Left:   moveRxDeg =  135f; break;
-                    case HumanMoveFlag.Back    | HumanMoveFlag.Right:  moveRxDeg = -135f; break;
-                    case HumanMoveFlag.Forward | HumanMoveFlag.Right:  moveRxDeg =  -45f; break;
+                    case HumanMoveFlag.Forward: moveRxDeg = 0f; break;
+                    case HumanMoveFlag.Back: moveRxDeg = 180f; break;
+                    case HumanMoveFlag.Left: moveRxDeg = 90f; break;
+                    case HumanMoveFlag.Right: moveRxDeg = -90f; break;
+                    case HumanMoveFlag.Forward | HumanMoveFlag.Left: moveRxDeg = 45f; break;
+                    case HumanMoveFlag.Back | HumanMoveFlag.Left: moveRxDeg = 135f; break;
+                    case HumanMoveFlag.Back | HumanMoveFlag.Right: moveRxDeg = -135f; break;
+                    case HumanMoveFlag.Forward | HumanMoveFlag.Right: moveRxDeg = -45f; break;
                 }
             }
 
             // 후진 성분이면 180도 뒤집기 (원본 3503-3509) → 다리 자체는 정면을 향한 채 애니메이션만 역방향
             float moveRx2Deg = (Mathf.Abs(moveRxDeg) > 90f) ? moveRxDeg + 180f : moveRxDeg;
-            float target     = bodyYaw - moveRx2Deg;
+            float target = bodyYaw - moveRx2Deg;
 
             if (!alive || !m_legRotationInitialized)
             {
-                m_legRotationX           = alive ? target : bodyYaw;
+                m_legRotationX = alive ? target : bodyYaw;
                 m_legRotationInitialized = true;
             }
             else
             {
                 // 원본: leg = leg*0.85 + target*0.15 (per 33.33Hz frame) → Unity 연속시간 변환
-                float blend    = 1f - Mathf.Pow(0.85f, dt * 33.3333f);
+                float blend = 1f - Mathf.Pow(0.85f, dt * 33.3333f);
                 m_legRotationX = Mathf.LerpAngle(m_legRotationX, target, blend);
             }
 

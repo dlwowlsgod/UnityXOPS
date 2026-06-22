@@ -8,7 +8,6 @@ namespace UnityXOPS
     /// </summary>
     public class XOPSSpriteTextPulse : XOPSSpriteText
     {
-        // 펄스 시작
         /// <summary>
         /// 알파값이 alphaFrom에서 alphaTo로 duration마다 반복되는 펄스 애니메이션을 시작한다.
         /// </summary>
@@ -18,7 +17,6 @@ namespace UnityXOPS
             StartCoroutine(PulseRoutine(duration, alphaFrom, alphaTo));
         }
 
-        // 펄스 중지
         /// <summary>
         /// 실행 중인 펄스 애니메이션을 중지한다.
         /// </summary>

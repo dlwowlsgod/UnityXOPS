@@ -759,7 +759,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   osFont: {fileID: 0}
-  SpriteFontTexture: {fileID: 0}
+  spriteFontTexture: {fileID: 0}
 --- !u!1 &1049169626
 GameObject:
   m_ObjectHideFlags: 0

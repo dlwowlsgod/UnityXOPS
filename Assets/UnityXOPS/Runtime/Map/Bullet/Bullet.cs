@@ -17,25 +17,25 @@ namespace UnityXOPS
         // 관통 시 attacks 감쇠 — OpenXOPS objectmanager.cpp:760-797 부위 명중 후 다음 hit 에 적용. 정수 truncation(원본 (int) 캐스팅) 유지.
         private const float k_pierceAttenHead = 0.5f;
         private const float k_pierceAttenBody = 0.6f;
-        private const float k_pierceAttenLeg  = 0.7f;
+        private const float k_pierceAttenLeg = 0.7f;
         // 벽(Block) 관통 후 attacks 감쇠 — OpenXOPS objectmanager.cpp:854 (penetration >= 0 일 때 × 0.6). 사람·벽이 penetration 카운터 공유.
         private const float k_pierceAttenWall = 0.6f;
         // 벽 두께 1 서브스텝 = 원본 BULLET_SPEEDSCALE 2.5 × 0.1. 벽 내부에 걸친 서브스텝마다 penetration 1 소비 → 두꺼운 벽은 관통력 있어도 소진돼 막힘 (원본 objectmanager.cpp:845-859).
-        private const float k_blockStepSize        = 0.25f;
+        private const float k_blockStepSize = 0.25f;
         // 두께 측정 상한 (Collider.Raycast 역방향 탐색). 이 이상이면 측정 실패 = 매우 두꺼움 → 사실상 막힘.
-        private const float k_maxBlockThickness    = 10f;
+        private const float k_maxBlockThickness = 10f;
         // 얇은 벽(서브스텝보다 얇아 inside 점이 안 걸림) — penetration 무소비, 위력만 감쇠 (원본 경로 B objectmanager.cpp:870-874).
-        private const float k_thinWallAttenPierce  = 0.75f; // penetration > 0
-        private const float k_thinWallAttenStop    = 0.55f; // penetration <= 0
+        private const float k_thinWallAttenPierce = 0.75f; // penetration > 0
+        private const float k_thinWallAttenStop = 0.55f; // penetration <= 0
 
         // 수류탄 마찰 — OpenXOPS object.cpp:3010-3026 (× 0.98 / frame, 33.333 fps). dt 가변 변환: 0.98^33.333 ≈ 0.5169.
         private const float k_grenadeFrictionPerSec = 0.5169f;
         // 수류탄 반사 감속 = -Angle×0.2546 + 0.7 (원본 object.cpp:3000). Angle = asin(v̂·n)×-1 ∈ [0, π/2].
         // 정면 충돌(π/2) → 0.3 강한 감속, 스치는 충돌(0) → 0.7. 0.2546 은 원본 매직넘버.
         private const float k_reflectAngleCoef = 0.2546f;
-        private const float k_reflectBaseCoef  = 0.7f;
+        private const float k_reflectBaseCoef = 0.7f;
         // 명중 후 hit point 직전 epsilon — 면 안쪽 박힘 방지.
-        private const float k_hitEpsilon            = 0.001f;
+        private const float k_hitEpsilon = 0.001f;
 
         // 총알 명중 시 사람에 가하는 knockback — OpenXOPS objectmanager.cpp:935 AddPosOrder(brx, 0, 1.0).
         // 원본 1.0 unit/frame × 33.333 fps × 0.1 m/unit = 3.333 m/s. 부위/무기/탄종 무관 고정.
@@ -45,7 +45,7 @@ namespace UnityXOPS
 
         // 수류탄 폭발 사람 판정점 Y (원본 objectmanager.cpp:1076,1088 — HUMAN 좌표 +2.0=발, HUMAN_HEIGHT-2.0=18.0=머리. ×0.1 Unity).
         // 발 점을 지면에서 0.2 띄우는 게 핵심: 지면 정착 수류탄→발 차폐 레이가 바닥을 스쳐 막히면서 발 데미지가 통째로 0이 되는 버그 방지.
-        private const float k_grenadeLegPointY  = 0.2f;
+        private const float k_grenadeLegPointY = 0.2f;
         private const float k_grenadeHeadPointY = 1.8f;
 
         // 수류탄 바운드음 속도 게이트 — 원본 objectmanager.cpp:2889 (반사 직전 speed > 3.4 units/frame 일 때만 재생).
@@ -53,30 +53,30 @@ namespace UnityXOPS
         private const float k_grenadeBoundSoundMinSpeed = 11.333f;
         // 효과음 볼륨 — 원본 볼륨 상수(폭발 120, 바운드/착탄 95~100)를 최댓값(폭발)으로 정규화한 상대값. 거리 감쇠는 SoundManager 3D 선형 rolloff 가 처리.
         private const float k_explosionVolume = 1.0f;
-        private const float k_wallHitVolume   = 0.8f;
+        private const float k_wallHitVolume = 0.8f;
         // 사람 피격음 볼륨 — 원본 MAX_SOUNDHITHUMAN 75 / 폭발(120) 정규화. 부위·사망 무관 단일 hit2.wav (원본 soundmanager.cpp:605-612).
-        private const float k_humanHitVolume  = 0.625f;
+        private const float k_humanHitVolume = 0.625f;
         // 총알 통과음(hyu) 볼륨 — 원본 MAX_SOUNDPASSING 80 / 폭발(120) 정규화 (soundmanager.h:40).
-        private const float k_passingVolume   = 0.667f;
+        private const float k_passingVolume = 0.667f;
 
-        private BulletData     m_bulletData;
-        private Human          m_owner;
-        private int            m_team;
-        private int            m_attacks;
-        private int            m_penetration;
-        private Vector3        m_velocity;
-        private float          m_lifetimeTimer;
-        private float          m_armingTimer;
-        private bool           m_active;
-        private float          m_onTargetWeight; // 명중 통계 가중(산탄=2/pellet, 단발=1). Weapon.SpawnBullets 가 Spawn 직후 주입.
-        private Vector3        m_visualOrigin;   // visual 표시 기준점 (무기 머즐플래시 위치). 원본엔 없는 UnityXOPS 연출.
-        private bool           m_visualVisible;  // bulletBoundAdjust 거리 도달 후 true
-        private bool           m_passingSoundDone; // 통과음(hyu) 한 발당 1회만 재생 — closest-approach 프레임에서 true
-        private HashSet<Human>       m_hitHumans  = new HashSet<Human>();
+        private BulletData m_bulletData;
+        private Human m_owner;
+        private int m_team;
+        private int m_attacks;
+        private int m_penetration;
+        private Vector3 m_velocity;
+        private float m_lifetimeTimer;
+        private float m_armingTimer;
+        private bool m_active;
+        private float m_onTargetWeight; // 명중 통계 가중(산탄=2/pellet, 단발=1). Weapon.SpawnBullets 가 Spawn 직후 주입.
+        private Vector3 m_visualOrigin; // visual 표시 기준점 (무기 머즐플래시 위치). 원본엔 없는 UnityXOPS 연출.
+        private bool m_visualVisible; // bulletBoundAdjust 거리 도달 후 true
+        private bool m_passingSoundDone; // 통과음(hyu) 한 발당 1회만 재생 — closest-approach 프레임에서 true
+        private HashSet<Human> m_hitHumans = new HashSet<Human>();
         private HashSet<SmallObject> m_hitObjects = new HashSet<SmallObject>();
 
-        private MeshFilter     m_visualMeshFilter;
-        private MeshRenderer   m_visualMeshRenderer;
+        private MeshFilter m_visualMeshFilter;
+        private MeshRenderer m_visualMeshRenderer;
 
         public bool IsActive => m_active;
 
@@ -87,7 +87,7 @@ namespace UnityXOPS
         {
             if (visual != null)
             {
-                m_visualMeshFilter   = visual.GetComponent<MeshFilter>();
+                m_visualMeshFilter = visual.GetComponent<MeshFilter>();
                 m_visualMeshRenderer = visual.GetComponent<MeshRenderer>();
             }
         }
@@ -97,13 +97,13 @@ namespace UnityXOPS
         /// </summary>
         public void ApplyVisual(Mesh mesh, Material material, Vector3 position, Vector3 rotation, Vector3 scale)
         {
-            if (m_visualMeshFilter   != null) m_visualMeshFilter.sharedMesh       = mesh;
+            if (m_visualMeshFilter != null) m_visualMeshFilter.sharedMesh = mesh;
             if (m_visualMeshRenderer != null) m_visualMeshRenderer.sharedMaterial = material;
-            if (visual               != null)
+            if (visual != null)
             {
                 visual.transform.localPosition = position;
                 visual.transform.localRotation = Quaternion.Euler(rotation);
-                visual.transform.localScale    = scale;
+                visual.transform.localScale = scale;
             }
         }
 
@@ -114,17 +114,17 @@ namespace UnityXOPS
                           int attacks, int penetration,
                           Vector3 position, Vector3 velocity, Vector3 visualOrigin)
         {
-            m_bulletData    = data;
-            m_owner         = owner;
-            m_team          = team;
-            m_attacks       = attacks;
-            m_penetration   = penetration;
-            m_velocity      = velocity;
+            m_bulletData = data;
+            m_owner = owner;
+            m_team = team;
+            m_attacks = attacks;
+            m_penetration = penetration;
+            m_velocity = velocity;
             m_lifetimeTimer = data.lifetime;
-            m_armingTimer   = data.armingDelay;
-            m_active        = true;
+            m_armingTimer = data.armingDelay;
+            m_active = true;
             m_onTargetWeight = 1f; // 기본 단발 가중. 산탄은 SpawnBullets 가 SetOnTargetWeight 로 덮어씀.
-            m_visualOrigin  = visualOrigin;
+            m_visualOrigin = visualOrigin;
             m_passingSoundDone = false;
             m_hitHumans.Clear();
             m_hitObjects.Clear();
@@ -189,8 +189,8 @@ namespace UnityXOPS
             float speed = m_velocity.magnitude;
             if (speed <= 0f) return;
 
-            float   distance = speed * dt;
-            Vector3 dir      = m_velocity / speed;
+            float distance = speed * dt;
+            Vector3 dir = m_velocity / speed;
 
             if (TryHandleCollision(transform.position, dir, distance)) return;
             transform.position += m_velocity * dt;
@@ -201,13 +201,13 @@ namespace UnityXOPS
             // 중력 — BulletData.gravityScale 자체를 m/s² 단위로 가정 (1차 사이클 가정, 검증 단계에서 보정).
             m_velocity.y -= m_bulletData.gravityScale * dt;
             // 마찰
-            m_velocity   *= Mathf.Pow(k_grenadeFrictionPerSec, dt);
+            m_velocity *= Mathf.Pow(k_grenadeFrictionPerSec, dt);
 
             float speed = m_velocity.magnitude;
             if (speed <= 0f) return;
 
-            float   distance = speed * dt;
-            Vector3 dir      = m_velocity / speed;
+            float distance = speed * dt;
+            Vector3 dir = m_velocity / speed;
 
             // Block 충돌 — 원본 grenade::ProcessObject 처럼 우선 검사.
             if (Physics.Raycast(transform.position, dir, out RaycastHit blockHit,
@@ -223,8 +223,8 @@ namespace UnityXOPS
                 }
 
                 // 일반 수류탄 — 반사 + 입사각 기반 감속 (원본 grenade::ProcessObject object.cpp:2987-3005).
-                float dot   = Mathf.Clamp(Vector3.Dot(dir, blockHit.normal), -1f, 1f);
-                float angle = -Mathf.Asin(dot);                          // 원본 Collision::AngleVector (collision.cpp:883)
+                float dot = Mathf.Clamp(Vector3.Dot(dir, blockHit.normal), -1f, 1f);
+                float angle = -Mathf.Asin(dot); // 원본 Collision::AngleVector (collision.cpp:883)
                 float accel = -angle * k_reflectAngleCoef + k_reflectBaseCoef;
                 m_velocity = Vector3.Reflect(m_velocity, blockHit.normal) * accel;
                 transform.position = blockHit.point + blockHit.normal * k_hitEpsilon;
@@ -298,10 +298,10 @@ namespace UnityXOPS
         {
             consumed = false;
             Human human = hitbox.Human;
-            if (human == null)               return false;
-            if (human == m_owner)            return false; // 자기 사격 차단
-            if (human.Team == m_team)        return false; // 같은 팀 차단 (총알 한정, 폭발은 Explode 에서 차단 X)
-            if (!human.Alive)                return false; // 시체 통과
+            if (human == null) return false;
+            if (human == m_owner) return false; // 자기 사격 차단
+            if (human.Team == m_team) return false; // 같은 팀 차단 (총알 한정, 폭발은 Explode 에서 차단 X)
+            if (!human.Alive) return false; // 시체 통과
             if (m_hitHumans.Contains(human)) return false; // HashSet 차단
 
             // 임팩트 폭발 트리거 활성 — 즉시 Explode 또는 dud Recycle.
@@ -321,7 +321,7 @@ namespace UnityXOPS
             HumanController controller = human.GetComponent<HumanController>();
             if (controller != null) controller.AddKnockback(knockYaw, 0f, k_bulletKnockbackSpeedMps);
 
-            float hpBefore = human.HP;                  // 킬 판정용 스냅샷 (원본 hp_old, objectmanager.cpp:977)
+            float hpBefore = human.HP; // 킬 판정용 스냅샷 (원본 hp_old, objectmanager.cpp:977)
             float dealtDmg = hitbox.OnBulletHit(m_attacks);
             m_hitHumans.Add(human);
 
@@ -338,8 +338,8 @@ namespace UnityXOPS
             float hitDist = hitbox.Part switch
             {
                 HumanHitPart.Head => hg.aiHearHitHumanHead,
-                HumanHitPart.Leg  => hg.aiHearHitHumanLeg,
-                _                 => hg.aiHearHitHumanBody,
+                HumanHitPart.Leg => hg.aiHearHitHumanLeg,
+                _ => hg.aiHearHitHumanBody,
             };
             WorldSound.EmitPointSound(hit.point, m_team, hitDist, hitDist);
 
@@ -347,15 +347,15 @@ namespace UnityXOPS
             {
                 HumanHitPart.Head => k_pierceAttenHead,
                 HumanHitPart.Body => k_pierceAttenBody,
-                HumanHitPart.Leg  => k_pierceAttenLeg,
-                _                 => 1f,
+                HumanHitPart.Leg => k_pierceAttenLeg,
+                _ => 1f,
             };
             m_attacks = Mathf.FloorToInt(m_attacks * atten);
             m_penetration--;
 
             if (m_penetration < 0)
             {
-                transform.position = hit.point;  // 마지막 hit 지점에 정지
+                transform.position = hit.point; // 마지막 hit 지점에 정지
                 Recycle();
                 consumed = true;
                 return true;
@@ -428,8 +428,8 @@ namespace UnityXOPS
             bool prev = Physics.queriesHitBackfaces;
             Physics.queriesHitBackfaces = true;
 
-            float   thickness = k_maxBlockThickness;
-            Vector3 start     = entry.point + dir * k_hitEpsilon;
+            float thickness = k_maxBlockThickness;
+            Vector3 start = entry.point + dir * k_hitEpsilon;
             if (entry.collider.Raycast(new Ray(start, dir), out RaycastHit exit, k_maxBlockThickness))
                 thickness = exit.distance + k_hitEpsilon;
 
@@ -467,11 +467,11 @@ namespace UnityXOPS
             // chord(콜라이더 통과 길이) / k_blockStepSize(= BULLET_SPEEDSCALE×0.1) = 명중 횟수. 최소 1회.
             // 소물은 프리미티브 콜라이더라 벽용 MeasureBlockThickness 가 안 통함 → 전용 측정 사용.
             float chord = MeasureObjectChord(hit.collider, hit.point, dir);
-            int   steps = Mathf.Max(1, Mathf.FloorToInt(chord / k_blockStepSize));
+            int steps = Mathf.Max(1, Mathf.FloorToInt(chord / k_blockStepSize));
 
             for (int s = 0; s < steps; s++)
             {
-                obj.HitBullet(Mathf.FloorToInt(m_attacks * gen.bulletDamageMultiplier));     // 파괴 후엔 SmallObject 가 자체 가드로 no-op
+                obj.HitBullet(Mathf.FloorToInt(m_attacks * gen.bulletDamageMultiplier)); // 파괴 후엔 SmallObject 가 자체 가드로 no-op
                 m_attacks = Mathf.FloorToInt(m_attacks * gen.bulletPenetrationAttenuation);
             }
 
@@ -499,10 +499,10 @@ namespace UnityXOPS
             float radius = m_bulletData.explosionRadius;
             if (radius > 0f)
             {
-                Vector3 origin     = transform.position;
-                float   headDmgMax = m_bulletData.humanExplosiveHeadDamageMax;
-                float   legDmgMax  = m_bulletData.humanExplosiveLegDamageMax;
-                float   knockMax   = m_bulletData.explosionknockbackMax * k_frameToSecond;
+                Vector3 origin = transform.position;
+                float headDmgMax = m_bulletData.humanExplosiveHeadDamageMax;
+                float legDmgMax = m_bulletData.humanExplosiveLegDamageMax;
+                float knockMax = m_bulletData.explosionknockbackMax * k_frameToSecond;
 
                 Collider[] cols = Physics.OverlapSphere(origin, radius);
                 HashSet<Human> processed = new HashSet<Human>();
@@ -515,7 +515,7 @@ namespace UnityXOPS
                     if (!hb.Human.Alive)         continue;
 
                     Vector3 humanPos = hb.Human.transform.position;
-                    float legDmg  = ComputeExplosionDamage(origin, humanPos + Vector3.up * k_grenadeLegPointY,  radius, legDmgMax);
+                    float legDmg = ComputeExplosionDamage(origin, humanPos + Vector3.up * k_grenadeLegPointY, radius, legDmgMax);
                     float headDmg = ComputeExplosionDamage(origin, humanPos + Vector3.up * k_grenadeHeadPointY, radius, headDmgMax);
 
                     float total = legDmg + headDmg;
@@ -524,8 +524,8 @@ namespace UnityXOPS
                     // knockback - 사람이 폭심에서 멀어지는 방향. 폭심이 사람 위면 수평만 (지면 박힘 방지, 원본 :1129-1135).
                     // 사망 분기용 SetHitYaw 도 같이 — 데미지 적용보다 먼저 (사망 진입 시 EnterDeadState 가 HitYaw 사용).
                     Vector3 toHuman = humanPos - origin;
-                    float   dist    = toHuman.magnitude;
-                    float pushYaw   = Mathf.Atan2(toHuman.x, toHuman.z) * Mathf.Rad2Deg;
+                    float dist = toHuman.magnitude;
+                    float pushYaw = Mathf.Atan2(toHuman.x, toHuman.z) * Mathf.Rad2Deg;
                     hb.Human.SetHitYaw(pushYaw);
 
                     if (dist > k_hitEpsilon)
@@ -565,8 +565,8 @@ namespace UnityXOPS
                     {
                         ObjectCollider oc = cols[i].GetComponentInParent<ObjectCollider>();
                         if (oc == null || oc.Owner == null) continue;
-                        if (oc.Owner.IsDestroyed)           continue;
-                        if (!processedObj.Add(oc.Owner))    continue;
+                        if (oc.Owner.IsDestroyed) continue;
+                        if (!processedObj.Add(oc.Owner)) continue;
 
                         float objDmg = ComputeExplosionDamage(origin, oc.Owner.transform.position, radius, objDmgMax);
                         if (objDmg > 0f) oc.Owner.HitGrenadeExplosion(objDmg);
@@ -580,7 +580,7 @@ namespace UnityXOPS
         private float ComputeExplosionDamage(Vector3 origin, Vector3 target, float radius, float maxDamage)
         {
             Vector3 toTarget = target - origin;
-            float   dist     = toTarget.magnitude;
+            float dist = toTarget.magnitude;
             if (dist >= radius) return 0f;
 
             // Block 차폐 검사 — 원본 raycast (벽 뒤 사람에 데미지 안 들어감).
@@ -625,8 +625,8 @@ namespace UnityXOPS
             if (player == null || m_team == player.Team) return;
 
             Vector3 listener = SoundManager.Instance.ListenerPosition;
-            Vector3 current  = transform.position;
-            Vector3 move     = current - startPos;
+            Vector3 current = transform.position;
+            Vector3 move = current - startPos;
 
             if (!IsClosestApproach(startPos, current, move, listener, out Vector3 closestPoint)) return;
 
@@ -645,12 +645,12 @@ namespace UnityXOPS
             var humans = MapLoader.Humans;
             if (humans == null) return;
 
-            var     gen      = DataManager.Instance.HumanParameterData.humanGeneralData;
-            float   maxDist  = gen.aiHearBulletDist;
-            float   eye      = gen.cameraAttachPosition;
-            Human   player   = MapLoader.Player;
-            Vector3 current  = transform.position;
-            Vector3 move     = current - startPos;
+            var gen = DataManager.Instance.HumanParameterData.humanGeneralData;
+            float maxDist = gen.aiHearBulletDist;
+            float eye = gen.cameraAttachPosition;
+            Human player = MapLoader.Player;
+            Vector3 current = transform.position;
+            Vector3 move = current - startPos;
 
             for (int i = 0; i < humans.Count; i++)
             {

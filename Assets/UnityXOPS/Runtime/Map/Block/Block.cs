@@ -49,8 +49,8 @@ namespace UnityXOPS
             hitDist = 0f;
             if (!collider) return false;
 
-            float minT      = (maxDist > 0f) ? maxDist : float.MaxValue;
-            int   foundFace = -1;
+            float minT = (maxDist > 0f) ? maxDist : float.MaxValue;
+            int foundFace = -1;
 
             for (int i = 0; i < 6; i++)
             {
@@ -68,8 +68,8 @@ namespace UnityXOPS
                 if (t < 0f || t > minT) continue;
 
                 // p가 블록 내부(나머지 면들의 안쪽)인가?
-                Vector3 p      = origin + direction * t;
-                bool    inside = true;
+                Vector3 p = origin + direction * t;
+                bool inside = true;
                 for (int j = 0; j < 6; j++)
                 {
                     if (j == i) continue;
@@ -81,7 +81,7 @@ namespace UnityXOPS
                 }
                 if (!inside) continue;
 
-                minT      = t;
+                minT = t;
                 foundFace = i;
             }
 

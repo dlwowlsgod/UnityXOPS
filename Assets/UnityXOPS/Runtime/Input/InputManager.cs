@@ -10,18 +10,18 @@ namespace UnityXOPS
     /// </summary>
     public class InputManager : SingletonBehavior<InputManager>
     {
-        public InputAction Look     { get; private set; }
-        public InputAction Move     { get; private set; }
-        public InputAction Jump     { get; private set; }
-        public InputAction Walk     { get; private set; }
-        public InputAction Drop     { get; private set; }
-        public InputAction Fire     { get; private set; }
-        public InputAction Zoom     { get; private set; }
+        public InputAction Look { get; private set; }
+        public InputAction Move { get; private set; }
+        public InputAction Jump { get; private set; }
+        public InputAction Walk { get; private set; }
+        public InputAction Drop { get; private set; }
+        public InputAction Fire { get; private set; }
+        public InputAction Zoom { get; private set; }
         public InputAction Previous { get; private set; }
-        public InputAction Next     { get; private set; }
-        public InputAction Reload   { get; private set; }
-        public InputAction First    { get; private set; }
-        public InputAction Second   { get; private set; }
+        public InputAction Next { get; private set; }
+        public InputAction Reload { get; private set; }
+        public InputAction First { get; private set; }
+        public InputAction Second { get; private set; }
         public InputAction Interact { get; private set; }
 
         private InputActionMap m_map;
@@ -33,9 +33,6 @@ namespace UnityXOPS
 
         private bool m_hideInWindow;
 
-        /// <summary>
-        /// 바인딩 JSON을 읽어 InputActionMap을 생성하고 모든 액션을 등록한 뒤 활성화한다.
-        /// </summary>
         private void Start()
         {
             Keyboard = Keyboard.current;
@@ -50,16 +47,16 @@ namespace UnityXOPS
             Look = m_map.AddAction("Look", InputActionType.PassThrough);
             Look.AddBinding(binding.look);
             Look.AddCompositeBinding("2DVector")
-                .With("Up",    binding.lookUp)
-                .With("Down",  binding.lookDown)
-                .With("Left",  binding.lookLeft)
+                .With("Up", binding.lookUp)
+                .With("Down", binding.lookDown)
+                .With("Left", binding.lookLeft)
                 .With("Right", binding.lookRight);
 
             Move = m_map.AddAction("Move", InputActionType.Value);
             Move.AddCompositeBinding("2DVector")
-                .With("Up",    binding.moveForward)
-                .With("Down",  binding.moveBackward)
-                .With("Left",  binding.moveLeft)
+                .With("Up", binding.moveForward)
+                .With("Down", binding.moveBackward)
+                .With("Left", binding.moveLeft)
                 .With("Right", binding.moveRight);
 
             Jump = m_map.AddAction("Jump");
@@ -89,7 +86,7 @@ namespace UnityXOPS
             First = m_map.AddAction("First");
             First.AddBinding(binding.first);
 
-            Second = m_map.AddAction("Second"); 
+            Second = m_map.AddAction("Second");
             Second.AddBinding(binding.second);
 
             Interact = m_map.AddAction("Interact");
@@ -98,9 +95,6 @@ namespace UnityXOPS
             m_map.Enable();
         }
 
-        /// <summary>
-        /// hideInWindow 모드일 때 마우스 커서 가시성을 매 프레임 갱신한다.
-        /// </summary>
         private void Update()
         {
             if (m_hideInWindow && Mouse != null)
@@ -138,31 +132,27 @@ namespace UnityXOPS
         {
             if (m_map == null) return;
 
-            lookValue     = Look.ReadValue<Vector2>();
-            moveValue     = Move.ReadValue<Vector2>();
-            jumpValue     = Jump.IsPressed();
-            walkValue     = Walk.IsPressed();
-            dropValue     = Drop.IsPressed();
-            fireValue     = Fire.IsPressed();
-            zoomValue     = Zoom.IsPressed();
+            lookValue = Look.ReadValue<Vector2>();
+            moveValue = Move.ReadValue<Vector2>();
+            jumpValue = Jump.IsPressed();
+            walkValue = Walk.IsPressed();
+            dropValue = Drop.IsPressed();
+            fireValue = Fire.IsPressed();
+            zoomValue = Zoom.IsPressed();
             previousValue = Previous.IsPressed();
-            nextValue     = Next.IsPressed();
-            reloadValue   = Reload.IsPressed();
-            firstValue    = First.IsPressed();
-            secondValue   = Second.IsPressed();
+            nextValue = Next.IsPressed();
+            reloadValue = Reload.IsPressed();
+            firstValue = First.IsPressed();
+            secondValue = Second.IsPressed();
             interactValue = Interact.IsPressed();
         }
 #endif
-        /// <summary>
-        /// InputActionMap을 비활성화하고 해제한다.
-        /// </summary>
         private void OnDestroy()
         {
             m_map?.Disable();
             m_map?.Dispose();
         }
 
-        // hideInWindow: true이면 마우스가 창 안에 있을 때만 커서 숨김
         /// <summary>
         /// 마우스 커서 표시 여부, 잠금 모드, 화면 중앙 이동 여부를 설정한다.
         /// </summary>
@@ -177,11 +167,11 @@ namespace UnityXOPS
                 Cursor.visible = true;
             }
 
-            if (moveToCenter)
+            if (moveToCenter && Mouse != null)
             {
                 Mouse.WarpCursorPosition(new Vector2(Screen.width / 2, Screen.height / 2));
             }
-                
+
             if (centered)
             {
                 Cursor.lockState = CursorLockMode.Locked;
