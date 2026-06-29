@@ -21,11 +21,6 @@ namespace UnityXOPS
                 return;
             }
 
-            if (!ConfigManager.Loaded)
-            {
-                return;
-            }
-
             SceneManager.LoadScene(1);
         }
     }

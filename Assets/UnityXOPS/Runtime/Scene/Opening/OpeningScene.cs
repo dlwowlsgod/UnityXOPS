@@ -1,12 +1,12 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.IO;
 using JJLUtility;
 
 namespace UnityXOPS
 {
     /// <summary>
-    /// 오프닝 시퀀스를 관리하고 종료 조건에 따라 메인메뉴 씬으로 전환하는 컨트롤러.
+    /// 오프닝 씬을 부트스트랩하는 컨트롤러. 맵/스카이 데이터를 로드하고,
+    /// 씬 종료 시 로드한 리소스를 정리한다. 연출과 씬 전환은 opening.lua가 담당한다.
     /// </summary>
     public class OpeningScene : MonoBehaviour
     {
@@ -16,16 +16,12 @@ namespace UnityXOPS
 
         private const string k_openingDataPath = "unitydata/opening_data.json";
 
-        private float m_time;
-        private float m_endTime = 0;
-
         private void Start()
         {
-            m_time = Time.time;
             InputManager.MouseCursorMode(true, false, true);
 
             string fullPath = Path.Combine(Application.streamingAssetsPath, k_openingDataPath);
-            string openingDataFile = File.ReadAllText(fullPath);
+            string openingDataFile = EncodingHelper.ReadAllText(fullPath);
             openingData = JsonUtility.FromJson<OpeningData>(openingDataFile);
 
             openingData.openingBD1Path = SafePath.Combine(Application.streamingAssetsPath, openingData.openingBD1Path);
@@ -35,27 +31,22 @@ namespace UnityXOPS
             MapLoader.LoadPointData(openingData.openingPD1Path);
             MapLoader.LoadSkyData(openingData.openingSkyIndex);
             HumanController.TickEnabled = true;
-
-            m_endTime = openingData.openingFadeData.fadeOutEnd + 1.1f;
         }
 
-        private void Update()
+        private void OnDestroy()
         {
-            float t = Time.time - m_time;
-            bool pressed = InputManager.Keyboard.escapeKey.wasPressedThisFrame || InputManager.Mouse.leftButton.wasPressedThisFrame;
+            if (BulletManager.Loaded) BulletManager.Instance.ClearPool();
+            if (SoundManager.Loaded) SoundManager.Instance.ClearPool();
+            if (EffectManager.Loaded) EffectManager.Instance.ClearPool();
 
-            if (t > m_endTime || pressed)
+            if (MapLoader.Loaded)
             {
-                BulletManager.Instance.ClearPool();
-                SoundManager.Instance.ClearPool();
-                EffectManager.Instance.ClearPool();
                 MapLoader.UnloadBlockData();
                 MapLoader.UnloadPointData();
                 MapLoader.UnloadSkyData();
-                HumanController.TickEnabled = false;
-                Camera.main.gameObject.SetActive(false);
-                SceneManager.LoadScene(2);
             }
+
+            HumanController.TickEnabled = false;
         }
     }
 }

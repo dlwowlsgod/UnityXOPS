@@ -34,6 +34,7 @@ namespace UnityXOPS
 
         private void Update()
         {
+
             // 진입/재시작 직후 잠금 카운트다운 — 잠금 중엔 ESC·F12 무시.
             if (m_inputLockTimer > 0f) m_inputLockTimer -= Time.deltaTime;
             bool inputLocked = m_inputLockTimer > 0f;
