@@ -83,7 +83,7 @@ namespace UnityXOPS
                 string msgPath = Path.ChangeExtension(filepath, ".msg");
                 if (File.Exists(msgPath))
                 {
-                    pointData.msg = File.ReadAllLines(msgPath, EncodingHelper.GetEncoding());
+                    pointData.msg = EncodingHelper.ReadAllLines(msgPath);
                 }
 
                 return pointData;

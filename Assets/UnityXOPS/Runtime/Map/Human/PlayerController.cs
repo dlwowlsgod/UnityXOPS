@@ -115,7 +115,7 @@ namespace UnityXOPS
 
             var input = InputManager.Instance;
 
-            float sensitivity = ConfigManager.Instance.MouseSensitivity; // 외부 config(0~1) 감도
+            float sensitivity = 0.1f; // 외부 config(0~1) 감도
             Vector2 look = input.Look.ReadValue<Vector2>();
             m_yaw += look.x * sensitivity;
             m_pitch -= look.y * sensitivity;

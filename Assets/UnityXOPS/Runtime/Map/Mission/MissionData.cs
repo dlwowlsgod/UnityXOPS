@@ -96,7 +96,7 @@ namespace UnityXOPS
             if (mif)
             {
                 string addonMissionPath = DataManager.Instance.MissionData.addonMissions[index].mifPath;
-                string[] mifLines = File.ReadAllLines(addonMissionPath, EncodingHelper.GetEncoding());
+                string[] mifLines = EncodingHelper.ReadAllLines(addonMissionPath);
 
                 Instance.missionName = mifLines[0];
                 Instance.missionFullname = mifLines[1];
@@ -143,7 +143,7 @@ namespace UnityXOPS
                 var txtPath = SafePath.Combine(Application.streamingAssetsPath, officialMission.txtPath);
                 if (File.Exists(txtPath))
                 {
-                    var txt = File.ReadAllLines(txtPath, EncodingHelper.GetEncoding());
+                    var txt = EncodingHelper.ReadAllLines(txtPath);
                     if (txt.Length > 2)
                     {
                         var briefingPath = Path.Combine(Application.streamingAssetsPath, "data/briefing");
@@ -246,7 +246,7 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// 추가 사물 정보 txt(6줄)를 파싱한다. LoadMissionData 의 mif 파싱과 동일하게 File.ReadAllLines + EncodingHelper 사용.
+        /// 추가 사물 정보 txt(6줄)를 파싱한다. LoadMissionData 의 mif 파싱과 동일하게 EncodingHelper.ReadAllLines 로 인코딩 자동 판별.
         /// line0 모델경로 / line1 텍스처경로 / line2 decide(콜라이더 크기) / line3 hp / line4 피격음 경로 / line5 jump(파괴 점프력).
         /// MAX_ADDSMALLOBJECT == 1 이라 항목 사이 더미 줄은 없다. 경로는 OpenXOPS 형식(".\data\..")을 상대경로("data/..")로 정규화한다.
         /// </summary>
@@ -255,7 +255,7 @@ namespace UnityXOPS
         {
             if (string.IsNullOrEmpty(txtPath) || !File.Exists(txtPath)) return null;
 
-            string[] lines = File.ReadAllLines(txtPath, EncodingHelper.GetEncoding());
+            string[] lines = EncodingHelper.ReadAllLines(txtPath);
             if (lines.Length < 6) return null;
 
             // 원본 ENABLE_ADDOBJ_PARAM8BIT(main.h:73, 기본 ON) — 원조 XOPS 호환을 위해 char 8비트 마스킹.

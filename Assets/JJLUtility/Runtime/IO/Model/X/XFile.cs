@@ -2,6 +2,7 @@ using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
 using System.Globalization;
+using JJLUtility;
 
 namespace JJLUtility.IO
 {
@@ -169,7 +170,7 @@ namespace JJLUtility.IO
                 return null;
             }
 
-            string text = File.ReadAllText(filepath, System.Text.Encoding.UTF8);
+            string text = EncodingHelper.ReadAllText(filepath);
 
             if (text.Length < 16 || !text.StartsWith("xof"))
             {

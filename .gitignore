@@ -2,7 +2,6 @@
 Assembly-CSharp.csproj
 *.sln
 UnityXOPS.sln.DotSettings.user
-ProjectSettings
 obj
 UserSettings
 Logs
@@ -19,3 +18,4 @@ Assets/StreamingAssets/addon
 CLAUDE.md
 .claude
 docs
+Assets/XLua

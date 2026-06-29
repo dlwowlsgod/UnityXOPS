@@ -37,6 +37,17 @@ namespace UnityXOPS
         }
 
         /// <summary>
+        /// 진행 중인 페이드를 멈추고 알파값을 즉시 지정 값으로 설정한다.
+        /// </summary>
+        /// <param name="alpha">설정할 알파(0~1로 클램프)</param>
+        public void SetAlpha(float alpha)
+        {
+            StopAllCoroutines();
+            var c = m_rawImage.color;
+            m_rawImage.color = new Color(c.r, c.g, c.b, Mathf.Clamp01(alpha));
+        }
+
+        /// <summary>
         /// 지정 시간 동안 알파를 0에서 1로 서서히 증가시킨다(페이드 아웃).
         /// </summary>
         public void FadeOut(float duration)
