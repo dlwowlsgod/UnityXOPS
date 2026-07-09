@@ -69,19 +69,7 @@ namespace UnityXOPS
             var spriteText = obj.AddComponent<T>();
 
             var rectTransform = obj.GetComponent<RectTransform>();
-            rectTransform.pivot = alignment switch
-            {
-                TextAnchor.LowerLeft => new Vector2(0f, 0f),
-                TextAnchor.LowerCenter => new Vector2(0.5f, 0f),
-                TextAnchor.LowerRight => new Vector2(1f, 0f),
-                TextAnchor.MiddleLeft => new Vector2(0f, 0.5f),
-                TextAnchor.MiddleCenter => new Vector2(0.5f, 0.5f),
-                TextAnchor.MiddleRight => new Vector2(1f, 0.5f),
-                TextAnchor.UpperLeft => new Vector2(0f, 1f),
-                TextAnchor.UpperCenter => new Vector2(0.5f, 1f),
-                TextAnchor.UpperRight => new Vector2(1f, 1f),
-                _ => new Vector2(0f, 0f),
-            };
+            rectTransform.pivot = AlignmentToPivot(alignment);
             rectTransform.anchoredPosition = position;
             rectTransform.anchorMin = anchorMin;
             rectTransform.anchorMax = anchorMax;
@@ -95,6 +83,81 @@ namespace UnityXOPS
             spriteText.Spacing = spacing;
 
             return spriteText;
+        }
+
+        /// <summary>
+        /// 지정 파라미터로 OS 폰트(TMP) 텍스트 UI를 생성하고 RectTransform을 설정한 뒤 반환한다.
+        /// 스프라이트 폰트(XOPSSpriteText) 대신 가독성 좋은 OS 폰트를 쓸 때 사용한다.
+        /// rect는 0 크기로 두고 TMP alignment가 기준점에서의 정렬 방향을 결정한다(XOPSSpriteText와 동일 감각).
+        /// </summary>
+        /// <param name="root">부모 Transform.</param>
+        /// <param name="text">표시할 문자열.</param>
+        /// <param name="anchorMin">앵커 최소.</param>
+        /// <param name="anchorMax">앵커 최대.</param>
+        /// <param name="position">anchoredPosition.</param>
+        /// <param name="size">rect sizeDelta(보통 0 — 히트 영역이 필요하면 호출 측이 키운다).</param>
+        /// <param name="fontSize">글자 크기(pt).</param>
+        /// <param name="color">글자 색.</param>
+        /// <param name="alignment">글자 정렬 기준점.</param>
+        /// <returns>설정이 끝난 TextMeshProUGUI.</returns>
+        public static TextMeshProUGUI CreateOSFont(Transform root, string text, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size, float fontSize, Color32 color, TextAnchor alignment)
+        {
+            var obj = new GameObject();
+            obj.transform.SetParent(root, false);
+            var tmp = obj.AddComponent<TextMeshProUGUI>();
+
+            var rectTransform = tmp.rectTransform;
+            rectTransform.pivot = AlignmentToPivot(alignment);
+            rectTransform.anchoredPosition = position;
+            rectTransform.anchorMin = anchorMin;
+            rectTransform.anchorMax = anchorMax;
+            rectTransform.sizeDelta = size;
+
+            tmp.font = OSFont;
+            tmp.text = text;
+            tmp.fontSize = fontSize;
+            tmp.color = color;
+            tmp.alignment = ToTMPAlignment(alignment);
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            tmp.overflowMode = TextOverflowModes.Overflow;
+
+            return tmp;
+        }
+
+        // TextAnchor(9지점) → RectTransform pivot.
+        private static Vector2 AlignmentToPivot(TextAnchor alignment)
+        {
+            return alignment switch
+            {
+                TextAnchor.LowerLeft => new Vector2(0f, 0f),
+                TextAnchor.LowerCenter => new Vector2(0.5f, 0f),
+                TextAnchor.LowerRight => new Vector2(1f, 0f),
+                TextAnchor.MiddleLeft => new Vector2(0f, 0.5f),
+                TextAnchor.MiddleCenter => new Vector2(0.5f, 0.5f),
+                TextAnchor.MiddleRight => new Vector2(1f, 0.5f),
+                TextAnchor.UpperLeft => new Vector2(0f, 1f),
+                TextAnchor.UpperCenter => new Vector2(0.5f, 1f),
+                TextAnchor.UpperRight => new Vector2(1f, 1f),
+                _ => new Vector2(0f, 0f),
+            };
+        }
+
+        // TextAnchor(9지점) → TMP TextAlignmentOptions.
+        private static TextAlignmentOptions ToTMPAlignment(TextAnchor alignment)
+        {
+            return alignment switch
+            {
+                TextAnchor.UpperLeft => TextAlignmentOptions.TopLeft,
+                TextAnchor.UpperCenter => TextAlignmentOptions.Top,
+                TextAnchor.UpperRight => TextAlignmentOptions.TopRight,
+                TextAnchor.MiddleLeft => TextAlignmentOptions.Left,
+                TextAnchor.MiddleCenter => TextAlignmentOptions.Center,
+                TextAnchor.MiddleRight => TextAlignmentOptions.Right,
+                TextAnchor.LowerLeft => TextAlignmentOptions.BottomLeft,
+                TextAnchor.LowerCenter => TextAlignmentOptions.Bottom,
+                TextAnchor.LowerRight => TextAlignmentOptions.BottomRight,
+                _ => TextAlignmentOptions.TopLeft,
+            };
         }
     }
 }

@@ -17,5 +17,8 @@ namespace UnityXOPS
         public string versionMajor;
         public string versionMinor;
         public string versionPatch;
+
+        // 표시용 버전 문자열(major.minor.patch). JsonUtility는 필드만 직렬화하므로 프로퍼티는 무시된다.
+        public string Version => $"{versionMajor}.{versionMinor}.{versionPatch}";
     }
 }

@@ -12,5 +12,7 @@ namespace UnityXOPS
         private const string k_skyDataPath = "unitydata/sky_data.json";
         private const string k_missionDataPath = "unitydata/mission_data.json";
         private const string k_globalDataPath = "unitydata/global.json";
+        private const string k_addonPathDataPath = "addon.json";
+        private const string k_fallbackAddonFolder = "addon";
     }
 }

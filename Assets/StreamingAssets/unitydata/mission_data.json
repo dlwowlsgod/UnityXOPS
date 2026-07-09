@@ -1,4 +1,9 @@
 {
+    "openingData" : {
+        "bd1Path" : "data/map10/temp.bd1",
+        "pd1Path" : "data/map10/op.pd1",
+        "skyIndex" : 1
+    },
     "demoData" : [
         {
             "bd1Path" : "data/map2/temp.bd1",

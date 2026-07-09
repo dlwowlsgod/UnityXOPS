@@ -131,6 +131,18 @@ namespace UnityXOPS
             }
         }
 
+        /// <summary>
+        /// 카메라 시야각(FOV, degree)을 설정한다. 카메라가 없으면 무시한다.
+        /// </summary>
+        /// <param name="fieldOfView">수직 시야각(도).</param>
+        public void SetFieldOfView(float fieldOfView)
+        {
+            if (Cam != null)
+            {
+                Cam.fieldOfView = fieldOfView;
+            }
+        }
+
         /// <summary>현재 카메라 위치의 X를 반환한다. 카메라가 없으면 0.</summary>
         public float GetX() => Cam != null ? Cam.transform.position.x : 0f;
 

@@ -5,8 +5,7 @@ namespace UnityXOPS
     public enum ViewMode
     {
         FirstPerson = 0,
-        ThirdPersonRight = 1,
-        ThirdPersonLeft = 2,
+        ThirdPerson = 1,
     }
 
     public class PlayerController : MonoBehaviour
@@ -15,18 +14,22 @@ namespace UnityXOPS
         [SerializeField] private float pitchLimit = 70f;
         [SerializeField] private ViewMode viewMode = ViewMode.FirstPerson;
         [SerializeField] private LayerMask thirdPersonCollisionMask = ~0;
-        [SerializeField] private LayerMask aimMask = ~0; // 조준 표적점 ray 대상 (블록/사람/소품). 자기 자신 hitbox 는 코드에서 제외.
-        [SerializeField] private MaingameUIDynamicLayout uiLayout; // F4 로 Normal ↔ Simple UI 토글
-
-        // 카메라 중앙 ray 가 아무것도 안 맞을 때 쓰는 먼 표적 거리.
-        private const float k_aimRayMaxDist = 1000f;
+        [SerializeField] private MaingameUIDynamicLayout uiLayout; // F2 로 Normal → Simple → Off UI 순환
 
         // OpenXOPS gamemain.cpp:2651-2678 외부 3인칭 공식 상수 (원본 × 0.1)
         private const float k_thirdPersonPivotBack = 0.30f; // 원본 3.0f
         private const float k_thirdPersonMaxDist = 1.40f; // 원본 VIEW_F1MODE_DIST 14.0f
         private const float k_thirdPersonHeightBias = 0.25f; // 원본 2.5f
         private const float k_thirdPersonSphereRadius = 0.10f;
-        private const float k_thirdPersonShoulderOffset = 0.40f; // UnityXOPS 추가: over-the-shoulder 가로 오프셋
+        private const float k_thirdPersonPivotHeight = 1.95f; // 원본 HUMAN_HEIGHT(20.0)-0.5=19.5 × 0.1 (1인칭 eye 1.9 와 별개)
+        private const float k_thirdPersonInitialPitch = 22.5f; // 원본 VIEW_F1MODE_ANGLE (3인칭 진입 시 살짝 내려다봄)
+        private const float k_thirdPersonNumpadDegPerFrame = 2f; // 원본 INPUT_F1NUMKEYS_ANGLE 프레임당 2°
+        private const float k_thirdPersonSmoothBase = 0.8f; // 원본 카메라각 8:2 관성 (프레임당 목표각 20% 접근)
+        private const float k_referenceFps = 33.3333f; // 원본 프레임레이트 (관성/넘버패드 프레임독립 변환)
+
+        // 치트(F9) 복제 스폰 오프셋 — 원본 gamemain.cpp:2436-2438 (정면 10.0 / 위 5.0) × 0.1.
+        private const float k_cloneFrontDist = 1.0f;
+        private const float k_cloneUpOffset = 0.5f;
 
         // OpenXOPS gamemain.cpp:2633-2647 사망 카메라 상수 (원본 33.33fps 기준 → 시간 기반 변환).
         private const float k_deathCamFps = 33.3333f;
@@ -39,10 +42,13 @@ namespace UnityXOPS
         private Human m_player;
         private HumanController m_controller;
 
-        // 사용자가 고른 시점(F1/F2/F3). 스코프 조준 중에는 viewMode 가 1인칭으로 강제되지만 이 값은 유지 → 해제 시 복원.
-        private ViewMode m_desiredViewMode;
+        // 3인칭 카메라 시선 오프셋 (넘버패드 조정, 마우스 시선 위에 얹힘). 원본 view_rx/view_ry.
+        private float m_viewYawOffset;
+        private float m_viewPitchOffset;
 
-        private void Start() => m_desiredViewMode = viewMode;
+        // 8:2 관성이 적용된 실제 카메라 궤도각. 원본 camera_rx/camera_ry.
+        private float m_camYaw;
+        private float m_camPitch;
 
         private float m_yaw;
         private float m_pitch;
@@ -59,22 +65,17 @@ namespace UnityXOPS
         public bool FirstPerson => viewMode == ViewMode.FirstPerson;
 
         /// <summary>
-        /// 사용자 시점 선택(F1/F2/F3). 스코프 조준 중이면 1인칭이 유지되고 이 선택은 해제 후 복원된다.
+        /// 1인칭 ↔ 3인칭 시점을 토글한다 (원본 F1 키, gamemain.cpp:2293-2304).
+        /// 3인칭 진입 시 시선 오프셋을 초기화(pitch = 내려다보는 각)하고 관성 카메라각을 목표로 스냅한다.
         /// </summary>
-        public void SetViewMode(ViewMode value)
+        public void ToggleViewMode()
         {
-            m_desiredViewMode = value;
-            ResolveViewMode();
-        }
-
-        /// <summary>
-        /// 실제 적용 시점 결정 — 스코프 조준 중이면 1인칭 강제, 아니면 사용자 선택(m_desiredViewMode). 변경 시에만 ApplyViewpoint.
-        /// </summary>
-        private void ResolveViewMode()
-        {
-            ViewMode target = (m_player != null && m_player.IsScoping) ? ViewMode.FirstPerson : m_desiredViewMode;
-            if (target == viewMode) return;
-            viewMode = target;
+            viewMode = viewMode == ViewMode.FirstPerson ? ViewMode.ThirdPerson : ViewMode.FirstPerson;
+            m_viewYawOffset = 0f;
+            m_viewPitchOffset = viewMode == ViewMode.ThirdPerson ? k_thirdPersonInitialPitch : 0f;
+            // 관성 카메라각은 오프셋을 뺀 현재 시선에서 출발 → LateUpdate 스무딩이 3인칭 시선각까지 8:2 로 이즈인.
+            m_camYaw = m_yaw;
+            m_camPitch = m_pitch;
             ApplyViewpoint();
         }
 
@@ -105,22 +106,71 @@ namespace UnityXOPS
         {
             if (!TryAcquirePlayer()) return;
 
-            // UI 토글은 카메라(사망 시 Death Camera로 전환)와 무관하므로 사망 중에도 허용.
-            // F4 = Normal UI ↔ Simple UI 토글
-            if (uiLayout != null && InputManager.Keyboard.f4Key.wasPressedThisFrame) uiLayout.ToggleUIMode();
+            // UI 순환은 카메라(사망 시 Death Camera로 전환)와 무관하므로 사망 중에도 허용.
+            // F2 = Normal → Simple → Off UI 순환
+            if (uiLayout != null && InputManager.Keyboard.f2Key.wasPressedThisFrame) uiLayout.CycleUIMode();
+
+            // 치트 F5 — F5+Enter 동시 홀드 중 강제 상승(수직 관통). 원본 gamemain.cpp:2326-2332 (CheckKeyNow AND, hold 방식).
+            // 매 프레임 평가해 사망/해제 시 즉시 중지 (사망 시 false → 시체가 계속 떠오르는 것 방지).
+            var kb = InputManager.Keyboard;
+            bool cheatRise = m_player.Alive && kb != null && kb.f5Key.isPressed && kb.enterKey.isPressed;
+            m_controller.SetCheatRise(cheatRise);
+
+            // 치트 F8 — F8 홀드 + ←/→ 엣지로 Player Human 을 이전/다음으로 교체 (원본 gamemain.cpp:2367-2408).
+            // Event/Path 는 건드리지 않고 MapLoader.Player 만 스왑. 사망 중에도 동작(다른 Human 빙의).
+            // ← = 인덱스 증가, → = 감소 — 원본(←=HumanID+1) 과 동일.
+            if (kb != null && kb.f8Key.isPressed)
+            {
+                if (kb.leftArrowKey.wasPressedThisFrame) CyclePlayer(1);
+                else if (kb.rightArrowKey.wasPressedThisFrame) CyclePlayer(-1);
+            }
+
+            // 치트 F9 — F9 홀드 + ↑/↓ 엣지로 내 복제 캐릭터 생성. ↑=따라오기, ↓=제자리 경계(기본). 원본 gamemain.cpp:2411-2455.
+            // HP·탄약은 복사 안 하고 기본값(최대 HP / 기본 탄약), 종류·팀·현재 무기 종류·활성 슬롯만 복사.
+            if (kb != null && kb.f9Key.isPressed)
+            {
+                if (kb.upArrowKey.wasPressedThisFrame) SpawnClone(Human.CloneAIMode.Follow);
+                else if (kb.downArrowKey.wasPressedThisFrame) SpawnClone(Human.CloneAIMode.Guard);
+            }
 
             // 사망 시 모든 입력 무시 (이동/회전/무기 전환/시점 사이클).
             // 카메라는 LateUpdate가 별도 분기로 ApplyDeathCamera 처리.
             if (!m_player.Alive) return;
 
+            // 치트 F6 — F6 홀드 + Enter 엣지(누르는 순간 1회)로 현재 무기 예비탄에 장탄수만큼 추가.
+            // 원본 gamemain.cpp:2337-2341 (CheckKeyNow(F6) + CheckKeyDown(Enter), HP>0). Enter 엣지라 홀드해도 반복 안 됨.
+            if (kb != null && kb.f6Key.isPressed && kb.enterKey.wasPressedThisFrame)
+                m_player.CurrentWeapon?.CheatAddMagazine();
+
+            // 치트 F7 — F7 홀드 + ←/→ 엣지로 현재 슬롯 무기를 이전/다음 무기 종류로 강제 교체 (원본 gamemain.cpp:2344-2363, HP>0).
+            // 현재 탄약 유지, parameter 인덱스 순환. ← = 인덱스 증가(0→1→2), → = 감소 — 원본(←=id_param+1) 과 동일.
+            if (kb != null && kb.f7Key.isPressed)
+            {
+                if (kb.leftArrowKey.wasPressedThisFrame) m_player.CheatCycleWeapon(1);
+                else if (kb.rightArrowKey.wasPressedThisFrame) m_player.CheatCycleWeapon(-1);
+            }
+
             var input = InputManager.Instance;
 
-            float sensitivity = 0.1f; // 외부 config(0~1) 감도
+            float sensitivity = ConfigManager.Instance.MouseSensitivity; // 외부 config(0~1) 감도
             Vector2 look = input.Look.ReadValue<Vector2>();
             m_yaw += look.x * sensitivity;
             m_pitch -= look.y * sensitivity;
             m_pitch = Mathf.Clamp(m_pitch, -pitchLimit, pitchLimit);
             m_controller.SetYawPitch(m_yaw, m_pitch);
+
+            // 3인칭 카메라 시선 오프셋 — 넘버패드로 상하좌우 궤도 조정 (원본 gamemain.cpp:2307-2320, 홀드 시 프레임당 2°).
+            if (viewMode == ViewMode.ThirdPerson)
+            {
+                float step = k_thirdPersonNumpadDegPerFrame * Time.deltaTime * k_referenceFps;
+                if (kb != null)
+                {
+                    if (kb.numpad8Key.isPressed) m_viewPitchOffset += step; // 위로
+                    if (kb.numpad5Key.isPressed) m_viewPitchOffset -= step; // 아래로
+                    if (kb.numpad4Key.isPressed) m_viewYawOffset -= step;   // 좌 궤도
+                    if (kb.numpad6Key.isPressed) m_viewYawOffset += step;   // 우 궤도
+                }
+            }
 
             Vector2 move = input.Move.ReadValue<Vector2>();
             if (move.y > 0f) m_controller.SetMoveFlag(HumanMoveFlag.Forward);
@@ -153,7 +203,6 @@ namespace UnityXOPS
                           : input.Fire.WasPressedThisFrame();
                 if (fire)
                 {
-                    UpdateAimPoint();   // 발사 직전 카메라 중앙 표적점 갱신 → 총알이 크로스헤어로 수렴
                     currentWeapon.Shoot(m_player);
                 }
             }
@@ -181,9 +230,6 @@ namespace UnityXOPS
                 if (visual != null) visual.SetBodyVisible(viewMode != ViewMode.FirstPerson);
                 m_deathCamInitialized = false;
             }
-
-            // 스코프 조준 상태에 맞춰 시점 동기화 (스코프 ON→1인칭 강제, OFF→사용자 선택 복원). 토글은 별도 스크립트라 매 프레임 폴링.
-            ResolveViewMode();
 
             if (viewMode == ViewMode.FirstPerson)
             {
@@ -233,64 +279,81 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// OpenXOPS gamemain.cpp:2651-2678 외부 3인칭 공식 + UnityXOPS over-the-shoulder 오프셋.
-        /// 플레이어 눈높이 뒤쪽으로 주시점을 잡고 좌/우 어깨로 이동시킨 뒤 SphereCast로 벽 침투 방지.
+        /// OpenXOPS gamemain.cpp:2651-2678 외부 3인칭 공식 (정중앙 뒤, 어깨 오프셋 없음).
+        /// 마우스 시선 + 넘버패드 오프셋을 목표각으로 8:2 관성 접근(원본 camera_rx/ry 스무딩) 후,
+        /// 원본 주시점(注視点) = 수평 sin(pitch)×3.0 앞 + 수직 base 19.5 + cos(pitch)×2.5 (전부 ×0.1) 을 잡고,
+        /// 그 뒤로 시선 반대방향 dist 만큼 카메라를 배치. SphereCast(radius 0.10)로 원본 dist-1.0(=×0.1) 클리핑 재현.
         /// </summary>
         private void ApplyThirdPersonCamera()
         {
-            float eyeHeight = DataManager.Instance.HumanParameterData.humanGeneralData.cameraAttachPosition;
+            float targetYaw = m_yaw + m_viewYawOffset;
+            float targetPitch = m_pitch + m_viewPitchOffset;
+            float smooth = 1f - Mathf.Pow(k_thirdPersonSmoothBase, Time.deltaTime * k_referenceFps);
+            m_camYaw = Mathf.LerpAngle(m_camYaw, targetYaw, smooth);
+            m_camPitch = Mathf.LerpAngle(m_camPitch, targetPitch, smooth);
+
             Vector3 playerPos = m_player.transform.position;
+            Quaternion viewRot = Quaternion.Euler(m_camPitch, m_camYaw, 0f);
+            Vector3 look = viewRot * Vector3.forward;
+            Vector3 viewBack = -look;
+            Vector3 horizontal = new Vector3(look.x, 0f, look.z).normalized; // 수평 시선
+            float camPitchRad = m_camPitch * Mathf.Deg2Rad;
 
-            Quaternion viewRot = Quaternion.Euler(m_pitch, m_yaw, 0f);
-            Vector3 viewBack = viewRot * Vector3.back;
-            Vector3 viewRight = viewRot * Vector3.right;
-            float pitchRad = m_pitch * Mathf.Deg2Rad;
-
-            float shoulderSign = viewMode == ViewMode.ThirdPersonLeft ? -1f : 1f;
-
-            Vector3 pivot = playerPos;
-            pivot.y += eyeHeight;
-            pivot += viewBack * k_thirdPersonPivotBack;
-            pivot.y += Mathf.Sin(-pitchRad) * k_thirdPersonHeightBias;
-            pivot += viewRight * (k_thirdPersonShoulderOffset * shoulderSign);
+            // 원본 注視点 — 수평은 시선방향으로 sin(pitch)×0.3, 수직은 base(1.95) + cos(pitch)×0.25.
+            Vector3 focus = playerPos
+                          + horizontal * (Mathf.Sin(camPitchRad) * k_thirdPersonPivotBack)
+                          + Vector3.up * (k_thirdPersonPivotHeight + Mathf.Cos(camPitchRad) * k_thirdPersonHeightBias);
 
             float dist = k_thirdPersonMaxDist;
-            if (Physics.SphereCast(pivot, k_thirdPersonSphereRadius, viewBack,
+            if (Physics.SphereCast(focus, k_thirdPersonSphereRadius, viewBack,
                                    out RaycastHit hit, k_thirdPersonMaxDist, thirdPersonCollisionMask))
             {
                 dist = hit.distance;
             }
 
-            Vector3 cameraPos = pivot + viewBack * dist;
+            Vector3 cameraPos = focus + viewBack * dist;
             playerCamera.transform.position = cameraPos;
-            playerCamera.transform.rotation = Quaternion.LookRotation(pivot - cameraPos, Vector3.up);
+            playerCamera.transform.rotation = Quaternion.LookRotation(focus - cameraPos, Vector3.up);
         }
 
         /// <summary>
-        /// 카메라 중앙(크로스헤어)이 실제로 닿는 월드 표적점을 구해 플레이어에 주입.
-        /// 총알이 총구에서 이 점으로 향하면 3인칭 어깨 오프셋과 무관하게 크로스헤어에 명중한다.
-        /// 어깨 너머 자기 몸이 ray 에 걸리면 건너뛰고 그 너머를 표적으로 잡는다.
+        /// 치트(F9) — 플레이어 정면에 복제 캐릭터를 스폰한다. mode=Follow(따라오기) / Guard(제자리 경계).
+        /// HP·탄약은 복사하지 않고 기본값으로 생성(원본 F9). 위치는 원본과 동일하게 정면 1.0m + 위 0.5m.
         /// </summary>
-        private void UpdateAimPoint()
+        /// <param name="mode">클론 AI 모드 (Follow=나를 추적 / Guard=제자리 경계).</param>
+        private void SpawnClone(Human.CloneAIMode mode)
         {
-            if (playerCamera == null) return;
+            Vector3 pos = m_player.transform.position
+                        + m_player.transform.forward * k_cloneFrontDist
+                        + Vector3.up * k_cloneUpOffset;
+            float yaw = m_player.transform.eulerAngles.y;
+            MapLoader.SpawnHumanClone(m_player, pos, yaw, mode,
+                                      mode == Human.CloneAIMode.Follow ? m_player : null);
+        }
 
-            Vector3 origin = playerCamera.transform.position;
-            Vector3 fwd = playerCamera.transform.forward;
-            Vector3 target = origin + fwd * k_aimRayMaxDist;
+        /// <summary>
+        /// 치트(F7) — Player Human 을 Humans 리스트에서 dir(-1 이전 / +1 다음) 방향으로 순환 교체한다.
+        /// MapLoader.Player 만 바꾸며(Event/Path 불변), 다음 프레임 TryAcquirePlayer 가 카메라/조작을 새 Human 으로 재취득한다.
+        /// </summary>
+        /// <param name="dir">-1 = 이전 Human, +1 = 다음 Human.</param>
+        private void CyclePlayer(int dir)
+        {
+            int count = MapLoader.HumanCount;
+            if (count == 0) return;
 
-            RaycastHit[] hits = Physics.RaycastAll(origin, fwd, k_aimRayMaxDist, aimMask, QueryTriggerInteraction.Ignore);
-            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-            for (int i = 0; i < hits.Length; i++)
-            {
-                // 자기 자신(플레이어) 콜라이더는 통과 — 어깨 너머 화면에 잡힌 자기 몸을 표적으로 삼지 않도록.
-                HumanHitbox hb = hits[i].collider.GetComponent<HumanHitbox>();
-                if (hb != null && hb.Human == m_player) continue;
-                target = hits[i].point;
-                break;
-            }
+            int idx = MapLoader.PlayerIndex;
+            if (idx < 0) return;
 
-            m_player.SetAimPoint(target);
+            int next = ((idx + dir) % count + count) % count;
+            if (next == idx) return; // Human 이 1명뿐 — 교체할 대상 없음
+
+            // 옛 Player 는 AI(3인칭 대상)로 넘어가므로 1인칭 때 껐던 몸통/다리를 다시 켠다.
+            // 안 하면 투명한 채로 남는다. 새 Player 의 표시는 TryAcquirePlayer→ApplyViewpoint 가 시점에 맞춰 처리.
+            if (m_player != null && m_player.HumanVisual != null)
+                m_player.HumanVisual.SetBodyVisible(true);
+
+            m_controller.SetCheatRise(false); // 옛 Player 의 상승 치트 해제 (AI 로 넘어간 뒤 계속 떠오르는 것 방지)
+            MapLoader.SetPlayer(MapLoader.GetHuman(next));
         }
 
         private bool TryAcquirePlayer()
@@ -305,7 +368,12 @@ namespace UnityXOPS
                 if (m_controller == null) return false;
 
                 m_yaw = player.transform.eulerAngles.y;
-                m_pitch = 0f;
+                // 초기 시선 pitch — 정면(0)이 아니라 AI/HumanController 와 동일한 팔 rest 각(-armAngleInitial, 살짝 아래)에서 시작.
+                m_pitch = -DataManager.Instance.HumanParameterData.humanGeneralData.armAngleInitial;
+                m_camYaw = m_yaw;
+                m_camPitch = m_pitch;
+                m_viewYawOffset = 0f;
+                m_viewPitchOffset = 0f;
                 m_fireReady = false; // 조작권 획득 시 비무장 — Fire 를 한 번 떼야 발사 (씬 전환 클릭 누수 차단)
                 m_controller.SetYawPitch(m_yaw, m_pitch);
 

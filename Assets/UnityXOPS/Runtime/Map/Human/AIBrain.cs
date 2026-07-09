@@ -91,6 +91,17 @@ namespace UnityXOPS
             }
             m_lastFramePos = self.transform.position;
             m_nav.Init(self.PathStartId);
+
+            // 치트(F9) 복제 클론 — 패스 순찰 대신 따라오기/제자리 경계로 오버라이드.
+            switch (self.CloneAI)
+            {
+                case Human.CloneAIMode.Follow:
+                    m_nav.SetHoldTracking(self.CloneFollowTarget);
+                    break;
+                case Human.CloneAIMode.Guard:
+                    m_nav.SetHoldWait(self.transform.position, self.transform.eulerAngles.y);
+                    break;
+            }
         }
 
         /// <summary>원본 AIcontrol::Process (ai.cpp:1934) 1프레임. 상태 전이 → 상태별 처리 → 회전 적분 적용.</summary>

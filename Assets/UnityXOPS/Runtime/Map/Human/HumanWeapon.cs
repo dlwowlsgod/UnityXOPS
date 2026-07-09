@@ -85,6 +85,30 @@ namespace UnityXOPS
         }
 
         /// <summary>
+        /// 치트(F9 복제) — 두 슬롯 무기를 source 가 현재 들고 있는 무기 "종류"로 교체한다(탄약은 기본값, 현재 탄약 무시).
+        /// 활성 슬롯도 source 와 일치시킨다. 원본 F9: weapon_paramid[]=현재 무기 종류번호, 탄약은 AddVisualWeaponIndex 기본값.
+        /// </summary>
+        /// <param name="source">무기 구성을 복사할 원본 Human.</param>
+        public void CopyHeldWeaponsFrom(Human source)
+        {
+            if (source == null) return;
+            int noneIdx = DataManager.Instance.WeaponParameterData.weaponGeneralData.noneWeaponIndex;
+
+            for (int i = 0; i < m_weapons.Length; i++)
+            {
+                Weapon src = source.GetWeapon(i);
+                int idx = src != null ? src.WeaponIndex : noneIdx;
+                if (m_weapons[i] != null) Destroy(m_weapons[i].gameObject);
+                m_weapons[i] = InstantiateWeapon(idx); // 기본 탄약
+            }
+
+            m_selectWeapon = Mathf.Clamp(source.SelectWeapon, 0, 1);
+            m_weapons[0].gameObject.SetActive(m_selectWeapon == 0);
+            m_weapons[1].gameObject.SetActive(m_selectWeapon == 1);
+            humanVisual.ApplyWeaponVisual(m_weapons[m_selectWeapon]);
+        }
+
+        /// <summary>
         /// MapLoader.WeaponPrefab 을 Instantiate 하고 Weapon.CreateWeapon 으로 초기화한 뒤
         /// WeaponData.fixWeapon 에 따라 fixed/dynamicWeaponAttachRoot 중 하나로 부모를 설정한다.
         /// magazine/reserve 모두 음수면 default(가득 + 0예비). drop/pickup/SwitchID 는 옛 값을 그대로 넘겨 보존.
@@ -184,6 +208,40 @@ namespace UnityXOPS
             float holdDeg = DataManager.Instance.HumanParameterData.humanGeneralData.armAngleReloading;
             m_selectWeaponCnt = duration;
             humanVisual.BeginArmReactionHold(holdDeg, duration);
+        }
+
+        /// <summary>
+        /// 치트(F7) — 현재 슬롯 무기를 parameter 무기 목록에서 dir 방향으로 강제 순환 교체한다.
+        /// 현재 탄약(매거진/예비)을 새 무기 장탄수에 맞추지 않고 그대로 유지한다(예: PSG1 5/10 → MP5 5/10, NONE 0/0 → MP5 0/0).
+        /// 전환/재장전 락 없이 즉시 교체. 원본 ObjectManager::CheatNewWeapon (objectmanager.cpp:2320).
+        /// UnityXOPS 무기는 prefab 인스턴스라 모델/텍스처를 CreateWeapon 으로 재생성해야 하므로 destroy + InstantiateWeapon 패턴을 쓴다.
+        /// </summary>
+        /// <param name="dir">-1 = 이전 무기, +1 = 다음 무기 (weaponData 인덱스 순환, noneWeapon 포함).</param>
+        public void CheatCycleWeapon(int dir)
+        {
+            var list = DataManager.Instance.WeaponParameterData.weaponData;
+            if (list == null || list.Count == 0) return;
+
+            Weapon current = m_weapons[m_selectWeapon];
+            int count = list.Count;
+            int cur = current != null ? current.WeaponIndex : 0;
+            int next = ((cur + dir) % count + count) % count;
+
+            // 현재 탄약을 그대로 새 무기에 이전 (새 무기 장탄수에 맞추지 않음).
+            int mag = current != null ? current.CurrentMagazine : 0;
+            int reserve = current != null ? current.ReserveAmmo : 0;
+
+            if (current != null) Destroy(current.gameObject);
+
+            Weapon w = InstantiateWeapon(next);
+            w.CheatSetAmmo(mag, reserve);
+            m_weapons[m_selectWeapon] = w;
+            w.gameObject.SetActive(true);
+            humanVisual.ApplyWeaponVisual(w);
+
+            // 교체 전 무기의 진행 중 전환/재장전 카운터가 새 무기에 남지 않게 해제 → 즉시 사용 가능.
+            m_selectWeaponCnt = 0f;
+            m_reloadingCnt = 0f;
         }
 
         /// <summary>

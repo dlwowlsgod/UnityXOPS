@@ -87,6 +87,15 @@ namespace UnityXOPS.Modding
             CameraDirector.Instance.Rotate(dx, dy, dz);
         }
 
+        /// <summary>
+        /// 카메라 시야각(FOV)을 설정한다.
+        /// </summary>
+        /// <param name="fieldOfView">수직 시야각(도)</param>
+        public void SetFieldOfView(float fieldOfView)
+        {
+            CameraDirector.Instance.SetFieldOfView(fieldOfView);
+        }
+
         /// <summary>현재 카메라 위치의 X를 반환한다.</summary>
         public float GetX() => CameraDirector.Instance.GetX();
 

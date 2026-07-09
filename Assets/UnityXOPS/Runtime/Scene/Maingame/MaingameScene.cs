@@ -139,7 +139,7 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// F2 = 1인칭, F1 = 3인칭(좌), F3 = 3인칭(우). 사망 중에는 입력 무시 (사망 카메라 유지).
+        /// F1 = 1인칭 ↔ 3인칭 토글 (원본 gamemain.cpp:2293-2304). 사망 중에는 입력 무시 (사망 카메라 유지).
         /// </summary>
         private void UpdateViewModeInput()
         {
@@ -148,9 +148,7 @@ namespace UnityXOPS
             Human player = MapLoader.Player;
             if (player == null || !player.Alive) return;
 
-            if (InputManager.Keyboard.f2Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.FirstPerson);
-            else if (InputManager.Keyboard.f1Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.ThirdPersonLeft);
-            else if (InputManager.Keyboard.f3Key.wasPressedThisFrame) playerController.SetViewMode(ViewMode.ThirdPersonRight);
+            if (InputManager.Keyboard.f1Key.wasPressedThisFrame) playerController.ToggleViewMode();
         }
 
         /// <summary>

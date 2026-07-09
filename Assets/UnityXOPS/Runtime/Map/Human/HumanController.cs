@@ -36,6 +36,9 @@ namespace UnityXOPS
         private const float k_collisionAddSize = 0.001f; // COLLISION_ADDSIZE
         private const int k_moveYUpperCooldown = 8; // 경사 slide 후 점프/climb 금지 프레임
 
+        // 브로드페이즈 반경 — 원본 HUMAN_MAPCOLLISION_CHECK_MAXDIST(12.0) × 0.1. 이 반경 밖 블록은 이번 Tick 충돌 검사에서 제외.
+        private const float k_broadphaseRadius = 1.2f;
+
         // 원본 AddCollisionFlag 추가 허리 체크 높이 (SCHOOL 맵 좁은 통로 대응, 항상 적용)
         private const float k_addHeightA = 0.9f;
         private const float k_addHeightB = 1.3f;
@@ -45,6 +48,9 @@ namespace UnityXOPS
 
         // 경사 미끄러짐 예측 시간 (원본: move*3f @ 33fps = 90ms)
         private const float k_slidePredictionTime = 0.09f;
+
+        // 치트(F5) 강제 상승 속도 — 원본 object.cpp:2013-2017 pos_y += 5.0/frame × 0.1 scale × 33.333fps.
+        private const float k_cheatRiseSpeed = 16.6667f;
 
         // 사망 상태머신 상수 (원본 33.33fps 기준 → 시간 기반 변환).
         // OpenXOPS HUMAN_DEADADDRY = 0.75°/frame²: 매 프레임 회전속도가 0.75°씩 증가.
@@ -58,6 +64,9 @@ namespace UnityXOPS
         private Human m_human;
         private HumanVisual m_humanVisual;
 
+        // 이번 Tick 에서 충돌 검사할 근처 블록만 담는 재사용 리스트 (원본 CheckBlockID[] 브로드페이즈 대응). 매 Tick 갱신, GC 미발생.
+        private readonly List<Block> m_nearBlocks = new List<Block>(32);
+
         private float m_rotationX;
         private float m_armRotationY;
 
@@ -65,6 +74,9 @@ namespace UnityXOPS
         private HumanMoveFlag m_moveFlag;
         private HumanMoveFlag m_moveFlagLt;
         private int m_moveYUpper;
+
+        // 치트(F5+Enter 홀드) 강제 상승 플래그 — 플레이어가 매 프레임 갱신, Tick 이 소비. hold 방식이라 별도 해제 로직 불필요.
+        private bool m_cheatRise;
 
         // 접지 여부 — 원본 OpenXOPS move_y_flag 의 반전 (접지=true). 정확도 airborne 페널티에 사용.
         // 스폰 직후 첫 FixedUpdate 전까지는 접지로 간주 (대부분 지면에서 시작).
@@ -99,6 +111,12 @@ namespace UnityXOPS
         }
 
         public void SetMoveFlag(HumanMoveFlag flag) { m_moveFlag |= flag; }
+
+        /// <summary>
+        /// 치트(F5+Enter 홀드) 강제 상승 여부를 설정한다. true 면 다음 Tick 에서 수직 관통 상승한다.
+        /// </summary>
+        /// <param name="active">이번 프레임 상승 여부 (홀드 상태 그대로).</param>
+        public void SetCheatRise(bool active) => m_cheatRise = active;
 
         public void SetYawPitch(float yaw, float pitch)
         {
@@ -196,6 +214,17 @@ namespace UnityXOPS
             Vector3 pos2 = transform.position;
             Vector3 pos = pos2;
 
+            // 0. 치트(F5) 강제 상승 — 원본 object.cpp:2013-2017. CollisionMap 백업(pos2) 전에 상승분을 반영해
+            // 수직(천장/블록) 충돌이 되돌리지 못하게 함(수직 관통). pos2 도 함께 올려 수평 취소 분기가 높이를 유지.
+            // move_y=0 으로 중력 누적 차단. 수평 벽 충돌은 아래 로직에서 그대로 작동.
+            if (m_cheatRise)
+            {
+                m_moveVelocity.y = 0f;
+                float rise = k_cheatRiseSpeed * dt;
+                pos.y += rise;
+                pos2.y += rise;
+            }
+
             // 1. XZ 이동 반영 (원본: pos_x += move_x; pos_z += move_z;)
             pos.x += m_moveVelocity.x * dt;
             pos.z += m_moveVelocity.z * dt;
@@ -218,7 +247,10 @@ namespace UnityXOPS
             float waistY = H * 0.5f; // 원본 HUMAN_MAPCOLLISION_HEIGHT=10.0 → 허리
             float slopeLimit = gen.controllerSlopeLimit * Mathf.Deg2Rad;
 
-            IReadOnlyList<Block> blocks = MapLoader.BlockColliders;
+            // 브로드페이즈: 이번 Tick 의 모든 충돌 패스가 155개 전체가 아닌 근처 블록만 검사하도록 후보를 추린다.
+            // 이동 스윕(velocity*dt)과 키 높이(H)를 반경에 포함해 프레임 내 어떤 체크포인트도 놓치지 않게 함.
+            BuildNearBlocks(pos, H, m_moveVelocity * dt);
+            IReadOnlyList<Block> blocks = m_nearBlocks;
 
             if (speed > 0f || m_moveVelocity.y != 0f)
             {
@@ -320,10 +352,13 @@ namespace UnityXOPS
                             pos.x + m_moveVelocity.x * 0.33f,
                             shoulderY,
                             pos.z + m_moveVelocity.z * 0.33f);
+                        // 예측 지점(*0.33)은 고속 시 브로드페이즈 반경을 벗어날 수 있어, 원본 CheckALLBlockInside 처럼
+                        // 근처 리스트가 아닌 전체 블록으로 검사한다. 매몰 상태에서만 진입하므로 비용은 무시할 수준.
+                        IReadOnlyList<Block> allBlocks = MapLoader.BlockColliders;
                         bool predInAny = false;
-                        for (int j = 0; j < blocks.Count; j++)
+                        for (int j = 0; j < allBlocks.Count; j++)
                         {
-                            if (blocks[j].Contains(pred)) { predInAny = true; break; }
+                            if (allBlocks[j].Contains(pred)) { predInAny = true; break; }
                         }
                         if (predInAny)
                         {
@@ -472,6 +507,9 @@ namespace UnityXOPS
         private void EnterDeadState(ref Vector3 pos)
         {
             m_human.SetDeadState(HumanDeadState.Falling);
+
+            // 모드 이벤트 — 사망 진입 1회. (식별번호, 팀, 위치). 게임 로직은 그대로, Emit 한 줄만.
+            UnityXOPS.Modding.XOPSEventBus.Emit("humanDied", m_human.Identifier, m_human.Team, pos.x, pos.y, pos.z);
 
             // 원본 object.cpp:1213-1222 — Hit_rx 와 본인 yaw 차이로 앞/뒤 분기.
             // |Δyaw| < 90° (등 뒤에서 맞음) → 앞으로 엎어짐 (+pitch),
@@ -722,6 +760,35 @@ namespace UnityXOPS
 
             pos = newPos;
             return true;
+        }
+
+        /// <summary>
+        /// 원본 human::CollisionMap 의 CheckBlockID[] 프리필터 대응. 전체 블록 중 이번 Tick 검사 대상인 근처 블록만
+        /// m_nearBlocks 에 추린다. human 위치 기준 박스(반경 k_broadphaseRadius, 상단은 키 height 만큼 추가 + 이동 스윕)에
+        /// AABB 가 겹치는 블록만 통과. 이후 모든 충돌 패스는 이 리스트만 순회한다.
+        /// </summary>
+        /// <param name="pos">이번 Tick 의 현재 human 위치(발 기준).</param>
+        /// <param name="height">human 키(controllerHeight) — 머리/어깨 체크포인트를 반경에 포함하기 위한 상단 확장.</param>
+        /// <param name="moveDelta">이번 Tick 예상 이동량(velocity×dt) — 스윕 방향으로 박스를 늘려 이동 후 위치까지 커버.</param>
+        private void BuildNearBlocks(Vector3 pos, float height, Vector3 moveDelta)
+        {
+            m_nearBlocks.Clear();
+
+            float r = k_broadphaseRadius;
+            Vector3 lo = new Vector3(
+                pos.x - r + Mathf.Min(0f, moveDelta.x),
+                pos.y - r + Mathf.Min(0f, moveDelta.y),
+                pos.z - r + Mathf.Min(0f, moveDelta.z));
+            Vector3 hi = new Vector3(
+                pos.x + r + Mathf.Max(0f, moveDelta.x),
+                pos.y + height + r + Mathf.Max(0f, moveDelta.y),
+                pos.z + r + Mathf.Max(0f, moveDelta.z));
+
+            IReadOnlyList<Block> all = MapLoader.BlockColliders;
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (all[i].OverlapsAABB(lo, hi)) m_nearBlocks.Add(all[i]);
+            }
         }
 
         private static bool AnyBlockContains(IReadOnlyList<Block> blocks, float x, float y, float z)

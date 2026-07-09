@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace UnityXOPS
 {
     /// <summary>
-    /// JSON 액션 정의를 읽어 InputSystem 액션을 data-driven으로 구성하고 관리하는 싱글톤 매니저.
+    /// ConfigManager가 소유한 바인딩 정의로 InputSystem 액션을 data-driven으로 구성하고 관리하는 싱글톤 매니저.
     /// 코어 액션은 타입 접근자로, 그 외 액션은 GetAction(name)으로 이름 조회한다.
     /// </summary>
     public class InputManager : SingletonBehavior<InputManager>
@@ -32,7 +32,6 @@ namespace UnityXOPS
 
         private InputActionMap m_map;
 
-        private const string k_bindingsPath = "unitydata/input_bindings.json";
         private const string k_inputModPath = "unitydata/input/binding.lua";
 
         public static Keyboard Keyboard { get; private set; }
@@ -45,14 +44,12 @@ namespace UnityXOPS
             Keyboard = Keyboard.current;
             Mouse = Mouse.current;
 
-            string fullPath = SafePath.Combine(Application.streamingAssetsPath, k_bindingsPath);
-            string json = EncodingHelper.ReadAllText(fullPath);
-            var data = JsonUtility.FromJson<InputBindingData>(json);
-
+            // 바인딩 데이터는 ConfigManager가 소유(config.json)한다. ConfigManager.Awake가 먼저 끝나 있으므로 안전하게 읽는다.
             m_map = new InputActionMap("XOPS");
-            if (data?.actions != null)
+            InputActionDefinition[] bindings = ConfigManager.Instance.Bindings;
+            if (bindings != null)
             {
-                foreach (InputActionDefinition def in data.actions)
+                foreach (InputActionDefinition def in bindings)
                 {
                     BuildAction(def);
                 }

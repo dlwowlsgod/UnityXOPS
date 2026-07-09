@@ -25,12 +25,23 @@ namespace UnityXOPS
         private List<GameObject> m_scopeReticles;   // scopeData 인덱스별 레티클 컨테이너 (시작 시 1회 빌드).
 
         private Human m_player;
+        private PlayerController m_playerController;
 
         private Camera m_camera;
         private float m_baseFov;
         private bool m_baseFovCaptured;
 
         public bool HasPlayer => m_player != null;
+
+        // 3인칭 시점 여부 — 원본은 3인칭에서 크로스헤어/스코프/FOV줌을 전부 숨긴다 (gamemain.cpp:2755·2935·3169, Camera_F1mode 게이팅).
+        private bool IsThirdPerson
+        {
+            get
+            {
+                if (m_playerController == null) m_playerController = FindFirstObjectByType<PlayerController>();
+                return m_playerController != null && !m_playerController.FirstPerson;
+            }
+        }
 
         // 현재 무기가 크로스헤어 표시 무기인지 (WeaponData.crosshair). 죽었거나 무기 없으면 false.
         public bool ShowCrosshair
@@ -68,14 +79,16 @@ namespace UnityXOPS
             m_player = MapLoader.Player;
 
             // 스코프 토글 입력 → Human 에 위임 (상태·자동해제는 Human 이 관리, 원본 ChangeScopeMode).
+            // 3인칭에서도 스코프 상태값은 토글되지만(원본 InputPlayer 는 F1mode 무관 호출) 화면엔 아무것도 안 그려진다.
             if (m_player != null && InputManager.Instance.Zoom.WasPressedThisFrame())
                 m_player.ToggleScope();
 
-            ApplyScope();
+            bool thirdPerson = IsThirdPerson;
+            ApplyScope(thirdPerson);
 
-            // 크로스헤어 표시: 무기 crosshair 가 켜져 있고, (스코프 미사용 || 그 스코프가 크로스헤어를 숨기지 않음).
+            // 크로스헤어 표시: 1인칭이고, 무기 crosshair 가 켜져 있고, (스코프 미사용 || 그 스코프가 크로스헤어를 숨기지 않음).
             ScopeData activeScope = m_player != null ? m_player.ActiveScope : null;
-            bool showCross = ShowCrosshair && !(activeScope != null && activeScope.hideCrosshair);
+            bool showCross = !thirdPerson && ShowCrosshair && !(activeScope != null && activeScope.hideCrosshair);
             crosshairRoot.gameObject.SetActive(showCross);
             if (!showCross) return;
 
@@ -86,9 +99,10 @@ namespace UnityXOPS
         }
 
         // 스코프 오버레이 텍스처/표시 + 카메라 FOV + 레티클(인덱스 일치분만)을 현재 스코프 상태에 맞춰 적용.
-        private void ApplyScope()
+        // 3인칭이면 스코프 상태와 무관하게 오버레이/레티클/FOV줌 모두 끈다 (원본 3인칭 게이팅).
+        private void ApplyScope(bool thirdPerson)
         {
-            bool scoping = m_player != null && m_player.IsScoping;
+            bool scoping = m_player != null && m_player.IsScoping && !thirdPerson;
             ScopeData scope = scoping ? m_player.ActiveScope : null;
 
             if (scopeImage != null)

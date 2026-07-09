@@ -87,7 +87,7 @@ namespace UnityXOPS
             {
                 int atk = ai.attack + (m_longAttack ? 1 : 0);
                 if (GetRand(atk) == 0)
-                    w.Shoot(m_self); // AimPoint 미설정 → SpawnBullets 가 controller.Yaw/Pitch 방향으로 발사
+                    w.Shoot(m_self); // SpawnBullets 가 controller.Yaw/Pitch 방향으로 직사
             }
         }
 

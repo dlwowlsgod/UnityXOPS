@@ -188,5 +188,16 @@ namespace UnityXOPS.Modding
             InputAction action = InputManager.Instance.GetAction(name);
             return action != null ? action.type.ToString() : "";
         }
+
+        /// <summary>
+        /// 마우스 커서 모드를 설정한다. 씬 진입/전환 시 호출한다(예: 메뉴는 자유 커서, FPS는 중앙 고정).
+        /// </summary>
+        /// <param name="hideInWindow">true면 창 안에 커서가 있을 때 숨긴다.</param>
+        /// <param name="centered">true면 커서를 화면 중앙에 고정(Locked)한다(FPS용). false면 자유 이동(메뉴용).</param>
+        /// <param name="moveToCenter">true면 커서를 즉시 화면 중앙으로 이동시킨다.</param>
+        public void SetMouseCursor(bool hideInWindow, bool centered, bool moveToCenter)
+        {
+            InputManager.MouseCursorMode(hideInWindow, centered, moveToCenter);
+        }
     }
 }

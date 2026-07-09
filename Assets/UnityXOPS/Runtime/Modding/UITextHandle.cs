@@ -52,6 +52,20 @@ namespace UnityXOPS.Modding
         }
 
         /// <summary>
+        /// 요소 rect 크기를 설정한다. 글자 크기(SetFontSize)와 별개로, 정렬 기준 영역과 호버 판정 영역을 정한다.
+        /// 좌측 정렬 텍스트를 버튼처럼 쓸 때 rect를 줄 크기로 넓혀 클릭 판정을 맞추는 데 쓴다.
+        /// </summary>
+        /// <param name="width">rect 너비</param>
+        /// <param name="height">rect 높이</param>
+        public void SetSize(float width, float height)
+        {
+            if (m_rect != null)
+            {
+                m_rect.sizeDelta = new Vector2(width, height);
+            }
+        }
+
+        /// <summary>
         /// 글자 크기를 설정한다.
         /// </summary>
         /// <param name="width">글자 너비</param>

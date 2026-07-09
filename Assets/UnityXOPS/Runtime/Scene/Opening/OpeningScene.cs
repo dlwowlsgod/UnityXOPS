@@ -10,35 +10,21 @@ namespace UnityXOPS
     /// </summary>
     public class OpeningScene : MonoBehaviour
     {
-        [SerializeField]
-        private OpeningData openingData;
-        public OpeningData OpeningData => openingData;
-
-        private const string k_openingDataPath = "unitydata/opening_data.json";
-
         private void Start()
         {
-            InputManager.MouseCursorMode(true, false, true);
+            var openingData = DataManager.Instance.MissionData.openingData;
 
-            string fullPath = Path.Combine(Application.streamingAssetsPath, k_openingDataPath);
-            string openingDataFile = EncodingHelper.ReadAllText(fullPath);
-            openingData = JsonUtility.FromJson<OpeningData>(openingDataFile);
+            var openingBD1Path = SafePath.Combine(Application.streamingAssetsPath, openingData.bd1Path);
+            var openingPD1Path = SafePath.Combine(Application.streamingAssetsPath, openingData.pd1Path);
 
-            openingData.openingBD1Path = SafePath.Combine(Application.streamingAssetsPath, openingData.openingBD1Path);
-            openingData.openingPD1Path = SafePath.Combine(Application.streamingAssetsPath, openingData.openingPD1Path);
-
-            MapLoader.LoadBlockData(openingData.openingBD1Path);
-            MapLoader.LoadPointData(openingData.openingPD1Path);
-            MapLoader.LoadSkyData(openingData.openingSkyIndex);
+            MapLoader.LoadBlockData(openingBD1Path);
+            MapLoader.LoadPointData(openingPD1Path);
+            MapLoader.LoadSkyData(openingData.skyIndex);
             HumanController.TickEnabled = true;
         }
 
         private void OnDestroy()
         {
-            if (BulletManager.Loaded) BulletManager.Instance.ClearPool();
-            if (SoundManager.Loaded) SoundManager.Instance.ClearPool();
-            if (EffectManager.Loaded) EffectManager.Instance.ClearPool();
-
             if (MapLoader.Loaded)
             {
                 MapLoader.UnloadBlockData();

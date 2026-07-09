@@ -310,6 +310,9 @@ namespace UnityXOPS
         // 평평한 블록의 degenerate(부피 0) bounds 로 인한 프러스텀 컬링 오작동 방지용 최소 두께 (Unity 단위, = 1 OpenXOPS 단위).
         private const float k_minBoundsThickness = 0.1f;
 
+        // 충돌 AABB 여유 (원본 COLLISION_ADDSIZE × 0.1). 브로드페이즈 경계 케이스 포함용.
+        private const float k_collisionAddSize = 0.001f;
+
         private static Block BuildBlock(RawBlockData raw, bool darkFlag)
         {
             Vector3 center = Vector3.zero;
@@ -423,6 +426,18 @@ namespace UnityXOPS
             bool isBoardBlock = HasDuplicateExpandedVertices(expanded)
                               || IsCenterVisibleFromAnyFace(center, faceNormals, faceCenters);
 
+            // 8정점 월드 AABB — 충돌 브로드페이즈 fast-reject 용. 원본 COLLISION_ADDSIZE 여유를 반영해 살짝 확장.
+            Vector3 boundsMin = raw.vertices[0];
+            Vector3 boundsMax = raw.vertices[0];
+            for (int i = 1; i < 8; i++)
+            {
+                boundsMin = Vector3.Min(boundsMin, raw.vertices[i]);
+                boundsMax = Vector3.Max(boundsMax, raw.vertices[i]);
+            }
+            Vector3 boundsMargin = Vector3.one * k_collisionAddSize;
+            boundsMin -= boundsMargin;
+            boundsMax += boundsMargin;
+
             return new Block
             {
                 mesh = mesh,
@@ -431,6 +446,8 @@ namespace UnityXOPS
                 collider = !isBoardBlock,
                 faceNormals = faceNormals,
                 faceCenters = faceCenters,
+                boundsMin = boundsMin,
+                boundsMax = boundsMax,
             };
         }
 
