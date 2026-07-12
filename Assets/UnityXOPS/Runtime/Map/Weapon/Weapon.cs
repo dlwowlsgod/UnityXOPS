@@ -138,19 +138,21 @@ namespace UnityXOPS
         /// fireRate 쿨다운, 매거진 잔량, 발사자 상태(IsChanging/Alive) 검사 후 실제 발사. 산탄(pelletCount > 1) 은 박스 분포 분산.
         /// 원본 OpenXOPS ObjectManager::ShotWeapon (objectmanager.cpp:1926-2060) 대응.
         /// </summary>
-        public void Shoot(Human owner)
+        /// <param name="owner">발사 주체 Human.</param>
+        /// <returns>실제로 발사됐으면 true, 쿨다운·전환·재장전·매거진 0 등으로 발사 못 하면 false (원본 ShotWeapon 성공 여부).</returns>
+        public bool Shoot(Human owner)
         {
-            if (owner == null || !owner.Alive) return;
-            if (owner.IsChanging) return;
-            if (m_isFalling) return;
-            if (m_fireRateTimer > 0f) return;
-            if (m_isReloading) return;
-            if (m_currentMagazine <= 0) return;
-            if (m_weaponData.fireRate <= 0f) return; // noneWeapon 등 발사 불가능 무기
+            if (owner == null || !owner.Alive) return false;
+            if (owner.IsChanging) return false;
+            if (m_isFalling) return false;
+            if (m_fireRateTimer > 0f) return false;
+            if (m_isReloading) return false;
+            if (m_currentMagazine <= 0) return false;
+            if (m_weaponData.fireRate <= 0f) return false; // noneWeapon 등 발사 불가능 무기
 
             var wp = DataManager.Instance.WeaponParameterData;
             int bulletIdx = m_weaponData.bulletIndex;
-            if (bulletIdx < 0 || bulletIdx >= wp.bulletData.Count) return;
+            if (bulletIdx < 0 || bulletIdx >= wp.bulletData.Count) return false;
 
             BulletData bulletData = wp.bulletData[bulletIdx];
             SpawnBullets(owner, bulletData);
@@ -214,6 +216,8 @@ namespace UnityXOPS
                 if      (m_reserveAmmo > 0)                              owner.ReloadCurrentWeapon();
                 else if (m_weaponData.discardAfterAutoReloadIfNoAmmo)    owner.ConsumeCurrentWeapon();
             }
+
+            return true;
         }
 
         /// <summary>

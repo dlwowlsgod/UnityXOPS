@@ -12,6 +12,7 @@ namespace UnityXOPS
     public class MaingameScene : MonoBehaviour
     {
         [SerializeField] private PlayerController playerController;
+        [SerializeField] private Transform fpsCounter;
 
         private MaingameFadeSequence m_fadeSequence;
 
@@ -22,6 +23,11 @@ namespace UnityXOPS
         private bool m_missionEnded;  // 종료 시퀀스(FadeOut+EndText) 1회 트리거 가드. RestartMission 에서 리셋.
         private bool m_resultLoading; // Result 씬 전환 1회 가드. RestartMission 에서 리셋.
 
+        private XOPSSpriteText m_fpsText;
+        private float m_fpsAccum;   // FPS 평균용 누적 시간(초)
+        private int m_fpsFrames;    // FPS 평균용 누적 프레임 수
+        private const float k_fpsUpdateInterval = 0.5f;   // 이 간격마다 표시 갱신(매 프레임 깜빡임 방지)
+
         private void Start()
         {
             m_fadeSequence = GetComponent<MaingameFadeSequence>();
@@ -30,10 +36,28 @@ namespace UnityXOPS
             HumanController.TickEnabled = true;
             EventManager.Instance.BeginMission(); // 미션 이벤트/판정 가동 (Maingame 진입 시)
             m_inputLockTimer = k_inputLockSeconds;
+
+            m_fpsText = FontManager.CreateSpriteText<XOPSSpriteText>(fpsCounter, "60", Vector2.one, Vector2.one, new Vector2(-10, -10), 
+                Vector2.zero, new Vector2(18, 24), Color.magenta, TextAnchor.UpperRight, 0);
+
+            fpsCounter.gameObject.SetActive(ConfigManager.Instance.GetBool("General", "ShowFPS"));
         }
 
         private void Update()
         {
+            // FPS 표시 — ShowFPS 로 활성일 때만. 0.5초 평균으로 "60 FPS (16 ms)" 형식 갱신. 시간축 무관하게 unscaledDeltaTime 사용.
+            if (m_fpsText != null && fpsCounter.gameObject.activeSelf)
+            {
+                m_fpsAccum += Time.unscaledDeltaTime;
+                m_fpsFrames++;
+                if (m_fpsAccum >= k_fpsUpdateInterval)
+                {
+                    float avgFrame = m_fpsAccum / m_fpsFrames;   // 평균 프레임 시간(초)
+                    m_fpsText.Text = $"{Mathf.RoundToInt(1f / avgFrame)} FPS ({Mathf.RoundToInt(avgFrame * 1000f)} ms)";
+                    m_fpsAccum = 0f;
+                    m_fpsFrames = 0;
+                }
+            }
 
             // 진입/재시작 직후 잠금 카운트다운 — 잠금 중엔 ESC·F12 무시.
             if (m_inputLockTimer > 0f) m_inputLockTimer -= Time.deltaTime;

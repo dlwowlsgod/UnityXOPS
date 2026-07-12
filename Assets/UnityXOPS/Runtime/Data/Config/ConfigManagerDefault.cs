@@ -23,6 +23,11 @@ namespace UnityXOPS
         public const string KeyFullscreen = "fullscreen";
         public const string KeyResolution = "resolution";
         public const string KeySensitivity = "sensitivity";
+        public const string KeyInvertY = "invertY";
+        public const string KeyBrightness = "brightness";
+        public const string KeyGamma = "gamma";
+        public const string KeyMasterVolume = "MasterVolume";
+        public const string KeyUIScale = "UIScale";
 
         /// <summary>
         /// config.json이 없을 때 기록할 기본 설정을 코드로 구성한다. 코어 섹션 3종과 기본 입력 바인딩을 담는다.
@@ -51,9 +56,14 @@ namespace UnityXOPS
                     settings = new List<ConfigSetting>
                     {
                         new ConfigSetting { name = "ShowFPS", type = TypeBool, value = "false", min = 0f, max = 0f },
-                        new ConfigSetting { name = "aimLength", type = TypeInt, value = "10", min = 1f, max = 10f },
+                        // UIScale 상한은 해상도별로 다르다(k_resolutions의 maxUIScale). 부팅/해상도 변경 시 ApplyUIScaleLimit가 min/max를 갱신한다.
+                        // 여기 값은 기본 해상도(640x480)의 상한 = 1.0 고정.
+                        new ConfigSetting { name = KeyUIScale, type = TypeFloat, value = "1", min = 1f, max = 1f },
+                        new ConfigSetting { name = "aimLength", type = TypeInt, value = "10", min = 1f, max = 20f },
                         new ConfigSetting { name = "aimThick", type = TypeInt, value = "1", min = 1f, max = 5f },
                         new ConfigSetting { name = "aimGap", type = TypeInt, value = "3", min = 0f, max = 5f },
+                        // 크로스헤어 정적/동적. true=고정, false=반동(ErrorRange)으로 벌어짐.
+                        new ConfigSetting { name = "StaticAim", type = TypeBool, value = "false", min = 0f, max = 0f },
                         new ConfigSetting { name = "aimColorR", type = TypeFloat, value = "1", min = 0f, max = 1f },
                         new ConfigSetting { name = "aimColorG", type = TypeFloat, value = "0", min = 0f, max = 1f },
                         new ConfigSetting { name = "aimColorB", type = TypeFloat, value = "0", min = 0f, max = 1f },
@@ -66,7 +76,7 @@ namespace UnityXOPS
                     name = SectionInput,
                     settings = new List<ConfigSetting>
                     {
-                        new ConfigSetting { name = "invertX", type = TypeBool, value = "false", min = 0f, max = 0f },
+                        new ConfigSetting { name = "invertY", type = TypeBool, value = "false", min = 0f, max = 0f },
                         new ConfigSetting { name = KeySensitivity, type = TypeFloat, value = "0.1", min = 0.01f, max = 1f },
                     },
                 },
@@ -75,12 +85,13 @@ namespace UnityXOPS
                     name = SectionGraphic,
                     settings = new List<ConfigSetting>
                     {
-                        new ConfigSetting { name = "brightness", type = TypeFloat, value = "0.1", min = 0.01f, max = 1f },
-                        // 감마 보정 지수. 1.0=보정 없음, 표준 sRGB 2.2가 기본. 높을수록 중간톤이 밝아진다.
-                        new ConfigSetting { name = "gamma", type = TypeFloat, value = "2.2", min = 1f, max = 3f },
+                        // 밝기 곱(노출). ScreenColorAdjust 셰이더가 색에 곱한다. 1.0=원본, 0.5~1.5.
+                        new ConfigSetting { name = KeyBrightness, type = TypeFloat, value = "1", min = 0.5f, max = 1.5f },
+                        // 감마(모니터 관례). ScreenColorAdjust가 pow(c, gamma). 1.0=중립, 값이 클수록 어둡고 작을수록 밝다.
+                        new ConfigSetting { name = KeyGamma, type = TypeFloat, value = "1", min = 0.5f, max = 2f },
                         new ConfigSetting { name = KeyFullscreen, type = TypeBool, value = "true", min = 0f, max = 0f },
-                        // 해상도는 인덱스(4:3=0~4, 16:9=10~15). 기본 960x540=10. min/max는 인덱스 범위.
-                        new ConfigSetting { name = KeyResolution, type = TypeInt, value = "10", min = 0f, max = 15f },
+                        // 해상도는 인덱스(4:3=0~5, 16:9=10~15). 기본 640x480=0. min/max는 인덱스 범위.
+                        new ConfigSetting { name = KeyResolution, type = TypeInt, value = "0", min = 0f, max = 15f },
                         new ConfigSetting { name = "vsync", type = TypeBool, value = "false", min = 0f, max = 0f },
                         new ConfigSetting { name = "limitFrame", type = TypeBool, value = "true", min = 0f, max = 0f },
                         new ConfigSetting { name = "frameLimit", type = TypeInt, value = "60", min = 60f, max = 480f },
@@ -94,7 +105,7 @@ namespace UnityXOPS
                     name = SectionSound,
                     settings = new List<ConfigSetting>
                     {
-                        new ConfigSetting { name = "MasterVolume", type = TypeFloat, value = "1", min = 0f, max = 1f },
+                        new ConfigSetting { name = KeyMasterVolume, type = TypeFloat, value = "1", min = 0f, max = 1f },
                     },
                 },
             };
@@ -138,16 +149,16 @@ namespace UnityXOPS
                     },
                 },
                 new InputActionDefinition { name = "jump", type = "Button", bindings = new[] { "<Keyboard>/space" } },
-                new InputActionDefinition { name = "walk", type = "Button", bindings = new[] { "<Keyboard>/leftShift" } },
+                new InputActionDefinition { name = "walk", type = "Button", bindings = new[] { "<Keyboard>/tab" } },
                 new InputActionDefinition { name = "drop", type = "Button", bindings = new[] { "<Keyboard>/g" } },
                 new InputActionDefinition { name = "fire", type = "Button", bindings = new[] { "<Mouse>/leftButton" } },
-                new InputActionDefinition { name = "zoom", type = "Button", bindings = new[] { "<Mouse>/rightButton" } },
+                new InputActionDefinition { name = "zoom", type = "Button", bindings = new[] { "<Keyboard>/leftShift" } },
                 new InputActionDefinition { name = "previous", type = "Button", bindings = new[] { "<Keyboard>/z" } },
                 new InputActionDefinition { name = "next", type = "Button", bindings = new[] { "<Keyboard>/x" } },
                 new InputActionDefinition { name = "reload", type = "Button", bindings = new[] { "<Keyboard>/r" } },
                 new InputActionDefinition { name = "first", type = "Button", bindings = new[] { "<Keyboard>/1" } },
                 new InputActionDefinition { name = "second", type = "Button", bindings = new[] { "<Keyboard>/2" } },
-                new InputActionDefinition { name = "interact", type = "Button", bindings = new[] { "<Keyboard>/F" } },
+                new InputActionDefinition { name = "interact", type = "Button", bindings = new[] { "<Keyboard>/f" } },
                 new InputActionDefinition { name = "escape", type = "Button", bindings = new[] { "<Keyboard>/escape" } },
             };
         }

@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using XLua;
 
@@ -66,6 +67,18 @@ namespace UnityXOPS.Modding
             ClearTransientPools();
             DisableCurrentCamera();
             SceneManager.LoadScene(name);
+        }
+
+        /// <summary>
+        /// 게임을 종료한다. 에디터에서는 플레이 모드를 중단하고, 빌드에서는 Application.Quit을 호출한다.
+        /// </summary>
+        public void Quit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         /// <summary>

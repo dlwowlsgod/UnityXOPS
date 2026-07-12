@@ -70,10 +70,11 @@ namespace UnityXOPS
         {
             if (clip == null || volume <= 0f || m_pool == null) return;
 
+            float master = ConfigManager.Loaded ? ConfigManager.Instance.MasterVolume : 1f;
             AudioSource src = GetSource();
             src.transform.position = position;
             src.clip = clip;
-            src.volume = Mathf.Clamp01(volume);
+            src.volume = Mathf.Clamp01(volume) * master;
             src.Play();
         }
 

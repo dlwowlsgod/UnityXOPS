@@ -11,11 +11,11 @@ namespace UnityXOPS
         Walk = 0,
         Run = 1,
         Wait = 2,
-        Tracking = 3, // 특정 Human 추적 — 1차 미구현(제자리 대기로 폴백)
+        Tracking = 3, // 특정 Human 추적 — 대상 위치로 추격, 근접 시 두리번(AIBrainNavigation 처리)
         WaitAlert = 4, // 경계 대기 — 대기 중 Wait 과 동일, 경계(Caution+) 진입 시 다음 경로로 진행 (NormalMain 처리)
         Stop5Sec = 5,
-        Grenade = 6, // 지점 수류탄 투척 — 1차 미구현(즉시 다음으로)
-        Run2 = 7, // 전투 스트레이핑 달리기 — 1차 Run 으로 폴백
+        Grenade = 6, // 지점 수류탄 투척 — 그 지점을 조준해 수류탄 던짐(AIBrain.ThrowGrenade 처리)
+        Run2 = 7, // 우선적 달리기 — 경계 없이 경로를 달리다 적 조우 시 즉시 교전, 전투 중에도 경로 목표점으로 이동(MoveTarget2)
         Random, // RAND_AIPATH(param0=8) 분기 노드 (위치 없음, 통과 전용)
         None, // 경로 없음/종료
     }

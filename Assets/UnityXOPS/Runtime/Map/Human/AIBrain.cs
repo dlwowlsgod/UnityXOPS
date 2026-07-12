@@ -8,8 +8,7 @@ namespace UnityXOPS
     /// MonoBehaviour 가 아니라 AIController(씬 매니저)가 비플레이어 Human 마다 하나씩 생성·보유한다.
     /// 실제 이동·회전 적용은 대상 Human 의 HumanController(= 원본 AIObjectDriver) API 로 주입.
     ///
-    /// 구현 범위: 상태머신(NORMAL/CAUTION/ACTION/DEAD) + 타겟 탐색 + 조준 보간 + 사격 + 경로 이동 + 회피 + 좀비 근접.
-    /// 수류탄 궤도 조준·Run2 스트레이핑 돌격은 다음 단계.
+    /// 구현 범위: 상태머신(NORMAL/CAUTION/ACTION/DEAD) + 타겟 탐색 + 조준 보간 + 사격 + 경로 이동 + 회피 + 좀비 근접 + 지점 수류탄 투척.
     /// Tick() 한 번 = 원본 1프레임(33.333fps). 프레임 락 누산은 AIController 가 담당.
     /// 관심사별 partial 분리: 본 파일(코어/상태머신) + AIBrainNavigation/AIBrainCombat/AIBrainAim/AIBrainZombie/AIBrainWeapon.
     /// </summary>
@@ -59,6 +58,14 @@ namespace UnityXOPS
         private const int k_stuckChance = 28; // 1/28 끼임 탈출 시도 (원본 ai.cpp:213)
         private const float k_stuckMoveSqr = 0.0001f; // 직전 프레임 이동 < 0.01 이면 끼임 (원본 0.1 units ×0.1)
         private const float k_trackForwardTol = 20f; // Tracking 전진 허용각 (원본 ai.cpp:196-205)
+        private const float k_grenadeThrowTol = 1.5f; // 수류탄 투척 조준 수렴 임계 — 좌우·상하 각각 이 안이면 투척 (원본 ai.cpp:1247)
+
+        // RUN2(우선적 달리기) 전투 중 전방위 이동(원본 MoveTarget2 ai.cpp:225-272). 목표점 방향에 따라 전진/후진/스트레이프.
+        private const float k_run2ForwardTol = 56f; // 목표점이 이 각도 안이면 전진
+        private const float k_run2BackTol = 123.5f; // 이 각도 밖(뒤쪽)이면 후진
+        private const float k_run2StrafeMin = 33f; // 스트레이프 시작각
+        private const float k_run2StrafeMax = 146f; // 스트레이프 종료각
+        private const float k_run2ShotAngleScale = 1.5f; // RUN2 발사 허용각 완화 배수 (원본 ai.cpp:797)
         private const float k_combatProbeDist = 0.3f; // 회피 벽/낭떠러지 전방 거리 (원본 HUMAN_MAPCOLLISION_R 2.8 ×0.1)
         private const float k_cliffProbeDown = 0.5f; // 낭떠러지 판정 하향 레이 길이
 
@@ -174,6 +181,23 @@ namespace UnityXOPS
         {
             m_combatMove = HumanMoveFlag.None; // 비전투 — 전투 회피 플래그 잔존 방지
 
+            // 수류탄 투척 경로점 — 위협 감지(CAUTION)보다 먼저 독립 처리(원본 ai.cpp:1703). 교전 상황이어도 그 프레임엔
+            // 조준/투척을 우선한다. 걷지 않고 그 지점을 조준: 보유+수렴 시 던지고 다음, 미보유면 방향만 향하고 다음, 조준 중이면 유지.
+            if (m_nav.Mode == AIPathMode.Grenade)
+            {
+                if (ThrowGrenade()) m_nav.Advance();
+                return;
+            }
+
+            // RUN2(우선적 달리기) — 경계(CAUTION)를 건너뜀. 피격/소리/시체 자극은 전부 무시하고, 실제로 적을
+            // 봤을 때만 곧바로 전투(ACTION)로 직행한다(원본 NormalMain AI_RUN2 분기 ai.cpp:1714). 그 외엔 경로를 계속 달림.
+            if (m_nav.Mode == AIPathMode.Run2)
+            {
+                if (SearchEnemy() != 0) EnterAction();
+                else MovePath();
+                return;
+            }
+
             if (SearchEnemy() != 0 || heard || hit)
             {
                 // 경계 대기(WaitAlert): 그 지점에 도착해 대기 중일 때만, 경계(이상) 진입 순간 다음 경로로 진행.
@@ -196,9 +220,7 @@ namespace UnityXOPS
 
             if (m_enemy != null || SearchEnemy() != 0)
             {
-                m_mode = BattleMode.Action;
-                m_actionCnt = 0;
-                m_scanLeft = m_scanRight = false; // 전투 진입 — 스캔 플래그 정리
+                EnterAction();
                 return;
             }
 
@@ -229,12 +251,33 @@ namespace UnityXOPS
         /// <summary>원본 ActionMain (ai.cpp:1527). 조준·사격 + 회피 이동. 종료 조건이면 경계로 복귀.</summary>
         private void ActionMain()
         {
+            bool run2 = m_nav.Mode == AIPathMode.Run2;
+
             if (m_enemy == null || ActionCancel())
             {
                 m_enemy = null;
-                m_mode = BattleMode.Caution;
-                m_cautionCnt = GeneralData.aiCautionFrames;
                 m_combatMove = HumanMoveFlag.None; // 전투 종료 — 회피 이동 정리
+                if (run2)
+                {
+                    m_mode = BattleMode.Normal; // RUN2 — 경계 없이 즉시 경로 순찰 재개 (원본 ActionMain GetRun2 ai.cpp:1566)
+                }
+                else
+                {
+                    m_mode = BattleMode.Caution;
+                    m_cautionCnt = GeneralData.aiCautionFrames;
+                }
+                return;
+            }
+
+            if (run2)
+            {
+                // RUN2 — 사격(Action)하면서 경로 목표점으로 전방위 이동(MoveTarget2). 도착하면 전투 중에도 다음
+                // 포인트로 진행(원본 ActionMain GetRun2 분기 ai.cpp:1540-1550). 회피 스트레이핑(MoveRandom) 대신 경로 추종.
+                m_combatMove = HumanMoveFlag.None; // 이동은 MoveTarget2(per-frame m_moveIntent)가 전담
+                Action();
+                if (CheckArrived()) m_nav.Advance();
+                else MoveTarget2();
+                m_actionCnt++;
                 return;
             }
 
@@ -244,6 +287,14 @@ namespace UnityXOPS
             // 비좀비 무장 AI 만 회피 스트레이핑. 좀비(돌격)·맨손(항복+후퇴는 Action 내 처리)은 제외.
             if (!IsZombie() && !IsNoneWeapon(m_self.CurrentWeapon)) MoveRandom();
             m_actionCnt++;
+        }
+
+        /// <summary>전투(ACTION) 진입 공통 처리 — 카운터·스캔 플래그 초기화. 원본 newbattlemode=AI_ACTION 진입부.</summary>
+        private void EnterAction()
+        {
+            m_mode = BattleMode.Action;
+            m_actionCnt = 0;
+            m_scanLeft = m_scanRight = false;
         }
 
         // === 헬퍼 ===============================================================

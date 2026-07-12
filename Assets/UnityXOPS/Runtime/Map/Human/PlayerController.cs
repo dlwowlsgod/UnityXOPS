@@ -153,9 +153,10 @@ namespace UnityXOPS
             var input = InputManager.Instance;
 
             float sensitivity = ConfigManager.Instance.MouseSensitivity; // 외부 config(0~1) 감도
+            float invertY = ConfigManager.Instance.InvertY ? -1f : 1f; // 상하 반전 옵션(캐시)
             Vector2 look = input.Look.ReadValue<Vector2>();
             m_yaw += look.x * sensitivity;
-            m_pitch -= look.y * sensitivity;
+            m_pitch -= look.y * sensitivity * invertY;
             m_pitch = Mathf.Clamp(m_pitch, -pitchLimit, pitchLimit);
             m_controller.SetYawPitch(m_yaw, m_pitch);
 

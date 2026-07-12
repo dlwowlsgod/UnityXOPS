@@ -203,6 +203,70 @@ namespace UnityXOPS.Modding
         }
 
         /// <summary>
+        /// Graphic 섹션의 fullscreen/resolution 설정을 화면에 적용한다. 옵션에서 그래픽을 바꾸고 확정할 때 호출한다.
+        /// </summary>
+        public void ApplyGraphic()
+        {
+            ConfigManager.Instance.ApplyGraphic();
+        }
+
+        /// <summary>
+        /// 선택 가능한 해상도 옵션 개수. 옵션 UI가 &lt;&lt; &gt;&gt;로 순회할 때 쓴다.
+        /// </summary>
+        /// <returns>옵션 개수</returns>
+        public int GetResolutionOptionCount()
+        {
+            return ConfigManager.Instance.ResolutionOptionCount;
+        }
+
+        /// <summary>
+        /// i번째(0-기반) 해상도 옵션의 저장 인덱스 값을 반환한다("Graphic"/"resolution"에 넣을 값).
+        /// </summary>
+        /// <param name="i">옵션 순번</param>
+        /// <returns>저장 인덱스, 범위 밖이면 -1</returns>
+        public int GetResolutionOptionIndex(int i)
+        {
+            return ConfigManager.Instance.ResolutionOptionIndexAt(i);
+        }
+
+        /// <summary>
+        /// i번째(0-기반) 해상도 옵션의 표시 라벨("640x480")을 반환한다.
+        /// </summary>
+        /// <param name="i">옵션 순번</param>
+        /// <returns>라벨, 범위 밖이면 빈 문자열</returns>
+        public string GetResolutionOptionLabel(int i)
+        {
+            return ConfigManager.Instance.ResolutionOptionLabelAt(i);
+        }
+
+        /// <summary>
+        /// 저장하지 않은 변경을 마지막 저장 상태로 되돌린다. 옵션 화면 BACK(취소)에 쓴다.
+        /// </summary>
+        public void RevertToSaved()
+        {
+            ConfigManager.Instance.RevertToSaved();
+        }
+
+        /// <summary>
+        /// 설정의 초기값을 등록한다(RESET에서 이 값으로 복구). Lua가 옵션 기본값을 데이터로 등록한다.
+        /// </summary>
+        /// <param name="section">섹션 이름</param>
+        /// <param name="name">설정 이름</param>
+        /// <param name="value">초기값(숫자/불리언/문자열 허용)</param>
+        public void SetDefault(string section, string name, object value)
+        {
+            ConfigManager.Instance.SetDefault(section, name, ToStringValue(value));
+        }
+
+        /// <summary>
+        /// 등록된 초기값으로 설정을 복구한다. 옵션 화면 RESET에 쓴다(저장은 Save로 별도).
+        /// </summary>
+        public void ResetToDefaults()
+        {
+            ConfigManager.Instance.ResetToDefaults();
+        }
+
+        /// <summary>
         /// Lua에서 넘어온 값(숫자/불리언/문자열)을 저장용 불변 문자열로 변환한다.
         /// </summary>
         /// <param name="value">Lua 값</param>

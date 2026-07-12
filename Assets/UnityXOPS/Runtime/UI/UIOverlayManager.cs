@@ -19,6 +19,9 @@ namespace UnityXOPS
     public class UIOverlayManager : SingletonBehavior<UIOverlayManager>
     {
         private readonly Dictionary<int, Transform> m_layers = new Dictionary<int, Transform>();
+        // 레이어별 서브 루트(뷰포트 영역에 앵커됨). CreateImage/Text는 이 루트 아래에 붙는다.
+        private readonly Dictionary<int, RectTransform> m_layerRoots = new Dictionary<int, RectTransform>();
+        private Rect m_appliedViewport = new Rect(0f, 0f, 1f, 1f);
 
         private Canvas m_letterboxCanvas;
         private RectTransform m_topBar;
@@ -65,10 +68,11 @@ namespace UnityXOPS
             {
                 if (layer != null)
                 {
-                    Destroy(layer.gameObject);
+                    Destroy(layer.gameObject);   // 캔버스 파괴 시 하위 서브 루트도 함께 제거됨
                 }
             }
             m_layers.Clear();
+            m_layerRoots.Clear();
         }
 
         /// <summary>
@@ -134,9 +138,9 @@ namespace UnityXOPS
         /// <returns>해당 레이어 Canvas의 Transform</returns>
         public Transform GetOrCreateLayer(int sortingOrder, bool scaling = false)
         {
-            if (m_layers.TryGetValue(sortingOrder, out Transform existing))
+            if (m_layerRoots.TryGetValue(sortingOrder, out RectTransform existingRoot))
             {
-                return existing;
+                return existingRoot;
             }
 
             GameObject go = new GameObject($"OverlayLayer_{sortingOrder}", typeof(Canvas));
@@ -161,8 +165,56 @@ namespace UnityXOPS
                 scaler.scaleFactor = 1f;
             }
 
+            // 게임 뷰포트(레터박스 후 영역) 안에만 UI가 들어가도록 앵커된 서브 루트. 콘텐츠는 이 루트 아래에 붙는다.
+            // 앵커가 뷰포트 rect(정규화)를 따르므로, 4:3 뷰포트에선 640x480 코너 레이아웃이 그 영역에 정확히 들어가고
+            // 16:9 뷰포트(꽉 채움)에선 화면 전체로 퍼진다. 뷰포트가 바뀌면 LateUpdate가 앵커를 갱신한다.
+            RectTransform root = new GameObject("ViewportRoot", typeof(RectTransform)).GetComponent<RectTransform>();
+            root.SetParent(go.transform, false);
+            ApplyViewportAnchors(root, CurrentViewport());
+
             m_layers[sortingOrder] = go.transform;
-            return go.transform;
+            m_layerRoots[sortingOrder] = root;
+            return root;
+        }
+
+        private void LateUpdate()
+        {
+            Rect vp = CurrentViewport();
+            if (vp == m_appliedViewport)
+            {
+                return;
+            }
+            m_appliedViewport = vp;
+            foreach (RectTransform root in m_layerRoots.Values)
+            {
+                if (root != null)
+                {
+                    ApplyViewportAnchors(root, vp);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 현재 게임 뷰포트(레터박스/필러박스 후 정규화 rect)를 반환한다. 레터박스 컨트롤러가 없으면 전체 화면.
+        /// </summary>
+        /// <returns>정규화 뷰포트 rect(0~1).</returns>
+        private static Rect CurrentViewport()
+        {
+            return LetterboxController.Loaded ? LetterboxController.Instance.Viewport : new Rect(0f, 0f, 1f, 1f);
+        }
+
+        /// <summary>
+        /// 레이어 서브 루트의 앵커를 뷰포트 rect에 맞춰, 콘텐츠가 그 영역에만 놓이게 한다.
+        /// </summary>
+        /// <param name="root">레이어 서브 루트 RectTransform.</param>
+        /// <param name="vp">정규화 뷰포트 rect(0~1).</param>
+        private static void ApplyViewportAnchors(RectTransform root, Rect vp)
+        {
+            root.anchorMin = new Vector2(vp.xMin, vp.yMin);
+            root.anchorMax = new Vector2(vp.xMax, vp.yMax);
+            root.pivot = new Vector2(0.5f, 0.5f);
+            root.offsetMin = Vector2.zero;
+            root.offsetMax = Vector2.zero;
         }
 
         /// <summary>
@@ -173,7 +225,8 @@ namespace UnityXOPS
         /// <param name="factor">scaleFactor(1=기본, 2=2배 확대). 0 이하는 0.01로 보정</param>
         public void SetLayerScaleFactor(int sortingOrder, float factor)
         {
-            CanvasScaler scaler = GetOrCreateLayer(sortingOrder).GetComponent<CanvasScaler>();
+            GetOrCreateLayer(sortingOrder);
+            CanvasScaler scaler = m_layers[sortingOrder].GetComponent<CanvasScaler>();
             if (scaler != null)
             {
                 scaler.scaleFactor = Mathf.Max(0.01f, factor);
@@ -187,7 +240,8 @@ namespace UnityXOPS
         /// <returns>현재 scaleFactor. CanvasScaler가 없으면 1</returns>
         public float GetLayerScaleFactor(int sortingOrder)
         {
-            CanvasScaler scaler = GetOrCreateLayer(sortingOrder).GetComponent<CanvasScaler>();
+            GetOrCreateLayer(sortingOrder);
+            CanvasScaler scaler = m_layers[sortingOrder].GetComponent<CanvasScaler>();
             return scaler != null ? scaler.scaleFactor : 1f;
         }
 

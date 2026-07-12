@@ -205,7 +205,7 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// 전역 데이터를 JSON에서 로드한다. 파일이 없으면 기본값으로 새 JSON 파일을 생성한 뒤 로드한다.
+        /// 전역 데이터를 JSON에서 로드한다. 파일이 없으면 Player Settings 값으로 새 JSON 파일을 생성한 뒤 로드한다.
         /// </summary>
         private void LoadGlobalData()
         {
@@ -214,17 +214,39 @@ namespace UnityXOPS
             {
                 string json = EncodingHelper.ReadAllText(fullPath);
                 globalData = JsonUtility.FromJson<GlobalData>(json);
+                return;
             }
-            else
+
+            string directory = Path.GetDirectoryName(fullPath);
+            if (!Directory.Exists(directory))
             {
-                string directory = Path.GetDirectoryName(fullPath);
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-                File.WriteAllText(fullPath, k_globalJSONOriginal);
-                globalData = JsonUtility.FromJson<GlobalData>(k_globalJSONOriginal);
+                Directory.CreateDirectory(directory);
             }
+
+            globalData = BuildGlobalDataFromPlayerSettings();
+            File.WriteAllText(fullPath, JsonUtility.ToJson(globalData, true));
+        }
+
+        /// <summary>
+        /// Player Settings(회사명·제품명·버전)로 기본 전역 데이터를 만든다. 라이선스 항목은 비워 둔다.
+        /// </summary>
+        /// <returns>Player Settings 값이 채워진 GlobalData.</returns>
+        private static GlobalData BuildGlobalDataFromPlayerSettings()
+        {
+            var data = new GlobalData();
+            data.productName = Application.productName;
+            data.companyName = Application.companyName;
+            data.licenseType = string.Empty;
+            data.licenseName = string.Empty;
+            data.licenseLines = new string[0];
+
+            // 버전은 '.'로 나눠 앞의 둘을 major/minor로 쓰고, 남는 조각은 다시 '.'로 이어 patch로 둔다(예: "1.2.3.4" → patch "3.4").
+            string version = Application.version;
+            string[] parts = string.IsNullOrEmpty(version) ? new string[0] : version.Split('.');
+            data.versionMajor = parts.Length > 0 ? parts[0] : "0";
+            data.versionMinor = parts.Length > 1 ? parts[1] : "0";
+            data.versionPatch = parts.Length > 2 ? string.Join(".", parts, 2, parts.Length - 2) : "0";
+            return data;
         }
     }
 }

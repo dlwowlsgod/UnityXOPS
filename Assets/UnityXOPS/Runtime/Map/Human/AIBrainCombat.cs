@@ -37,6 +37,10 @@ namespace UnityXOPS
 
             m_longAttack = dist > GeneralData.aiShortAttackDist;
 
+            // RUN2(우선적 달리기) 전투 — 원거리 정밀조준 모드로 안 감(항상 근접 유지, 원본 ai.cpp:828).
+            bool run2 = m_nav.Mode == AIPathMode.Run2;
+            if (run2) m_longAttack = false;
+
             float desiredYaw = Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg;
             float atanx = Mathf.DeltaAngle(m_yaw, desiredYaw); // 좌우 오차
             float dz = GeneralData.aiTurnDeadzoneDeg;
@@ -81,6 +85,7 @@ namespace UnityXOPS
             HumanAIScopeData sc = ScopeAi(w);
             float shotAngle = m_longAttack ? sc.aiShotAngleLong : sc.aiShotAngle;
             shotAngle += (m_longAttack ? 0.2f : 0.5f) * ai.limitsError;
+            if (run2) shotAngle *= k_run2ShotAngleScale; // RUN2 — 달리며 쏘므로 발사 허용각 완화 (원본 ai.cpp:797)
             if (shotAngle < 0f) shotAngle = 0f;
 
             if (Mathf.Abs(atanx) + Mathf.Abs(atany) < shotAngle)
@@ -131,6 +136,39 @@ namespace UnityXOPS
                 {
                     m_combatMove &= ~HumanMoveFlag.Forward;
                     if (GetRand(70) == 0) m_combatMove |= HumanMoveFlag.Back;
+                }
+            }
+        }
+
+        /// <summary>
+        /// RUN2 전투 중 경로 목표점으로의 전방위 이동 (원본 MoveTarget2 ai.cpp:225-272). 몸은 적을 겨눈 채(선회는 Action 담당),
+        /// 목표점이 놓인 방향에 따라 전진/후진/좌우 스트레이프를 골라 이동 의사(m_moveIntent)로 넣는다 — 등을 안 보이며 접근. 전부 달리기.
+        /// </summary>
+        private void MoveTarget2()
+        {
+            Vector3 to = m_nav.TargetPos - m_self.transform.position;
+            to.y = 0f;
+            if (to.sqrMagnitude < 1e-8f) return;
+
+            float desiredYaw = Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg;
+            float atan = Mathf.DeltaAngle(m_yaw, desiredYaw); // + = 목표점이 몸 기준 오른쪽
+
+            if (Mathf.Abs(atan) < k_run2ForwardTol) m_moveIntent |= HumanMoveFlag.Forward;
+            if (Mathf.Abs(atan) > k_run2BackTol) m_moveIntent |= HumanMoveFlag.Back;
+            if (atan > k_run2StrafeMin && atan < k_run2StrafeMax) m_moveIntent |= HumanMoveFlag.Right;
+            if (atan < -k_run2StrafeMin && atan > -k_run2StrafeMax) m_moveIntent |= HumanMoveFlag.Left;
+
+            // 점프 — 진행 방향 앞에 장애물이 있을 때만 (1/16 프레임). 원본 MoveTarget2 (ai.cpp:257).
+            if (GetRand(k_jumpChance) == 0 && JumpBlocked()) m_jumpRequested = true;
+
+            // 끼임 탈출 — 이동 의사가 있는데 직전 프레임에 거의 안 움직였으면 랜덤 선회 (1/28 프레임). 원본 ai.cpp:264-270.
+            if (GetRand(k_stuckChance) == 0 && m_moveIntent != HumanMoveFlag.None)
+            {
+                Vector3 moved = m_self.transform.position - m_lastFramePos;
+                moved.y = 0f;
+                if (moved.sqrMagnitude < k_stuckMoveSqr)
+                {
+                    if (Random.Range(0, 2) == 0) m_turnRight = true; else m_turnLeft = true;
                 }
             }
         }

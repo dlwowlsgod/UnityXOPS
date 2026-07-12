@@ -181,10 +181,15 @@ namespace UnityXOPS
         /// </summary>
         public static void UnloadBlockData()
         {
+            // Destroy 는 프레임 끝에야 처리된다. 언로드→로드가 한 프레임에서 동기로 이어지므로(SceneAPI.LoadMission,
+            // MaingameScene.RestartMission), 그냥 Destroy 만 하면 이전 맵 블록 콜라이더가 Block 레이어에 살아남아
+            // 같은 프레임의 SmallObject.SnapToGround 레이가 옛 맵 지오메트리를 맞힌다. 비활성화로 물리 씬에서 즉시 뺀다.
             foreach (Transform child in Instance.blockRoot)
             {
+                child.gameObject.SetActive(false);
                 Destroy(child.gameObject);
             }
+
             // blockMaterials는 공유 머티리얼(BlockMaterial)과 런타임 복제본이 섞여 있음
             for (int i = 0; i < Instance.blockMaterials.Count; i++)
             {

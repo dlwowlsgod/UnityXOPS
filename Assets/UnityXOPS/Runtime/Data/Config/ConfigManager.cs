@@ -24,13 +24,46 @@ namespace UnityXOPS
         private readonly Dictionary<string, Dictionary<string, ConfigSetting>> m_lookup =
             new(StringComparer.OrdinalIgnoreCase);
 
-        // 시점 회전 핫패스에서 매 프레임 문자열 파싱을 피하려 감도만 캐시한다. 로드/감도 변경 시에만 갱신.
+        // 핫패스(시점 회전/화면 post)에서 매 프레임 문자열 파싱을 피하려 값들을 캐시한다. 로드/값 변경 시에만 갱신.
         private float m_mouseSensitivity = 0.1f;
+        private bool m_invertY;
+        private float m_brightness = 1f;
+        private float m_gamma = 1f;
+        private float m_masterVolume = 1f;
+
+        // 마지막 저장 시점의 값 스냅샷(옵션 BACK로 되돌리기). 섹션명 → (설정명 → 값 문자열).
+        private readonly Dictionary<string, Dictionary<string, string>> m_savedValues = new(StringComparer.OrdinalIgnoreCase);
+        // 초기값(옵션 RESET용). Lua가 SetDefault로 등록. 섹션명 → (설정명 → 값 문자열).
+        private readonly Dictionary<string, Dictionary<string, string>> m_defaults = new(StringComparer.OrdinalIgnoreCase);
+
+        // 입력 바인딩(0번 경로) 스냅샷/기본값. 액션명 → 경로. BACK/RESET에서 바인딩까지 되돌리는 데 쓴다.
+        private readonly Dictionary<string, string> m_savedBindings = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> m_defaultBindings = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// 마우스 감도(0~1). PlayerController가 매 프레임 시점 회전 배율로 읽으므로 캐시 값을 반환한다.
         /// </summary>
         public float MouseSensitivity => m_mouseSensitivity;
+
+        /// <summary>
+        /// 마우스 상하(Y축) 반전 여부. PlayerController가 매 프레임 읽으므로 캐시 값을 반환한다.
+        /// </summary>
+        public bool InvertY => m_invertY;
+
+        /// <summary>
+        /// 화면 밝기 곱(0.5~1.5). ScreenColorAdjust가 매 프레임 읽으므로 캐시 값을 반환한다.
+        /// </summary>
+        public float Brightness => m_brightness;
+
+        /// <summary>
+        /// 화면 감마(셰이더가 pow(c, gamma) 적용. 1.0=중립, 클수록 어둡게). ScreenColorAdjust가 매 프레임 읽으므로 캐시 값을 반환한다.
+        /// </summary>
+        public float Gamma => m_gamma;
+
+        /// <summary>
+        /// 마스터 볼륨(0~1). SoundManager가 재생 시 곱하므로 캐시 값을 반환한다.
+        /// </summary>
+        public float MasterVolume => m_masterVolume;
 
         /// <summary>
         /// InputManager가 액션을 빌드할 때 소비하는 기본 입력 바인딩 정의.
@@ -47,23 +80,46 @@ namespace UnityXOPS
 
             LoadConfig();
             BuildLookup();
-            RefreshSensitivityCache();
+            BuildDefaultBindingMap();
+            SnapshotSaved();
+            RefreshValueCaches();
+        }
+
+        /// <summary>
+        /// RESET용 기본 바인딩 맵(액션명 → 0번 경로)을 코드 기본 바인딩에서 구성한다.
+        /// </summary>
+        private void BuildDefaultBindingMap()
+        {
+            m_defaultBindings.Clear();
+            foreach (InputActionDefinition def in BuildDefaultBindings())
+            {
+                if (def.bindings != null && def.bindings.Length > 0)
+                {
+                    m_defaultBindings[def.name] = def.bindings[0];
+                }
+            }
         }
 
         private void Start()
         {
             // 모드 설정 스키마 등록(config.lua). LuaEnv는 모든 Awake 이후라 살아 있다. 그래픽 적용 전에 실행해 기본값 덮어쓰기를 허용한다.
             LuaManager.Instance.LoadSandboxedFile(k_configModPath, "config");
-            RefreshSensitivityCache();   // 모드가 감도 기본값을 바꿨을 수 있으므로 갱신
+            ApplyUIScaleLimit();         // 저장된 해상도의 UIScale 상한으로 범위 확정 + 초과분 클램프
+            SnapshotSaved();             // config.lua가 추가/변경한 설정까지 "저장된 상태" 기준에 포함
+            RefreshValueCaches();   // 모드가 감도 기본값을 바꿨을 수 있으므로 갱신
             ApplyGraphic();
         }
 
         /// <summary>
-        /// 감도 캐시를 현재 설정값으로 다시 계산한다. 로드 후와 감도 변경 후에 호출한다.
+        /// 값 캐시(감도/상하반전/밝기/감마/마스터볼륨)를 현재 설정값으로 다시 계산한다. 로드 후와 값 변경 후에 호출한다.
         /// </summary>
-        private void RefreshSensitivityCache()
+        private void RefreshValueCaches()
         {
             m_mouseSensitivity = GetFloat(SectionInput, KeySensitivity, 0.1f);
+            m_invertY = GetBool(SectionInput, KeyInvertY, false);
+            m_brightness = GetFloat(SectionGraphic, KeyBrightness, 1f);
+            m_gamma = GetFloat(SectionGraphic, KeyGamma, 1f);
+            m_masterVolume = GetFloat(SectionSound, KeyMasterVolume, 1f);
         }
 
         /// <summary>
@@ -341,6 +397,13 @@ namespace UnityXOPS
                 value = Mathf.Clamp(value, Mathf.RoundToInt(setting.min), Mathf.RoundToInt(setting.max));
             }
             setting.value = value.ToString(CultureInfo.InvariantCulture);
+
+            // 해상도가 바뀌면 그 해상도의 UIScale 상한으로 범위를 갱신하고 초과분을 내린다.
+            if (string.Equals(section, SectionGraphic, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(name, KeyResolution, StringComparison.OrdinalIgnoreCase))
+            {
+                ApplyUIScaleLimit();
+            }
         }
 
         /// <summary>
@@ -361,7 +424,7 @@ namespace UnityXOPS
                 value = Mathf.Clamp(value, setting.min, setting.max);
             }
             setting.value = value.ToString(CultureInfo.InvariantCulture);
-            RefreshSensitivityCache();
+            RefreshValueCaches();
         }
 
         /// <summary>
@@ -377,6 +440,7 @@ namespace UnityXOPS
             {
                 setting.value = value ? "true" : "false";
             }
+            RefreshValueCaches();   // invertX 등 입력 캐시 갱신
         }
 
         /// <summary>
@@ -400,6 +464,118 @@ namespace UnityXOPS
         public void Save()
         {
             WriteConfigFile(Path.Combine(Application.streamingAssetsPath, k_configPath));
+            SnapshotSaved();
+        }
+
+        /// <summary>
+        /// 현재 모든 설정 값을 "저장된 상태" 스냅샷으로 기록한다. 로드 직후와 Save 후에 호출한다(BACK 되돌리기 기준).
+        /// </summary>
+        private void SnapshotSaved()
+        {
+            m_savedValues.Clear();
+            foreach (ConfigSection section in config.sections)
+            {
+                var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (ConfigSetting setting in section.settings)
+                {
+                    map[setting.name] = setting.value;
+                }
+                m_savedValues[section.name] = map;
+            }
+
+            m_savedBindings.Clear();
+            if (config.bindings != null)
+            {
+                foreach (InputActionDefinition def in config.bindings)
+                {
+                    if (def.bindings != null && def.bindings.Length > 0)
+                    {
+                        m_savedBindings[def.name] = def.bindings[0];
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 저장하지 않은 변경을 마지막 저장 스냅샷으로 되돌린다(옵션 화면 BACK). 값만 되돌리고 스키마는 유지한다.
+        /// </summary>
+        public void RevertToSaved()
+        {
+            RestoreValues(m_savedValues);
+            RestoreBindings(m_savedBindings);
+        }
+
+        /// <summary>
+        /// 설정의 초기값을 등록한다(RESET용). Lua가 옵션 기본값을 데이터로 등록하는 진입점이다.
+        /// </summary>
+        /// <param name="section">섹션 이름.</param>
+        /// <param name="name">설정 이름.</param>
+        /// <param name="value">초기값 문자열.</param>
+        public void SetDefault(string section, string name, string value)
+        {
+            if (string.IsNullOrEmpty(section) || string.IsNullOrEmpty(name))
+            {
+                return;
+            }
+            if (!m_defaults.TryGetValue(section, out Dictionary<string, string> map))
+            {
+                map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                m_defaults[section] = map;
+            }
+            map[name] = value ?? string.Empty;
+        }
+
+        /// <summary>
+        /// 등록된 초기값(SetDefault)으로 설정 값을 되돌린다(옵션 화면 RESET). 저장은 별도(Save)로 한다.
+        /// </summary>
+        public void ResetToDefaults()
+        {
+            RestoreValues(m_defaults);
+            RestoreBindings(m_defaultBindings);
+        }
+
+        /// <summary>
+        /// 주어진 (섹션→(이름→값)) 맵의 값들을 현재 설정에 덮어쓴다. 스키마는 건드리지 않고 값만 되돌린다.
+        /// </summary>
+        /// <param name="values">복원할 값 맵.</param>
+        private void RestoreValues(Dictionary<string, Dictionary<string, string>> values)
+        {
+            foreach (var sectionPair in values)
+            {
+                foreach (var valuePair in sectionPair.Value)
+                {
+                    ConfigSetting setting = FindSetting(sectionPair.Key, valuePair.Key);
+                    if (setting != null)
+                    {
+                        setting.value = valuePair.Value;
+                    }
+                }
+            }
+            ApplyUIScaleLimit();   // 복원된 해상도에 맞춰 UIScale 범위/값을 다시 맞춘다(BACK/RESET)
+            RefreshValueCaches();
+        }
+
+        /// <summary>
+        /// 주어진 (액션명 → 경로) 맵으로 config 바인딩(0번)을 덮어쓰고, 라이브 액션에도 재적용한다(BACK/RESET용).
+        /// </summary>
+        /// <param name="source">복원할 바인딩 맵.</param>
+        private void RestoreBindings(Dictionary<string, string> source)
+        {
+            if (config.bindings != null)
+            {
+                foreach (InputActionDefinition def in config.bindings)
+                {
+                    if (def.bindings != null && def.bindings.Length > 0
+                        && source.TryGetValue(def.name, out string path))
+                    {
+                        def.bindings[0] = path;
+                    }
+                }
+            }
+            if (InputManager.Loaded)
+            {
+                InputManager.Instance.ReapplyBindings();
+            }
         }
 
         private void WriteConfigFile(string fullPath)
