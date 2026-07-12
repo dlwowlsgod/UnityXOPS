@@ -4,6 +4,13 @@ using UnityEngine.UI;
 
 namespace UnityXOPS
 {
+    public enum MaingameUIMode
+    {
+        Normal = 0,
+        Simple = 1,
+        Off = 2,
+    }
+
     public class MaingameUIDynamicLayout : MonoBehaviour
     {
         [SerializeField] private RectTransform state, hp, ammo, weaponName, reload, change, simpleWeaponName;
@@ -11,6 +18,7 @@ namespace UnityXOPS
         [SerializeField] private RawImage simpleHPLeft, simpleHPRight, simpleHPUp, simpleHPDown;
 
         private Human m_player;
+        private MaingameUIMode m_uiMode = MaingameUIMode.Normal;
         private XOPSSpriteText m_stateText, m_hpText, m_ammoText, m_weaponNameText, m_simpleWeaponNameText;
 
         private float m_lastHP = float.NaN;
@@ -66,22 +74,29 @@ namespace UnityXOPS
             m_lastReserveAmmo = m_player.CurrentWeapon.ReserveAmmo;
             m_lastWeaponName = m_player.CurrentWeapon.WeaponData.name;
 
-            simpleUI.SetActive(false);
+            ApplyUIMode();
         }
 
         /// <summary>
-        /// Normal UI ↔ Simple UI 토글. 토글 직후 활성 UI가 최신값을 즉시 반영하도록 캐시를 무효화한다.
+        /// HUD 표시 모드를 Normal → Simple → Off → Normal 순으로 순환한다 (원본 F2, Camera_F2mode 0/1/2).
+        /// 전환 직후 활성 UI가 최신값을 즉시 반영하도록 캐시를 무효화한다.
         /// </summary>
-        public void ToggleUIMode()
+        public void CycleUIMode()
         {
-            bool toSimple = normalUI.activeSelf;
-            normalUI.SetActive(!toSimple);
-            simpleUI.SetActive(toSimple);
+            m_uiMode = (MaingameUIMode)(((int)m_uiMode + 1) % 3);
+            ApplyUIMode();
 
             m_lastHP = float.NaN;
             m_lastMagazine = -1;
             m_lastReserveAmmo = -1;
             m_lastWeaponName = null;
+        }
+
+        // 현재 m_uiMode 에 맞춰 normalUI/simpleUI 활성 상태를 적용한다 (Off 는 둘 다 비활성).
+        private void ApplyUIMode()
+        {
+            normalUI.SetActive(m_uiMode == MaingameUIMode.Normal);
+            simpleUI.SetActive(m_uiMode == MaingameUIMode.Simple);
         }
 
         private void Update()

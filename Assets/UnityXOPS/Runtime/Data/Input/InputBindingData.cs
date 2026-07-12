@@ -3,17 +3,8 @@ using System;
 namespace UnityXOPS
 {
     /// <summary>
-    /// 입력 바인딩 설정 전체를 JSON으로 직렬화/역직렬화하기 위한 루트 데이터 클래스.
-    /// 고정 필드 대신 액션 정의 리스트를 담아 data-driven으로 액션을 구성한다.
-    /// </summary>
-    [Serializable]
-    public class InputBindingData
-    {
-        public InputActionDefinition[] actions;
-    }
-
-    /// <summary>
     /// 단일 입력 액션의 정의. 이름, 액션 타입, 단순 바인딩, 컴포짓 바인딩을 가진다.
+    /// 입력 바인딩은 ConfigManager(config.json)가 소유하며, InputManager가 이 정의로 InputSystem 액션을 빌드한다.
     /// </summary>
     [Serializable]
     public class InputActionDefinition

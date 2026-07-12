@@ -359,9 +359,13 @@ namespace UnityXOPS
             return false;
         }
 
-        /// <summary>메시지 ID(.msg 파일 0-base 행번호)로 텍스트 조회. 범위 밖이면 빈 문자열 (원본 GetMessageText).</summary>
+        /// <summary>로드된 메시지(.msg) 수. 맵 미로드 시 0.</summary>
+        public static int MessageCount => Loaded && Instance.messages != null ? Instance.messages.Count : 0;
+
+        /// <summary>메시지 ID(.msg 파일 0-base 행번호)로 텍스트 조회. 범위 밖이거나 맵 미로드 시 빈 문자열 (원본 GetMessageText).</summary>
         public static string GetMessageText(int id)
         {
+            if (!Loaded) return string.Empty;
             var msgs = Instance.messages;
             if (msgs == null || id < 0 || id >= msgs.Count) return string.Empty;
             return msgs[id];

@@ -93,7 +93,8 @@ namespace UnityXOPS
             m_hitPending = true; // AI 피격 반응(FaceCaution)용 — 다음 AI 틱이 ConsumeHit 로 소비.
         }
 
-        // 이번 구간 피격 여부 (원본 human::HitFlag). AIBrain 이 매 틱 소비해 경계+공격자 방향 조준(FaceCaution).
+        // 이번 구간 피격 여부 (원본 human::HitFlag). 소비자: AI human 은 AIBrain(경계+공격자 방향 FaceCaution),
+        // 플레이어 human 은 MaingameDamageFlash(빨강 피격 점등). 원본도 CheckHit 를 AI 반응/플레이어 redflash 가 공유.
         private bool m_hitPending;
         /// <summary>피격 소비. 맞았으면 true + 공격자를 바라보는 월드 yaw(=총알 진행방향 HitYaw + 180°). 원본 CheckHit + SetHitFlag(공격자 방향).</summary>
         public bool ConsumeHit(out float faceYawDeg)
@@ -141,6 +142,26 @@ namespace UnityXOPS
         private float m_reactionErrorRange;
 
         private RawPointData m_humanParam, m_humanDataParam;
+        public RawPointData HumanParam => m_humanParam;
+        public RawPointData HumanDataParam => m_humanDataParam;
+
+        // 치트(F9 복제) AI 의도 — AIBrain 생성 시 읽어 패스 순찰 대신 따라오기/경계로 설정 (lazy-brain 대응).
+        public enum CloneAIMode { None, Follow, Guard }
+        private CloneAIMode m_cloneAIMode = CloneAIMode.None;
+        private Human m_cloneFollowTarget;
+        public CloneAIMode CloneAI => m_cloneAIMode;
+        public Human CloneFollowTarget => m_cloneFollowTarget;
+
+        /// <summary>
+        /// 치트(F9) — 이 Human 을 복제 클론 AI 로 지정한다. Follow=followTarget 추적, Guard=제자리 경계. AIBrain 생성 시 적용.
+        /// </summary>
+        /// <param name="mode">클론 AI 모드.</param>
+        /// <param name="followTarget">Follow 모드에서 추적할 대상 (Guard 면 null).</param>
+        public void SetCloneAI(CloneAIMode mode, Human followTarget)
+        {
+            m_cloneAIMode = mode;
+            m_cloneFollowTarget = followTarget;
+        }
 
         private int m_identifier;
         public int Identifier => m_identifier;
@@ -220,12 +241,6 @@ namespace UnityXOPS
             team = m_humanDataParam.param2;
             deadState = hp > 0 ? HumanDeadState.Alive : HumanDeadState.Done;
         }
-
-        // 조준 표적점(월드). 플레이어가 카메라 중앙 ray 로 매 발사 전 주입 → SpawnBullets 가 총구→표적 방향으로 발사 (3인칭 어깨 오프셋 parallax 보정).
-        // null 이면 controller.Yaw/Pitch 사용 (AI). 원본엔 없는 UnityXOPS 3인칭 연출 보조.
-        private Vector3? m_aimPoint;
-        public Vector3? AimPoint => m_aimPoint;
-        public void SetAimPoint(Vector3 worldPoint) => m_aimPoint = worldPoint;
 
         private void Update()
         {

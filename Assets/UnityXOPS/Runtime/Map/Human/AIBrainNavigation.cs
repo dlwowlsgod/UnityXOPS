@@ -46,7 +46,7 @@ namespace UnityXOPS
                     }
                     break;
 
-                default: // Walk/Run/Run2/Grenade/Random → 즉시 다음 포인트
+                default: // Walk/Run/Run2/Random → 즉시 다음 포인트 (Grenade 는 MovePath 상단에서 별도 처리)
                     m_waitCnt = 0;
                     m_nav.Advance();
                     break;
@@ -138,6 +138,68 @@ namespace UnityXOPS
             Vector3 origin = m_self.transform.position + Vector3.up * (gen.controllerHeight * 0.5f);
             float dist = gen.aiJumpCheckDist + gen.controllerRadiusControllerToMap;
             return Physics.Raycast(origin, fwd, dist, MapLoader.BlockLayerMask);
+        }
+
+        /// <summary>
+        /// 수류탄 투척 경로점 처리 — 그 지점을 시야 높이에서 직선으로 조준해, 좌우·상하 모두 ±k_grenadeThrowTol 이내로
+        /// 수렴하면 수류탄을 투척한다. 수류탄 무기가 없으면 그 방향만 향한다. 원본 AIcontrol::ThrowGrenade (ai.cpp:1175).
+        /// </summary>
+        /// <returns>다음 경로점으로 진행할지 여부. true=투척 완료 또는 수류탄 미보유(원본 return 1/2), false=아직 조준 중(원본 return 0).</returns>
+        private bool ThrowGrenade()
+        {
+            int grenadeIdx = DataManager.Instance.WeaponParameterData.weaponGeneralData.grenadeWeaponIndex;
+            int slot = FindGrenadeSlot(grenadeIdx);
+
+            Vector3 from = EyePos(m_self);
+            Vector3 to = m_nav.TargetPos - from;
+            float dist = to.magnitude;
+            if (dist < 1e-4f) return true; // 지점이 겹침 — 진행
+
+            float dz = GeneralData.aiTurnDeadzoneDeg;
+            float desiredYaw = Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg;
+            float atanx = Mathf.DeltaAngle(m_yaw, desiredYaw);
+
+            // 수류탄 미보유 — 그 방향만 바라보고 다음 경로로 진행 (원본 return 2). 팔 각도는 평상시대로 관리(원본 ai.cpp:1229).
+            if (slot < 0)
+            {
+                if (atanx > dz) m_turnRight = true;
+                if (atanx < -dz) m_turnLeft = true;
+                ArmAngle();
+                return true;
+            }
+
+            // 수류탄으로 전환 (전환 중이면 SetSelectWeapon 이 내부 가드로 무시 — 그동안 계속 조준).
+            if (m_self.SelectWeapon != slot) m_self.SetSelectWeapon(slot);
+
+            float desiredPitch = -Mathf.Asin(Mathf.Clamp(to.y / dist, -1f, 1f)) * Mathf.Rad2Deg;
+            float atany = Mathf.DeltaAngle(m_pitch, desiredPitch);
+
+            if (atanx > dz) m_turnRight = true;
+            if (atanx < -dz) m_turnLeft = true;
+            if (atany > dz) m_turnDown = true;
+            if (atany < -dz) m_turnUp = true;
+
+            // 좌우·상하 모두 수렴 → 투척. 실제 투척 성공(Shoot==true) 시에만 다음 경로로 — 전환/쿨다운 중이면
+            // Shoot 이 실패하므로 계속 조준해 재시도(원본 ai.cpp:1255 ShotWeapon 성공 판정). 아직 멀어도 조준 유지.
+            if (Mathf.Abs(atanx) < k_grenadeThrowTol && Mathf.Abs(atany) < k_grenadeThrowTol)
+            {
+                Weapon g = m_self.CurrentWeapon;
+                return g != null && g.Shoot(m_self);
+            }
+            return false;
+        }
+
+        /// <summary>보유 두 슬롯에서 수류탄 무기(grenadeWeaponIndex) 슬롯을 찾는다. 원본 ThrowGrenade 의 슬롯 순회(ai.cpp:1188).</summary>
+        /// <param name="grenadeIdx">수류탄 무기 인덱스(WeaponGeneralData.grenadeWeaponIndex).</param>
+        /// <returns>수류탄 슬롯 인덱스(0/1), 없으면 -1.</returns>
+        private int FindGrenadeSlot(int grenadeIdx)
+        {
+            for (int s = 0; s < 2; s++)
+            {
+                Weapon w = m_self.GetWeapon(s);
+                if (w != null && w.WeaponIndex == grenadeIdx) return s;
+            }
+            return -1;
         }
     }
 }

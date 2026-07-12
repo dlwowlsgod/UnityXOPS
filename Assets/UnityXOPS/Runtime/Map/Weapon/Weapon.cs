@@ -98,6 +98,28 @@ namespace UnityXOPS
         }
 
         /// <summary>
+        /// 치트(F6) — 예비탄에 장탄수(magazineSize)만큼 1회 추가한다. 현재 탄창은 그대로.
+        /// 원본 ObjectManager::CheatAddBullet (objectmanager.cpp:2285) — nbs += nbsmax. noneWeapon(magazineSize≤0)은 무시. 상한 없음.
+        /// </summary>
+        public void CheatAddMagazine()
+        {
+            if (m_weaponData == null || m_weaponData.magazineSize <= 0) return;
+            m_reserveAmmo += m_weaponData.magazineSize;
+        }
+
+        /// <summary>
+        /// 치트(F7 무기변경) — 매거진/예비탄을 장탄수 클램프 없이 그대로 설정한다.
+        /// 무기 종류를 바꿔도 현재 탄약을 새 무기에 그대로 유지(새 무기 장탄수에 안 맞춤)하는 용도.
+        /// </summary>
+        /// <param name="magazine">설정할 현재 탄창 수 (클램프 없음).</param>
+        /// <param name="reserve">설정할 예비탄 수.</param>
+        public void CheatSetAmmo(int magazine, int reserve)
+        {
+            m_currentMagazine = magazine;
+            m_reserveAmmo = reserve;
+        }
+
+        /// <summary>
         /// Human 슬롯에 부착될 때 호출. WeaponData.position 을 적용하고 Weapon Root 회전을 identity 로 reset 한다.
         /// visualRoot 의 prefab 기본 Y180° 보정은 그대로 두어 weaponAttachRoot 의 Y180° 와 누적 상쇄되도록 한다.
         /// </summary>
@@ -116,19 +138,21 @@ namespace UnityXOPS
         /// fireRate 쿨다운, 매거진 잔량, 발사자 상태(IsChanging/Alive) 검사 후 실제 발사. 산탄(pelletCount > 1) 은 박스 분포 분산.
         /// 원본 OpenXOPS ObjectManager::ShotWeapon (objectmanager.cpp:1926-2060) 대응.
         /// </summary>
-        public void Shoot(Human owner)
+        /// <param name="owner">발사 주체 Human.</param>
+        /// <returns>실제로 발사됐으면 true, 쿨다운·전환·재장전·매거진 0 등으로 발사 못 하면 false (원본 ShotWeapon 성공 여부).</returns>
+        public bool Shoot(Human owner)
         {
-            if (owner == null || !owner.Alive) return;
-            if (owner.IsChanging) return;
-            if (m_isFalling) return;
-            if (m_fireRateTimer > 0f) return;
-            if (m_isReloading) return;
-            if (m_currentMagazine <= 0) return;
-            if (m_weaponData.fireRate <= 0f) return; // noneWeapon 등 발사 불가능 무기
+            if (owner == null || !owner.Alive) return false;
+            if (owner.IsChanging) return false;
+            if (m_isFalling) return false;
+            if (m_fireRateTimer > 0f) return false;
+            if (m_isReloading) return false;
+            if (m_currentMagazine <= 0) return false;
+            if (m_weaponData.fireRate <= 0f) return false; // noneWeapon 등 발사 불가능 무기
 
             var wp = DataManager.Instance.WeaponParameterData;
             int bulletIdx = m_weaponData.bulletIndex;
-            if (bulletIdx < 0 || bulletIdx >= wp.bulletData.Count) return;
+            if (bulletIdx < 0 || bulletIdx >= wp.bulletData.Count) return false;
 
             BulletData bulletData = wp.bulletData[bulletIdx];
             SpawnBullets(owner, bulletData);
@@ -192,6 +216,8 @@ namespace UnityXOPS
                 if      (m_reserveAmmo > 0)                              owner.ReloadCurrentWeapon();
                 else if (m_weaponData.discardAfterAutoReloadIfNoAmmo)    owner.ConsumeCurrentWeapon();
             }
+
+            return true;
         }
 
         /// <summary>
@@ -316,19 +342,9 @@ namespace UnityXOPS
 
             HumanController controller = owner.GetComponent<HumanController>();
 
-            // 조준 표적점이 있으면(플레이어) 총구→표적 방향으로 발사 — 3인칭 어깨 오프셋 parallax 보정. 없으면(AI) 캐릭터 시점각 그대로.
-            float yaw, pitch;
-            if (owner.AimPoint.HasValue)
-            {
-                Vector3 baseDir = (owner.AimPoint.Value - spawnPos).normalized;
-                yaw = Mathf.Atan2(baseDir.x, baseDir.z) * Mathf.Rad2Deg;
-                pitch = -Mathf.Asin(Mathf.Clamp(baseDir.y, -1f, 1f)) * Mathf.Rad2Deg;
-            }
-            else
-            {
-                yaw = controller.Yaw;
-                pitch = controller.Pitch;
-            }
+            // 발사 방향은 사람 시점각(rx/ry) 그대로 — 카메라·조준점 무관 직사 (원본 objectmanager.cpp:1970-1973).
+            float yaw = controller.Yaw;
+            float pitch = controller.Pitch;
 
             // 기본 탄도 오차 (모든 펠릿 공유). 실효 오차 공식은 GetEffectiveErrorRange 단일 소스 (크로스헤어와 공유).
             float effError = GetEffectiveErrorRange(owner);

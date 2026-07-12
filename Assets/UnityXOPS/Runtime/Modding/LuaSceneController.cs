@@ -40,6 +40,9 @@ namespace UnityXOPS.Modding
 
         private void OnDestroy()
         {
+            // 이 씬이 등록한 이벤트 콜백 해제(다음 씬으로 잔존 방지). Clear는 env가 죽었으면 내부에서 dispose를 건너뛴다.
+            XOPSEventBus.Clear();
+
             // 앱/Play 종료 시 LuaManager가 먼저 LuaEnv를 Dispose하면(순서 비결정) 핸들 Dispose가 예외를 던진다.
             // env가 죽으면 그 안의 Lua 객체도 함께 무효화되므로, 살아있을 때만 개별 정리한다.
             if (!LuaManager.IsEnvAlive)

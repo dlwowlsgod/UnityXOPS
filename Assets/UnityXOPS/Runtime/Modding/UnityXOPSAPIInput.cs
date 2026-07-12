@@ -188,5 +188,56 @@ namespace UnityXOPS.Modding
             InputAction action = InputManager.Instance.GetAction(name);
             return action != null ? action.type.ToString() : "";
         }
+
+        /// <summary>
+        /// 이번 프레임에 타이핑된 텍스트를 반환한다. Lua 커스텀 입력 필드에서 글자를 받는 데 쓴다.
+        /// 반환값은 XLua를 거치며 UTF-8 바이트열이 된다. Lua에서 바이트 32~126만 통과시키면 ASCII 전용이 되고,
+        /// 일본어 등 멀티바이트/IME 입력은 통째로 버려진다(유니코드가 필요하면 문자 단위로 처리해야 함).
+        /// </summary>
+        /// <returns>이번 프레임 타이핑 문자열(없으면 빈 문자열)</returns>
+        public string GetTypedText()
+        {
+            return InputManager.Instance.GetTypedText();
+        }
+
+        /// <summary>
+        /// 이번 프레임에 백스페이스 키가 눌렸는지 반환한다. 입력 필드의 마지막 글자 삭제에 쓴다.
+        /// </summary>
+        /// <returns>눌렸으면 true</returns>
+        public bool WasBackspacePressed()
+        {
+            return InputManager.Instance.WasBackspacePressed();
+        }
+
+        /// <summary>
+        /// 이번 프레임에 처음 눌린 키/버튼의 바인딩 경로를 반환한다. 리바인딩 리스닝 중 키 캡처에 쓴다.
+        /// </summary>
+        /// <returns>바인딩 경로(예 "&lt;Keyboard&gt;/w"), 없으면 빈 문자열</returns>
+        public string GetFirstPressedKeyPath()
+        {
+            return InputManager.Instance.GetFirstPressedKeyPath();
+        }
+
+        /// <summary>
+        /// 단일 버튼 액션의 바인딩을 지정 경로로 교체한다(즉시 반영 + 저장 시 유지). 컴포짓 액션에는 쓰지 않는다.
+        /// </summary>
+        /// <param name="name">액션 이름</param>
+        /// <param name="path">새 바인딩 경로</param>
+        /// <returns>성공하면 true</returns>
+        public bool SetActionBinding(string name, string path)
+        {
+            return InputManager.Instance.SetActionBinding(name, path);
+        }
+
+        /// <summary>
+        /// 마우스 커서 모드를 설정한다. 씬 진입/전환 시 호출한다(예: 메뉴는 자유 커서, FPS는 중앙 고정).
+        /// </summary>
+        /// <param name="hideInWindow">true면 창 안에 커서가 있을 때 숨긴다.</param>
+        /// <param name="centered">true면 커서를 화면 중앙에 고정(Locked)한다(FPS용). false면 자유 이동(메뉴용).</param>
+        /// <param name="moveToCenter">true면 커서를 즉시 화면 중앙으로 이동시킨다.</param>
+        public void SetMouseCursor(bool hideInWindow, bool centered, bool moveToCenter)
+        {
+            InputManager.MouseCursorMode(hideInWindow, centered, moveToCenter);
+        }
     }
 }

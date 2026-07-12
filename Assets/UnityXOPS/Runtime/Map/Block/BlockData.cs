@@ -181,10 +181,15 @@ namespace UnityXOPS
         /// </summary>
         public static void UnloadBlockData()
         {
+            // Destroy 는 프레임 끝에야 처리된다. 언로드→로드가 한 프레임에서 동기로 이어지므로(SceneAPI.LoadMission,
+            // MaingameScene.RestartMission), 그냥 Destroy 만 하면 이전 맵 블록 콜라이더가 Block 레이어에 살아남아
+            // 같은 프레임의 SmallObject.SnapToGround 레이가 옛 맵 지오메트리를 맞힌다. 비활성화로 물리 씬에서 즉시 뺀다.
             foreach (Transform child in Instance.blockRoot)
             {
+                child.gameObject.SetActive(false);
                 Destroy(child.gameObject);
             }
+
             // blockMaterials는 공유 머티리얼(BlockMaterial)과 런타임 복제본이 섞여 있음
             for (int i = 0; i < Instance.blockMaterials.Count; i++)
             {
@@ -310,6 +315,9 @@ namespace UnityXOPS
         // 평평한 블록의 degenerate(부피 0) bounds 로 인한 프러스텀 컬링 오작동 방지용 최소 두께 (Unity 단위, = 1 OpenXOPS 단위).
         private const float k_minBoundsThickness = 0.1f;
 
+        // 충돌 AABB 여유 (원본 COLLISION_ADDSIZE × 0.1). 브로드페이즈 경계 케이스 포함용.
+        private const float k_collisionAddSize = 0.001f;
+
         private static Block BuildBlock(RawBlockData raw, bool darkFlag)
         {
             Vector3 center = Vector3.zero;
@@ -423,6 +431,18 @@ namespace UnityXOPS
             bool isBoardBlock = HasDuplicateExpandedVertices(expanded)
                               || IsCenterVisibleFromAnyFace(center, faceNormals, faceCenters);
 
+            // 8정점 월드 AABB — 충돌 브로드페이즈 fast-reject 용. 원본 COLLISION_ADDSIZE 여유를 반영해 살짝 확장.
+            Vector3 boundsMin = raw.vertices[0];
+            Vector3 boundsMax = raw.vertices[0];
+            for (int i = 1; i < 8; i++)
+            {
+                boundsMin = Vector3.Min(boundsMin, raw.vertices[i]);
+                boundsMax = Vector3.Max(boundsMax, raw.vertices[i]);
+            }
+            Vector3 boundsMargin = Vector3.one * k_collisionAddSize;
+            boundsMin -= boundsMargin;
+            boundsMax += boundsMargin;
+
             return new Block
             {
                 mesh = mesh,
@@ -431,6 +451,8 @@ namespace UnityXOPS
                 collider = !isBoardBlock,
                 faceNormals = faceNormals,
                 faceCenters = faceCenters,
+                boundsMin = boundsMin,
+                boundsMax = boundsMax,
             };
         }
 

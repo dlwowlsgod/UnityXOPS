@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 using JJLUtility;
@@ -18,6 +19,9 @@ namespace UnityXOPS
     public class UIOverlayManager : SingletonBehavior<UIOverlayManager>
     {
         private readonly Dictionary<int, Transform> m_layers = new Dictionary<int, Transform>();
+        // 레이어별 서브 루트(뷰포트 영역에 앵커됨). CreateImage/Text는 이 루트 아래에 붙는다.
+        private readonly Dictionary<int, RectTransform> m_layerRoots = new Dictionary<int, RectTransform>();
+        private Rect m_appliedViewport = new Rect(0f, 0f, 1f, 1f);
 
         private Canvas m_letterboxCanvas;
         private RectTransform m_topBar;
@@ -64,10 +68,11 @@ namespace UnityXOPS
             {
                 if (layer != null)
                 {
-                    Destroy(layer.gameObject);
+                    Destroy(layer.gameObject);   // 캔버스 파괴 시 하위 서브 루트도 함께 제거됨
                 }
             }
             m_layers.Clear();
+            m_layerRoots.Clear();
         }
 
         /// <summary>
@@ -124,7 +129,8 @@ namespace UnityXOPS
         /// <summary>
         /// 지정 sortingOrder의 오버레이 레이어(독립 ScreenSpaceOverlay Canvas)를 가져오거나 생성한다.
         /// sortingOrder가 높을수록 위에 그려진다. UI 요소를 반환된 Transform 아래에 붙인다.
-        /// scaling이 true면 640x480 기준의 CanvasScaler(높이 매치)를 붙여 비율이 바뀌어도 깨지지 않게 한다.
+        /// scaling이 true면 640x480 기준 CanvasScaler(높이 매치)로 비율이 바뀌어도 깨지지 않게 하고,
+        /// false면 Constant Pixel Size(1:1) CanvasScaler를 붙인다(어느 쪽이든 scaleFactor 조절 가능).
         /// 한 sortingOrder의 scaling 여부는 최초 생성 시 결정되며 이후 호출에서는 무시된다.
         /// </summary>
         /// <param name="sortingOrder">레이어 우선순위(정수)</param>
@@ -132,9 +138,9 @@ namespace UnityXOPS
         /// <returns>해당 레이어 Canvas의 Transform</returns>
         public Transform GetOrCreateLayer(int sortingOrder, bool scaling = false)
         {
-            if (m_layers.TryGetValue(sortingOrder, out Transform existing))
+            if (m_layerRoots.TryGetValue(sortingOrder, out RectTransform existingRoot))
             {
-                return existing;
+                return existingRoot;
             }
 
             GameObject go = new GameObject($"OverlayLayer_{sortingOrder}", typeof(Canvas));
@@ -143,17 +149,100 @@ namespace UnityXOPS
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = sortingOrder;
 
+            // scaling 여부와 무관하게 CanvasScaler를 항상 붙인다. scaling=false면 Constant Pixel Size(1:1)로 둬
+            // scaleFactor 조절 지점(SetLayerScaleFactor)을 항상 확보한다.
+            CanvasScaler scaler = go.AddComponent<CanvasScaler>();
             if (scaling)
             {
-                CanvasScaler scaler = go.AddComponent<CanvasScaler>();
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(k_referenceWidth, k_referenceHeight);
                 scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
                 scaler.matchWidthOrHeight = 1f;
             }
+            else
+            {
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
+                scaler.scaleFactor = 1f;
+            }
+
+            // 게임 뷰포트(레터박스 후 영역) 안에만 UI가 들어가도록 앵커된 서브 루트. 콘텐츠는 이 루트 아래에 붙는다.
+            // 앵커가 뷰포트 rect(정규화)를 따르므로, 4:3 뷰포트에선 640x480 코너 레이아웃이 그 영역에 정확히 들어가고
+            // 16:9 뷰포트(꽉 채움)에선 화면 전체로 퍼진다. 뷰포트가 바뀌면 LateUpdate가 앵커를 갱신한다.
+            RectTransform root = new GameObject("ViewportRoot", typeof(RectTransform)).GetComponent<RectTransform>();
+            root.SetParent(go.transform, false);
+            ApplyViewportAnchors(root, CurrentViewport());
 
             m_layers[sortingOrder] = go.transform;
-            return go.transform;
+            m_layerRoots[sortingOrder] = root;
+            return root;
+        }
+
+        private void LateUpdate()
+        {
+            Rect vp = CurrentViewport();
+            if (vp == m_appliedViewport)
+            {
+                return;
+            }
+            m_appliedViewport = vp;
+            foreach (RectTransform root in m_layerRoots.Values)
+            {
+                if (root != null)
+                {
+                    ApplyViewportAnchors(root, vp);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 현재 게임 뷰포트(레터박스/필러박스 후 정규화 rect)를 반환한다. 레터박스 컨트롤러가 없으면 전체 화면.
+        /// </summary>
+        /// <returns>정규화 뷰포트 rect(0~1).</returns>
+        private static Rect CurrentViewport()
+        {
+            return LetterboxController.Loaded ? LetterboxController.Instance.Viewport : new Rect(0f, 0f, 1f, 1f);
+        }
+
+        /// <summary>
+        /// 레이어 서브 루트의 앵커를 뷰포트 rect에 맞춰, 콘텐츠가 그 영역에만 놓이게 한다.
+        /// </summary>
+        /// <param name="root">레이어 서브 루트 RectTransform.</param>
+        /// <param name="vp">정규화 뷰포트 rect(0~1).</param>
+        private static void ApplyViewportAnchors(RectTransform root, Rect vp)
+        {
+            root.anchorMin = new Vector2(vp.xMin, vp.yMin);
+            root.anchorMax = new Vector2(vp.xMax, vp.yMax);
+            root.pivot = new Vector2(0.5f, 0.5f);
+            root.offsetMin = Vector2.zero;
+            root.offsetMax = Vector2.zero;
+        }
+
+        /// <summary>
+        /// 지정 레이어의 CanvasScaler scaleFactor를 설정한다(UI 전체 확대/축소). 레이어가 없으면 생성한다.
+        /// Constant Pixel Size(scaling=false) 레이어에서 의미가 있으며, ScaleWithScreenSize(scaling=true) 레이어에서는 무시된다.
+        /// </summary>
+        /// <param name="sortingOrder">대상 레이어 우선순위</param>
+        /// <param name="factor">scaleFactor(1=기본, 2=2배 확대). 0 이하는 0.01로 보정</param>
+        public void SetLayerScaleFactor(int sortingOrder, float factor)
+        {
+            GetOrCreateLayer(sortingOrder);
+            CanvasScaler scaler = m_layers[sortingOrder].GetComponent<CanvasScaler>();
+            if (scaler != null)
+            {
+                scaler.scaleFactor = Mathf.Max(0.01f, factor);
+            }
+        }
+
+        /// <summary>
+        /// 지정 레이어의 현재 CanvasScaler scaleFactor를 반환한다. 레이어가 없으면 생성한다.
+        /// </summary>
+        /// <param name="sortingOrder">대상 레이어 우선순위</param>
+        /// <returns>현재 scaleFactor. CanvasScaler가 없으면 1</returns>
+        public float GetLayerScaleFactor(int sortingOrder)
+        {
+            GetOrCreateLayer(sortingOrder);
+            CanvasScaler scaler = m_layers[sortingOrder].GetComponent<CanvasScaler>();
+            return scaler != null ? scaler.scaleFactor : 1f;
         }
 
         /// <summary>
@@ -410,8 +499,28 @@ namespace UnityXOPS
         /// <returns>생성된 요소를 제어하는 핸들</returns>
         public UIElementHandle CreateImage(int layer, bool scaling, UIPivot pivot, string texturePath, float x, float y, float width, float height, float r, float g, float b, float a)
         {
-            Transform parent = GetOrCreateLayer(layer, scaling);
+            return CreateImageUnder(GetOrCreateLayer(layer, scaling), pivot, texturePath, x, y, width, height, r, g, b, a);
+        }
 
+        /// <summary>
+        /// 지정한 부모 Transform 아래에 RawImage 요소를 생성한다. 레이어 직속(CreateImage) 또는
+        /// 다른 요소의 자식(UIElementHandle.CreateChildImage)으로 붙일 때 공용으로 쓴다.
+        /// 앵커/피벗/스트레치는 부모 rect 기준으로 계산되므로, 스트레치 자식은 부모 크기를 따라간다.
+        /// </summary>
+        /// <param name="parent">부모 Transform(레이어 캔버스 또는 다른 요소).</param>
+        /// <param name="pivot">앵커/피벗 기준 지점(9지점/스트레치).</param>
+        /// <param name="texturePath">streamingAssets 기준 이미지 경로(빈 문자열이면 패널).</param>
+        /// <param name="x">기준 지점으로부터의 X 오프셋(스트레치 축이면 sizeDelta 보정).</param>
+        /// <param name="y">기준 지점으로부터의 Y 오프셋(스트레치 축이면 sizeDelta 보정).</param>
+        /// <param name="width">너비(스트레치 축이면 부모 대비 증감량).</param>
+        /// <param name="height">높이(스트레치 축이면 부모 대비 증감량).</param>
+        /// <param name="r">빨강(0~1)</param>
+        /// <param name="g">초록(0~1)</param>
+        /// <param name="b">파랑(0~1)</param>
+        /// <param name="a">알파(0~1)</param>
+        /// <returns>생성된 요소를 제어하는 핸들</returns>
+        public UIElementHandle CreateImageUnder(Transform parent, UIPivot pivot, string texturePath, float x, float y, float width, float height, float r, float g, float b, float a)
+        {
             GameObject go = new GameObject("UIImage", typeof(RawImage));
             go.transform.SetParent(parent, false);
 
@@ -454,8 +563,30 @@ namespace UnityXOPS
         /// <returns>생성된 텍스트를 제어하는 핸들</returns>
         public UITextHandle CreateText(int layer, bool scaling, UIPivot pivot, UIPivot alignment, string text, float x, float y, float fontWidth, float fontHeight, float spacing, float r, float g, float b, float a)
         {
-            Transform parent = GetOrCreateLayer(layer, scaling);
+            return CreateTextUnder(GetOrCreateLayer(layer, scaling), pivot, alignment, text, x, y, fontWidth, fontHeight, spacing, r, g, b, a);
+        }
 
+        /// <summary>
+        /// 지정한 부모 Transform 아래에 스프라이트 텍스트(XOPSSpriteText)를 생성한다. 레이어 직속(CreateText) 또는
+        /// 다른 요소의 자식(UIElementHandle.CreateChildText)으로 붙일 때 공용으로 쓴다.
+        /// pivot은 UI 요소 기준점(앵커/피벗), alignment는 글자 정렬을 따로 정한다.
+        /// </summary>
+        /// <param name="parent">부모 Transform(레이어 캔버스 또는 다른 요소).</param>
+        /// <param name="pivot">UI 요소 기준점(앵커/피벗, 9지점).</param>
+        /// <param name="alignment">글자 정렬 기준점(9지점).</param>
+        /// <param name="text">표시할 문자열.</param>
+        /// <param name="x">pivot 지점으로부터의 X 오프셋(오른쪽 +).</param>
+        /// <param name="y">pivot 지점으로부터의 Y 오프셋(위쪽 +).</param>
+        /// <param name="fontWidth">글자 너비.</param>
+        /// <param name="fontHeight">글자 높이.</param>
+        /// <param name="spacing">글자 간격.</param>
+        /// <param name="r">빨강(0~1)</param>
+        /// <param name="g">초록(0~1)</param>
+        /// <param name="b">파랑(0~1)</param>
+        /// <param name="a">알파(0~1)</param>
+        /// <returns>생성된 텍스트를 제어하는 핸들.</returns>
+        public UITextHandle CreateTextUnder(Transform parent, UIPivot pivot, UIPivot alignment, string text, float x, float y, float fontWidth, float fontHeight, float spacing, float r, float g, float b, float a)
+        {
             GetAnchorConfig(pivot, out Vector2 anchorMin, out Vector2 anchorMax, out Vector2 pivotPoint);
             TextAnchor textAlignment = PivotToTextAnchor(alignment);
             Vector2 fontSize = new Vector2(fontWidth, fontHeight);
@@ -468,6 +599,58 @@ namespace UnityXOPS
             spriteText.raycastTarget = false;
 
             return new UITextHandle(spriteText.gameObject, spriteText);
+        }
+
+        /// <summary>
+        /// 지정 레이어에 OS 폰트(TMP) 텍스트를 생성하고 핸들을 반환한다.
+        /// 스프라이트 폰트(CreateText) 대신 가독성 좋은 OS 폰트를 쓸 때 사용하며, 글자 크기는 스칼라(pt)다.
+        /// </summary>
+        /// <param name="layer">레이어 우선순위(sortingOrder).</param>
+        /// <param name="scaling">true면 640x480 기준 스케일 레이어에 배치.</param>
+        /// <param name="pivot">UI 요소 기준점(앵커/피벗).</param>
+        /// <param name="alignment">글자 정렬 기준점.</param>
+        /// <param name="text">표시할 문자열.</param>
+        /// <param name="x">pivot 지점 기준 X 오프셋.</param>
+        /// <param name="y">pivot 지점 기준 Y 오프셋.</param>
+        /// <param name="fontSize">글자 크기(pt).</param>
+        /// <param name="r">빨강(0~1)</param>
+        /// <param name="g">초록(0~1)</param>
+        /// <param name="b">파랑(0~1)</param>
+        /// <param name="a">알파(0~1)</param>
+        /// <returns>OS 폰트 텍스트 제어 핸들.</returns>
+        public UIOSTextHandle CreateOSText(int layer, bool scaling, UIPivot pivot, UIPivot alignment, string text, float x, float y, float fontSize, float r, float g, float b, float a)
+        {
+            return CreateOSTextUnder(GetOrCreateLayer(layer, scaling), pivot, alignment, text, x, y, fontSize, r, g, b, a);
+        }
+
+        /// <summary>
+        /// 지정한 부모 Transform 아래에 OS 폰트(TMP) 텍스트를 생성한다. 레이어 직속(CreateOSText) 또는 다른 요소의 자식으로 붙일 때 공용.
+        /// </summary>
+        /// <param name="parent">부모 Transform.</param>
+        /// <param name="pivot">UI 요소 기준점(앵커/피벗).</param>
+        /// <param name="alignment">글자 정렬 기준점.</param>
+        /// <param name="text">표시할 문자열.</param>
+        /// <param name="x">pivot 지점 기준 X 오프셋.</param>
+        /// <param name="y">pivot 지점 기준 Y 오프셋.</param>
+        /// <param name="fontSize">글자 크기(pt).</param>
+        /// <param name="r">빨강(0~1)</param>
+        /// <param name="g">초록(0~1)</param>
+        /// <param name="b">파랑(0~1)</param>
+        /// <param name="a">알파(0~1)</param>
+        /// <returns>OS 폰트 텍스트 제어 핸들.</returns>
+        public UIOSTextHandle CreateOSTextUnder(Transform parent, UIPivot pivot, UIPivot alignment, string text, float x, float y, float fontSize, float r, float g, float b, float a)
+        {
+            GetAnchorConfig(pivot, out Vector2 anchorMin, out Vector2 anchorMax, out Vector2 pivotPoint);
+            TextAnchor textAlignment = PivotToTextAnchor(alignment);
+
+            TextMeshProUGUI tmp = FontManager.CreateOSFont(
+                parent, text, anchorMin, anchorMax, new Vector2(x, y), Vector2.zero, fontSize, new Color(r, g, b, a), textAlignment);
+
+            // CreateOSFont는 정렬에서 rect.pivot을 유도하므로, UI 기준점(pivot)으로 덮어써 정렬과 분리한다.
+            tmp.rectTransform.pivot = pivotPoint;
+            tmp.raycastTarget = false;
+
+            return new UIOSTextHandle(tmp.gameObject, tmp);
         }
 
         /// <summary>
@@ -528,6 +711,19 @@ namespace UnityXOPS
             }
             RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, Mouse.current.position.ReadValue(), null, out Vector2 local);
             return local;
+        }
+
+        /// <summary>
+        /// 현재 마우스 포인터를 지정 레이어 캔버스의 로컬 좌표(중심 기준, CanvasScaler 스케일 반영)로 변환한다.
+        /// 십자 커서 등 포인터를 따라가는 UI가 그대로 anchoredPosition(SetPosition)에 넘길 수 있는 좌표다.
+        /// scaling은 레이어 최초 생성 시 값과 동일하게 줘야 같은 좌표계를 얻는다.
+        /// </summary>
+        /// <param name="sortingOrder">기준 레이어 우선순위</param>
+        /// <param name="scaling">레이어 생성 시 사용한 scaling 값</param>
+        /// <returns>레이어 로컬 좌표. 포인터가 없으면 (0,0)</returns>
+        public static Vector2 PointerInLayer(int sortingOrder, bool scaling)
+        {
+            return PointerLocal(Instance.GetOrCreateLayer(sortingOrder, scaling) as RectTransform);
         }
     }
 }

@@ -1,10 +1,14 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UnityXOPS
 {
     public class MaingameUIStaticLayout : MonoBehaviour
     {
-        [SerializeField] private RectTransform normalBottomLeft, normalBottomRight;
+        [SerializeField] 
+        private RectTransform normalBottomLeft, normalBottomRight;
+        [SerializeField]
+        private CanvasScaler scaler;
 
         private void Start()
         {
@@ -26,6 +30,12 @@ namespace UnityXOPS
                 normalBottomRight, "\u00C0\u00C1\u00C1\u00C1\u00C1\u00C1\u00C1\u00C2", oneZero, oneZero, new Vector2(0, 98 - 32), new Vector2(32 * 7, 32), fontSize, fontColor, TextAnchor.UpperRight, 0);
             FontManager.CreateSpriteText<XOPSSpriteText>(
                 normalBottomRight, "\u00D0\u00D1\u00D1\u00D1\u00D1\u00D1\u00D1\u00D2", oneZero, oneZero, new Vector2(0, 98 - 64), new Vector2(32 * 7, 32), fontSize, fontColor, TextAnchor.UpperRight, 0);
+
+            // UI 배수 — General.UIScale. 해상도별 상한은 ConfigManager가 이미 클램프해 두므로 그대로 쓴다.
+            float uiScale = ConfigManager.Loaded
+                ? ConfigManager.Instance.GetFloat(ConfigManager.SectionGeneral, ConfigManager.KeyUIScale, 1f)
+                : 1f;
+            scaler.scaleFactor = uiScale;
         }
     }
 }

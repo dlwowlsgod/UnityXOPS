@@ -109,6 +109,80 @@ namespace UnityXOPS.Modding
         }
 
         /// <summary>
+        /// 이 요소를 부모로 하는 자식 이미지/패널(RawImage)을 생성해 핸들을 반환한다.
+        /// 앵커/스트레치가 이 요소 기준으로 계산되므로, 부모가 움직이거나 크기가 바뀌면 자식이 따라간다(중첩 UI).
+        /// </summary>
+        /// <param name="pivot">앵커/피벗 기준 지점 이름("StretchTop", "center" 등). 대소문자/구분자 무시</param>
+        /// <param name="texturePath">streamingAssets 기준 이미지 경로(빈 문자열=패널)</param>
+        /// <param name="x">기준 지점 기준 X 오프셋(스트레치 축이면 sizeDelta 보정)</param>
+        /// <param name="y">기준 지점 기준 Y 오프셋(스트레치 축이면 sizeDelta 보정)</param>
+        /// <param name="width">너비(스트레치 축이면 부모 대비 증감량)</param>
+        /// <param name="height">높이(스트레치 축이면 부모 대비 증감량)</param>
+        /// <param name="r">빨강(0~1)</param>
+        /// <param name="g">초록(0~1)</param>
+        /// <param name="b">파랑(0~1)</param>
+        /// <param name="a">알파(0~1)</param>
+        /// <returns>자식 요소 제어 핸들. 이 요소가 이미 파괴됐으면 null</returns>
+        public UIElementHandle CreateChildImage(string pivot, string texturePath, float x, float y, float width, float height, float r, float g, float b, float a)
+        {
+            if (m_rect == null)
+            {
+                return null;
+            }
+            return UIOverlayManager.Instance.CreateImageUnder(m_rect, UIOverlayManager.ParsePivot(pivot), texturePath, x, y, width, height, r, g, b, a);
+        }
+
+        /// <summary>
+        /// 이 요소를 부모로 하는 자식 스프라이트 텍스트를 생성해 핸들을 반환한다.
+        /// 컨테이너(투명 패널) 밑에 묶어 두면 컨테이너 하나의 SetActive로 그룹 전체를 토글할 수 있다(탭/패널 전환).
+        /// </summary>
+        /// <param name="pivot">UI 요소 기준점 이름("center", "top_left" 등). 대소문자/구분자 무시</param>
+        /// <param name="alignment">글자 정렬 기준점 이름("center", "left" 등). 대소문자/구분자 무시</param>
+        /// <param name="text">표시할 문자열</param>
+        /// <param name="x">기준 지점 기준 X 오프셋(오른쪽 +)</param>
+        /// <param name="y">기준 지점 기준 Y 오프셋(위쪽 +)</param>
+        /// <param name="fontWidth">글자 너비</param>
+        /// <param name="fontHeight">글자 높이</param>
+        /// <param name="spacing">글자 간격</param>
+        /// <param name="r">빨강(0~1)</param>
+        /// <param name="g">초록(0~1)</param>
+        /// <param name="b">파랑(0~1)</param>
+        /// <param name="a">알파(0~1)</param>
+        /// <returns>자식 텍스트 제어 핸들. 이 요소가 이미 파괴됐으면 null</returns>
+        public UITextHandle CreateChildText(string pivot, string alignment, string text, float x, float y, float fontWidth, float fontHeight, float spacing, float r, float g, float b, float a)
+        {
+            if (m_rect == null)
+            {
+                return null;
+            }
+            return UIOverlayManager.Instance.CreateTextUnder(m_rect, UIOverlayManager.ParsePivot(pivot), UIOverlayManager.ParsePivot(alignment), text, x, y, fontWidth, fontHeight, spacing, r, g, b, a);
+        }
+
+        /// <summary>
+        /// 이 요소를 부모로 하는 자식 OS 폰트(TMP) 텍스트를 생성해 핸들을 반환한다. 스프라이트 폰트 대신 가독성 텍스트용.
+        /// CreateChildText와 달리 글자 크기가 스칼라(pt) 하나다(w/h가 아님).
+        /// </summary>
+        /// <param name="pivot">UI 요소 기준점 이름("center", "top_left" 등). 대소문자/구분자 무시</param>
+        /// <param name="alignment">글자 정렬 기준점 이름("center", "left" 등). 대소문자/구분자 무시</param>
+        /// <param name="text">표시할 문자열</param>
+        /// <param name="x">기준 지점 기준 X 오프셋(오른쪽 +)</param>
+        /// <param name="y">기준 지점 기준 Y 오프셋(위쪽 +)</param>
+        /// <param name="fontSize">글자 크기(pt)</param>
+        /// <param name="r">빨강(0~1)</param>
+        /// <param name="g">초록(0~1)</param>
+        /// <param name="b">파랑(0~1)</param>
+        /// <param name="a">알파(0~1)</param>
+        /// <returns>자식 OS 폰트 텍스트 제어 핸들. 이 요소가 이미 파괴됐으면 null</returns>
+        public UIOSTextHandle CreateChildOSText(string pivot, string alignment, string text, float x, float y, float fontSize, float r, float g, float b, float a)
+        {
+            if (m_rect == null)
+            {
+                return null;
+            }
+            return UIOverlayManager.Instance.CreateOSTextUnder(m_rect, UIOverlayManager.ParsePivot(pivot), UIOverlayManager.ParsePivot(alignment), text, x, y, fontSize, r, g, b, a);
+        }
+
+        /// <summary>
         /// 현재 마우스 포인터가 이 요소 위에 있는지 반환한다(호버 판정).
         /// </summary>
         /// <returns>포인터가 요소 영역 안이면 true</returns>

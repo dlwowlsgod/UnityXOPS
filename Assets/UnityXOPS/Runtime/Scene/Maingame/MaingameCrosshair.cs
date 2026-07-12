@@ -15,22 +15,37 @@ namespace UnityXOPS
     public class MaingameCrosshair : MonoBehaviour
     {
         [SerializeField]
-        private RectTransform crosshairRoot, crosshairErrorRoot, scopeRoot, leftBox, rightBox, upBox, downBox;
+        private RectTransform crosshairRoot, scopeRoot, leftBox, rightBox, upBox, downBox,
+            leftCrosshair, rightCrosshair, upCrosshair, downCrosshair;
         [SerializeField]
-        private RawImage scopeImage;
+        private RawImage scopeImage, leftCrosshairColor, rightCrosshairColor, upCrosshairColor, downCrosshairColor;
         [SerializeField]
         private RectTransform scopeLineRoot;   // 스코프 레티클(line) 부모. 미지정 시 scopeImage 로 폴백. 화면 중앙 정렬 권장.
 
-        private XOPSSpriteText m_crosshairLeft, m_crosshairRight;
         private List<GameObject> m_scopeReticles;   // scopeData 인덱스별 레티클 컨테이너 (시작 시 1회 빌드).
 
+        // 크로스헤어 config 캐시(Start 1회). StaticAim=true면 고정, false면 ErrorRange 로 벌어짐.
+        private float m_aimGap, m_aimThick, m_aimLength;
+        private bool m_staticAim;
+
         private Human m_player;
+        private PlayerController m_playerController;
 
         private Camera m_camera;
         private float m_baseFov;
         private bool m_baseFovCaptured;
 
         public bool HasPlayer => m_player != null;
+
+        // 3인칭 시점 여부 — 원본은 3인칭에서 크로스헤어/스코프/FOV줌을 전부 숨긴다 (gamemain.cpp:2755·2935·3169, Camera_F1mode 게이팅).
+        private bool IsThirdPerson
+        {
+            get
+            {
+                if (m_playerController == null) m_playerController = FindFirstObjectByType<PlayerController>();
+                return m_playerController != null && !m_playerController.FirstPerson;
+            }
+        }
 
         // 현재 무기가 크로스헤어 표시 무기인지 (WeaponData.crosshair). 죽었거나 무기 없으면 false.
         public bool ShowCrosshair
@@ -48,18 +63,8 @@ namespace UnityXOPS
 
         private void Start()
         {
-            // 좌우 오차 글리프를 crosshairErrorRoot 중앙에 앵커(중앙 기준 ±오프셋용). 실제 위치는 Update 에서 ±ErrorRange 로 갱신.
-            // 원본 gamemain.cpp:3195-3198 — 0xBD("ｽ")=왼쪽, 0xBE("ｾ")=오른쪽, 32×32, 흰색 alpha 0.5, 수직 화면 중앙 정렬.
-            Vector2 center = new Vector2(0.5f, 0.5f);
-            Vector2 size = new Vector2(32f, 32f);
-            Color col = new Color(1f, 1f, 1f, 0.5f);
-
-            m_crosshairLeft = FontManager.CreateSpriteText<XOPSSpriteText>(
-                crosshairErrorRoot, "½", center, center, Vector2.zero, size, size, col, TextAnchor.MiddleCenter, 0f);
-            m_crosshairRight = FontManager.CreateSpriteText<XOPSSpriteText>(
-                crosshairErrorRoot, "¾", center, center, Vector2.zero, size, size, col, TextAnchor.MiddleCenter, 0f);
-
             BuildScopeReticles();
+            ApplyCrosshairConfig();
         }
 
         private void Update()
@@ -68,27 +73,29 @@ namespace UnityXOPS
             m_player = MapLoader.Player;
 
             // 스코프 토글 입력 → Human 에 위임 (상태·자동해제는 Human 이 관리, 원본 ChangeScopeMode).
+            // 3인칭에서도 스코프 상태값은 토글되지만(원본 InputPlayer 는 F1mode 무관 호출) 화면엔 아무것도 안 그려진다.
             if (m_player != null && InputManager.Instance.Zoom.WasPressedThisFrame())
                 m_player.ToggleScope();
 
-            ApplyScope();
+            bool thirdPerson = IsThirdPerson;
+            ApplyScope(thirdPerson);
 
-            // 크로스헤어 표시: 무기 crosshair 가 켜져 있고, (스코프 미사용 || 그 스코프가 크로스헤어를 숨기지 않음).
+            // 크로스헤어 표시: 1인칭이고, 무기 crosshair 가 켜져 있고, (스코프 미사용 || 그 스코프가 크로스헤어를 숨기지 않음).
             ScopeData activeScope = m_player != null ? m_player.ActiveScope : null;
-            bool showCross = ShowCrosshair && !(activeScope != null && activeScope.hideCrosshair);
+            bool showCross = !thirdPerson && ShowCrosshair && !(activeScope != null && activeScope.hideCrosshair);
             crosshairRoot.gameObject.SetActive(showCross);
             if (!showCross) return;
 
-            // 두 글리프를 화면 중앙에서 좌우로 ±ErrorRange (640×480 기준 픽셀 1:1). y 오프셋은 0 (수직 중앙 정렬).
-            float er = ErrorRange;
-            m_crosshairLeft.rectTransform.anchoredPosition = new Vector2(-er, 0f);
-            m_crosshairRight.rectTransform.anchoredPosition = new Vector2(er, 0f);
+            // Static 이면 config Gap 고정, Dynamic 이면 Gap + ErrorRange 로 벌어짐(원본 반동 스프레드).
+            float gap = m_staticAim ? m_aimGap : m_aimGap + ErrorRange;
+            UpdateCrosshairSpread(gap);
         }
 
         // 스코프 오버레이 텍스처/표시 + 카메라 FOV + 레티클(인덱스 일치분만)을 현재 스코프 상태에 맞춰 적용.
-        private void ApplyScope()
+        // 3인칭이면 스코프 상태와 무관하게 오버레이/레티클/FOV줌 모두 끈다 (원본 3인칭 게이팅).
+        private void ApplyScope(bool thirdPerson)
         {
-            bool scoping = m_player != null && m_player.IsScoping;
+            bool scoping = m_player != null && m_player.IsScoping && !thirdPerson;
             ScopeData scope = scoping ? m_player.ActiveScope : null;
 
             if (scopeImage != null)
@@ -136,7 +143,10 @@ namespace UnityXOPS
             {
                 if (!m_baseFovCaptured && !scoping)
                 {
-                    m_baseFov = m_camera.fieldOfView;
+                    // 기본 FOV는 Graphic 설정(config)에서 — 메인게임에서만 유저 FOV를 적용. 스코프 줌은 이 값 기준.
+                    m_baseFov = ConfigManager.Loaded
+                        ? ConfigManager.Instance.GetInt("Graphic", "fov", Mathf.RoundToInt(m_camera.fieldOfView))
+                        : m_camera.fieldOfView;
                     m_baseFovCaptured = true;
                 }
 
@@ -198,6 +208,58 @@ namespace UnityXOPS
             img.texture = Texture2D.whiteTexture;
             img.color = line.color;
             img.raycastTarget = false;
+        }
+
+        // Config(General) 의 Gap/Thick/Length/StaticAim/Color 로 4방향 크로스헤어 선을 세팅한다. 시작 시 1회.
+        // 크기/색/앵커는 여기서 고정하고, 벌어짐(위치)은 UpdateCrosshairSpread 가 Static/Dynamic 에 따라 갱신한다.
+        private void ApplyCrosshairConfig()
+        {
+            if (!ConfigManager.Loaded) return;
+            ConfigManager cfg = ConfigManager.Instance;
+
+            m_aimGap = cfg.GetInt("General", "aimGap");
+            m_aimThick = cfg.GetInt("General", "aimThick");
+            m_aimLength = cfg.GetInt("General", "aimLength");
+            m_staticAim = cfg.GetBool("General", "StaticAim", false);   // 신설 설정 — 구 config.json 엔 없으므로 기본 false 폴백
+            Color color = new Color(
+                cfg.GetFloat("General", "aimColorR"),
+                cfg.GetFloat("General", "aimColorG"),
+                cfg.GetFloat("General", "aimColorB"),
+                cfg.GetFloat("General", "aimColorA"));
+
+            // 가로선(Left/Right)=(Length,Thick), 세로선(Up/Down)=(Thick,Length). 색은 RawImage 에(텍스처 없으면 흰 텍스처 × color).
+            SetupCrosshairLine(leftCrosshair, leftCrosshairColor, new Vector2(m_aimLength, m_aimThick), color);
+            SetupCrosshairLine(rightCrosshair, rightCrosshairColor, new Vector2(m_aimLength, m_aimThick), color);
+            SetupCrosshairLine(upCrosshair, upCrosshairColor, new Vector2(m_aimThick, m_aimLength), color);
+            SetupCrosshairLine(downCrosshair, downCrosshairColor, new Vector2(m_aimThick, m_aimLength), color);
+
+            UpdateCrosshairSpread(m_aimGap);   // 초기 위치(정적)
+        }
+
+        // 크로스헤어 선 1개: 중앙 앵커 + 크기 + 색 세팅(위치는 UpdateCrosshairSpread 담당).
+        private static void SetupCrosshairLine(RectTransform rect, RawImage image, Vector2 size, Color color)
+        {
+            if (rect != null)
+            {
+                rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.sizeDelta = size;
+            }
+            if (image != null)
+            {
+                if (image.texture == null) image.texture = Texture2D.whiteTexture;
+                image.color = color;
+                image.raycastTarget = false;
+            }
+        }
+
+        // 현재 gap 으로 4선 위치(벌어짐)를 갱신. 중심에서 gap 만큼 떨어진 곳부터 선이 시작한다(선 중심 = gap + Length/2).
+        private void UpdateCrosshairSpread(float gap)
+        {
+            float offset = gap + m_aimLength * 0.5f;
+            if (leftCrosshair != null) leftCrosshair.anchoredPosition = new Vector2(-offset, 0f);
+            if (rightCrosshair != null) rightCrosshair.anchoredPosition = new Vector2(offset, 0f);
+            if (upCrosshair != null) upCrosshair.anchoredPosition = new Vector2(0f, offset);
+            if (downCrosshair != null) downCrosshair.anchoredPosition = new Vector2(0f, -offset);
         }
     }
 }

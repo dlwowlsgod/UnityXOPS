@@ -81,17 +81,20 @@ namespace UnityXOPS
             float totalWidth = text.Length * charWidth + (text.Length - 1) * spacing;
             float totalHeight = charHeight;
 
+            // 정렬은 pivot 원점이 아니라 rect 경계 기준으로 계산한다. 그래야 alignment가 "rect 안에서의 글자 정렬"이 되어
+            // pivot(요소 기준점)과 독립적으로 동작한다(pivot≠alignment여도 위치가 맞음).
+            Rect r = rectTransform.rect;
             float ox = alignment switch
             {
-                TextAnchor.LowerCenter or TextAnchor.MiddleCenter or TextAnchor.UpperCenter => -totalWidth * 0.5f,
-                TextAnchor.LowerRight or TextAnchor.MiddleRight or TextAnchor.UpperRight => -totalWidth,
-                _ => 0f,
+                TextAnchor.LowerCenter or TextAnchor.MiddleCenter or TextAnchor.UpperCenter => (r.xMin + r.xMax) * 0.5f - totalWidth * 0.5f,
+                TextAnchor.LowerRight or TextAnchor.MiddleRight or TextAnchor.UpperRight => r.xMax - totalWidth,
+                _ => r.xMin,
             };
             float oy = alignment switch
             {
-                TextAnchor.MiddleLeft or TextAnchor.MiddleCenter or TextAnchor.MiddleRight => -totalHeight * 0.5f,
-                TextAnchor.UpperLeft or TextAnchor.UpperCenter or TextAnchor.UpperRight => -totalHeight,
-                _ => 0f,
+                TextAnchor.MiddleLeft or TextAnchor.MiddleCenter or TextAnchor.MiddleRight => (r.yMin + r.yMax) * 0.5f - totalHeight * 0.5f,
+                TextAnchor.UpperLeft or TextAnchor.UpperCenter or TextAnchor.UpperRight => r.yMax - totalHeight,
+                _ => r.yMin,
             };
 
             for (int i = 0; i < text.Length; i++)
