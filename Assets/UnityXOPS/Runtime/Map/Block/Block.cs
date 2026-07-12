@@ -16,6 +16,23 @@ namespace UnityXOPS
         public Vector3[] faceNormals;
         public Vector3[] faceCenters;
 
+        // 블록 8정점을 감싸는 월드 AABB. 맵 로드 시 1회 계산(BuildBlock). 충돌 브로드페이즈 fast-reject 용.
+        public Vector3 boundsMin;
+        public Vector3 boundsMax;
+
+        /// <summary>
+        /// 이 블록의 월드 AABB가 주어진 AABB(min~max)와 겹치는지 판정한다. 브로드페이즈 프리필터용 싸구려 테스트.
+        /// </summary>
+        /// <param name="min">질의 AABB 최소 코너.</param>
+        /// <param name="max">질의 AABB 최대 코너.</param>
+        /// <returns>겹치면 true.</returns>
+        public bool OverlapsAABB(Vector3 min, Vector3 max)
+        {
+            return boundsMax.x >= min.x && boundsMin.x <= max.x
+                && boundsMax.y >= min.y && boundsMin.y <= max.y
+                && boundsMax.z >= min.z && boundsMin.z <= max.z;
+        }
+
         /// <summary>
         /// 주어진 월드 좌표가 블록 내부에 있는지 판정한다.
         /// </summary>
@@ -49,8 +66,8 @@ namespace UnityXOPS
             hitDist = 0f;
             if (!collider) return false;
 
-            float minT      = (maxDist > 0f) ? maxDist : float.MaxValue;
-            int   foundFace = -1;
+            float minT = (maxDist > 0f) ? maxDist : float.MaxValue;
+            int foundFace = -1;
 
             for (int i = 0; i < 6; i++)
             {
@@ -68,8 +85,8 @@ namespace UnityXOPS
                 if (t < 0f || t > minT) continue;
 
                 // p가 블록 내부(나머지 면들의 안쪽)인가?
-                Vector3 p      = origin + direction * t;
-                bool    inside = true;
+                Vector3 p = origin + direction * t;
+                bool inside = true;
                 for (int j = 0; j < 6; j++)
                 {
                     if (j == i) continue;
@@ -81,7 +98,7 @@ namespace UnityXOPS
                 }
                 if (!inside) continue;
 
-                minT      = t;
+                minT = t;
                 foundFace = i;
             }
 
