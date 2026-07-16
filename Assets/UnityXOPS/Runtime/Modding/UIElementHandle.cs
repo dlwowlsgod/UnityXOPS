@@ -41,6 +41,18 @@ namespace UnityXOPS.Modding
         }
 
         /// <summary>
+        /// Z축 회전(도)을 설정한다. 기울어진 막대(스코프 조준선 등)를 그릴 때 쓴다.
+        /// </summary>
+        /// <param name="degrees">회전 각도(도). 양수면 반시계 방향</param>
+        public void SetRotation(float degrees)
+        {
+            if (m_rect != null)
+            {
+                m_rect.localRotation = Quaternion.Euler(0f, 0f, degrees);
+            }
+        }
+
+        /// <summary>
         /// 크기를 설정한다.
         /// </summary>
         /// <param name="width">너비</param>

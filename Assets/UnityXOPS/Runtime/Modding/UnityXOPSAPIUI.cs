@@ -1,3 +1,5 @@
+using JJLUtility;
+using UnityEngine;
 using XLua;
 
 namespace UnityXOPS.Modding
@@ -99,6 +101,30 @@ namespace UnityXOPS.Modding
         }
 
         /// <summary>
+        /// 지정 레이어가 콘텐츠를 배치하는 영역의 너비를 그 레이어의 좌표 단위로 반환한다.
+        /// scaling=true 레이어는 높이가 480 고정이고 너비만 화면비를 따라 늘어난다 — 화면비와 무관하게
+        /// 특정 비율로 콘텐츠를 맞추려면(예: 스코프를 4:3으로 내접) 이 값과 GetLayerHeight로 계산한다.
+        /// </summary>
+        /// <param name="layer">대상 레이어 우선순위</param>
+        /// <param name="scaling">레이어 생성 시 scaling 값(이미 있으면 무시)</param>
+        /// <returns>레이어 영역 너비(레이어 좌표 단위)</returns>
+        public float GetLayerWidth(int layer, bool scaling)
+        {
+            return UIOverlayManager.Instance.GetLayerSize(layer, scaling).x;
+        }
+
+        /// <summary>
+        /// 지정 레이어가 콘텐츠를 배치하는 영역의 높이를 그 레이어의 좌표 단위로 반환한다.
+        /// </summary>
+        /// <param name="layer">대상 레이어 우선순위</param>
+        /// <param name="scaling">레이어 생성 시 scaling 값(이미 있으면 무시)</param>
+        /// <returns>레이어 영역 높이(레이어 좌표 단위)</returns>
+        public float GetLayerHeight(int layer, bool scaling)
+        {
+            return UIOverlayManager.Instance.GetLayerSize(layer, scaling).y;
+        }
+
+        /// <summary>
         /// 현재 마우스 포인터의 지정 레이어 로컬 X 좌표(중심 기준, 스케일 반영)를 반환한다.
         /// 반환값을 그대로 핸들의 SetPosition X에 넘기면 포인터를 따라가는 UI를 만들 수 있다(십자 커서 등).
         /// scaling은 그 레이어를 만들 때 쓴 값과 동일하게 준다.
@@ -145,6 +171,85 @@ namespace UnityXOPS.Modding
         public UIElementHandle CreateImage(int layer, bool scaling, string pivot, string texturePath, float x, float y, float width, float height, float r, float g, float b, float a)
         {
             return UIOverlayManager.Instance.CreateImage(layer, scaling, UIOverlayManager.ParsePivot(pivot), texturePath, x, y, width, height, r, g, b, a);
+        }
+
+        /// <summary>
+        /// 들고 있는 무기를 3D로 비추는 화면(무기 뷰)을 UI에 띄우고 핸들을 반환한다.
+        /// 무기 모델을 그리는 일(전용 카메라·회전·모델 교체)은 엔진이 하고, 이 API는 그 결과를 어디에 얼마만큼
+        /// 띄울지만 정한다 — 위치/크기/표시 여부를 핸들로 제어하면 된다. 배경은 투명이라 뒤 UI가 비친다.
+        /// 무기 뷰를 그리는 엔진이 없는 화면(메뉴 등)에서는 아무것도 표시되지 않는다.
+        /// </summary>
+        /// <param name="layer">레이어 우선순위(높을수록 위)</param>
+        /// <param name="scaling">true면 640x480 기준 스케일 레이어에 배치(최초 생성 시 결정)</param>
+        /// <param name="pivot">앵커/피벗 기준 지점 이름("BottomRight" 등). 대소문자/구분자 무시</param>
+        /// <param name="x">기준 지점 기준 X 오프셋(오른쪽 +)</param>
+        /// <param name="y">기준 지점 기준 Y 오프셋(위쪽 +)</param>
+        /// <param name="width">너비</param>
+        /// <param name="height">높이</param>
+        /// <returns>요소 제어 핸들(UIElementHandle)</returns>
+        public UIElementHandle CreateWeaponView(int layer, bool scaling, string pivot, float x, float y, float width, float height)
+        {
+            HUDWeaponDisplay display = HUDWeaponDisplay.Current;
+            Texture texture = display != null ? display.ViewportTexture : null;
+            if (display == null)
+            {
+                Debugger.LogWarning("[Lua] 이 화면에는 무기 뷰를 그리는 엔진이 없습니다 — 아무것도 표시되지 않습니다.");
+            }
+            else if (texture == null)
+            {
+                Debugger.LogWarning("[Lua] 무기 뷰 엔진에 뷰포트 텍스처가 지정되지 않았습니다 — 아무것도 표시되지 않습니다. HUDWeaponDisplay 확인 필요.");
+            }
+
+            // 텍스처가 없으면 투명하게 — 알파를 남겨두면 흰 사각형이 화면에 남는다.
+            float alpha = texture != null ? 1f : 0f;
+            return UIOverlayManager.Instance.CreateImageWithTexture(
+                layer, scaling, UIOverlayManager.ParsePivot(pivot), texture, x, y, width, height, 1f, 1f, 1f, alpha);
+        }
+
+        /// <summary>
+        /// 무기 뷰에 비치는 3D 무기 자리를 가져온다. 위치·크기·회전을 이 핸들로 정하며, 매 프레임 회전을
+        /// 조금씩 바꾸면 무기가 도는 연출이 된다(엔진은 모델을 만들고 비추기만 한다).
+        /// </summary>
+        /// <param name="slot">"main"(들고 있는 무기) 또는 "sub"(메고 있는 무기). 대소문자/앞뒤 공백 무시</param>
+        /// <returns>자리 제어 핸들. 무기 뷰를 그리는 엔진이 없거나 이름이 틀리면 nil. start 에서 한 번 받아 보관해 쓴다.</returns>
+        public WeaponSlotHandle GetWeaponViewSlot(string slot)
+        {
+            HUDWeaponDisplay display = HUDWeaponDisplay.Current;
+            if (display == null)
+            {
+                Debugger.LogWarning("[Lua] 이 화면에는 무기 뷰를 그리는 엔진이 없습니다.");
+                return null;
+            }
+
+            switch (slot != null ? slot.Trim().ToLowerInvariant() : "")
+            {
+                case "main": return new WeaponSlotHandle(display.MainSlot);
+                case "sub": return new WeaponSlotHandle(display.SubSlot);
+                default:
+                    Debugger.LogWarning($"[Lua] 무기 자리 이름이 잘못됐습니다: '{slot}' (main 또는 sub)");
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// 무기 뷰를 비추는 카메라를 가져온다. 무기를 어떤 구도로 담을지(위치/회전/시야각/배경색)를 이 핸들로 정한다.
+        /// </summary>
+        /// <returns>카메라 제어 핸들. 무기 뷰를 그리는 엔진이 없으면 nil. start 에서 한 번 받아 보관해 쓴다.</returns>
+        public WeaponViewCameraHandle GetWeaponViewCamera()
+        {
+            HUDWeaponDisplay display = HUDWeaponDisplay.Current;
+            if (display == null)
+            {
+                Debugger.LogWarning("[Lua] 이 화면에는 무기 뷰를 그리는 엔진이 없습니다.");
+                return null;
+            }
+            if (display.ViewCamera == null)
+            {
+                Debugger.LogWarning("[Lua] 무기 뷰 엔진에 뷰포트 텍스처가 지정되지 않아 카메라가 만들어지지 않았습니다. HUDWeaponDisplay 확인 필요.");
+                return null;
+            }
+
+            return new WeaponViewCameraHandle(display.ViewCamera);
         }
 
         /// <summary>

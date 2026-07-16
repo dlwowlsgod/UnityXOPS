@@ -44,8 +44,12 @@ namespace UnityXOPS
         private int m_messageCnt; // 메시지 표시 경과 프레임
         private bool m_running;
         private float m_accum;
+        // BeginMission 누적 호출 수. 진입/재시작을 구분 없이 "처음부터 다시 시작됨" 하나로 알리는 신호 —
+        // 폴링하는 쪽(HUD 연출)이 값 변화만 보고 상태를 리셋하면 되므로 재시작 경로를 알 필요가 없다.
+        private int m_startCount;
 
         public MissionResult Result => m_result;
+        public int StartCount => m_startCount;
         public int CurrentMessageId => m_messageId;
         public string CurrentMessageText => m_messageId >= 0 ? MapLoader.GetMessageText(m_messageId) : string.Empty;
         public bool IsRunning => m_running;
@@ -88,10 +92,20 @@ namespace UnityXOPS
             m_messageCnt = 0;
             m_accum      = 0f;
             m_running    = true;
+            m_startCount++;
         }
 
         /// <summary>이벤트 진행 정지 (씬 이탈 시).</summary>
         public void StopMission() => m_running = false;
+
+        private void Update()
+        {
+            // 플레이타임 누적 — 미션이 도는 동안에만 (원본 framecnt, gamemain.cpp:2705). 판정이 확정되면 멈춘다.
+            if (m_running && m_result == MissionResult.InProgress)
+            {
+                MapLoader.AddPlayTime(Time.deltaTime);
+            }
+        }
 
         private void FixedUpdate()
         {

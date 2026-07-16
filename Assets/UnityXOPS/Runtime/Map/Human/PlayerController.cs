@@ -14,7 +14,6 @@ namespace UnityXOPS
         [SerializeField] private float pitchLimit = 70f;
         [SerializeField] private ViewMode viewMode = ViewMode.FirstPerson;
         [SerializeField] private LayerMask thirdPersonCollisionMask = ~0;
-        [SerializeField] private MaingameUIDynamicLayout uiLayout; // F2 로 Normal → Simple → Off UI 순환
 
         // OpenXOPS gamemain.cpp:2651-2678 외부 3인칭 공식 상수 (원본 × 0.1)
         private const float k_thirdPersonPivotBack = 0.30f; // 원본 3.0f
@@ -54,7 +53,7 @@ namespace UnityXOPS
         private float m_pitch;
 
         // 씬 전환 입력 누수 방지 — 조작권 획득 후 Fire 를 한 번 떼야 발사 허용.
-        // 브리핑을 닫은 좌클릭(BriefingScene 의 leftButton)이 Maingame 첫 프레임 Fire 로 새는 것 차단.
+        // 브리핑을 닫은 좌클릭(briefing.lua 의 fire)이 Maingame 첫 프레임 Fire 로 새는 것 차단.
         private bool m_fireReady;
 
         private float m_deathCamYaw;
@@ -105,10 +104,6 @@ namespace UnityXOPS
         private void Update()
         {
             if (!TryAcquirePlayer()) return;
-
-            // UI 순환은 카메라(사망 시 Death Camera로 전환)와 무관하므로 사망 중에도 허용.
-            // F2 = Normal → Simple → Off UI 순환
-            if (uiLayout != null && InputManager.Keyboard.f2Key.wasPressedThisFrame) uiLayout.CycleUIMode();
 
             // 치트 F5 — F5+Enter 동시 홀드 중 강제 상승(수직 관통). 원본 gamemain.cpp:2326-2332 (CheckKeyNow AND, hold 방식).
             // 매 프레임 평가해 사망/해제 시 즉시 중지 (사망 시 false → 시체가 계속 떠오르는 것 방지).

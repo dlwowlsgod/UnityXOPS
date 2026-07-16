@@ -577,8 +577,8 @@ local function buildCreditText()
         XOPS.Data:GetProductName() .. "  v" .. XOPS.Data:GetVersion(),
         XOPS.Data:GetCompanyName(),
         "",
-        XOPS.Data:GetLicenseType() .. " " .. XOPS.Data:GetCompanyName(),
-        XOPS.Data:GetLicenseName(),
+        XOPS.Data:GetLicenseType(),
+        XOPS.Data:GetLicenseName() .. " " .. XOPS.Data:GetCompanyName(),
         "",
     }
     local lines = XOPS.Data:GetLicenseLines()

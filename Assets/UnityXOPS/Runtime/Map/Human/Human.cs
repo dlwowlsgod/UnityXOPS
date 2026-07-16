@@ -94,7 +94,7 @@ namespace UnityXOPS
         }
 
         // 이번 구간 피격 여부 (원본 human::HitFlag). 소비자: AI human 은 AIBrain(경계+공격자 방향 FaceCaution),
-        // 플레이어 human 은 MaingameDamageFlash(빨강 피격 점등). 원본도 CheckHit 를 AI 반응/플레이어 redflash 가 공유.
+        // 플레이어 human 은 maingame.lua 의 피격 번쩍(XOPS.Player:ConsumeHit). 원본도 CheckHit 를 AI 반응/플레이어 redflash 가 공유.
         private bool m_hitPending;
         /// <summary>피격 소비. 맞았으면 true + 공격자를 바라보는 월드 yaw(=총알 진행방향 HitYaw + 180°). 원본 CheckHit + SetHitFlag(공격자 방향).</summary>
         public bool ConsumeHit(out float faceYawDeg)

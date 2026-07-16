@@ -95,6 +95,18 @@ namespace UnityXOPS.Modding
         }
 
         /// <summary>
+        /// 줄 간격을 설정한다. 글자 크기에 대한 상대값이라 크기를 바꿔도 비율이 유지된다.
+        /// </summary>
+        /// <param name="spacing">줄 간격(0=기본, 음수=좁게, 양수=넓게)</param>
+        public void SetLineSpacing(float spacing)
+        {
+            if (m_text != null)
+            {
+                m_text.lineSpacing = spacing;
+            }
+        }
+
+        /// <summary>
         /// 줄바꿈 방식을 설정한다. "nowrap"=줄바꿈 없음, "normal"=자동 줄바꿈,
         /// "preserve"=공백 유지 줄바꿈, "preservenowrap"=공백 유지+줄바꿈 없음. 알 수 없으면 normal.
         /// </summary>

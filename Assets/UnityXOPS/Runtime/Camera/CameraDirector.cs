@@ -5,10 +5,14 @@ namespace UnityXOPS
 {
     /// <summary>
     /// 메인 카메라의 위치/회전을 제어하는 전역 디렉터 싱글톤.
-    /// 즉시 이동(Snap/GoTo/LookAt), 증감(Translate/Rotate), 현재값 조회를 제공한다.
+    /// 즉시 이동(Snap/GoTo/LookAt), 증감(Translate/Rotate), 현재값 조회와 카메라 기준 벽 파묻힘 질의를 제공한다.
     /// </summary>
     public class CameraDirector : SingletonBehavior<CameraDirector>
     {
+        // 벽 블라인드 프로브를 near-clip 사각형 바깥으로 더 밀어내는 여유값. 0 이면 정확히 가장자리.
+        // 화면이 뚫려 보이는데 블라인드가 안 걸리는 사례가 남으면 이 값을 키운다.
+        private const float k_blindEdgeInflate = 0f;
+
         private Camera m_camera;
 
         private Camera Cam
@@ -21,6 +25,48 @@ namespace UnityXOPS
                 }
                 return m_camera;
             }
+        }
+
+        /// <summary>
+        /// 카메라가 벽 안에 파묻혔는지 상/하/좌/우 네 방향으로 검사한다 (원본 OpenXOPS gamemain.cpp:2973-3003 벽 블라인드).
+        /// near-clip 사각형의 각 변 중점이 블록 내부인지 본다 — 화면이 실제로 뚫려 보이기 시작하는 경계가 near-clip 면이므로,
+        /// 그 지점을 직접 짚어야 뚫림을 놓치지 않는다. 시야각/종횡비가 바뀌면 사각형도 따라가므로 스코프·화면비 대응이 자동이다.
+        /// 플레이어가 없거나 죽었으면 전부 false 다(원본 hp > 0 조건).
+        ///
+        /// 원본과 다른 부분(의도적): 원본은 시선축에서 시야각의 1/4 만큼 돌린 거리 1.2 지점을 봤는데,
+        /// 그건 시야 한참 안쪽이라 가장자리로 벽이 파고들면 화면이 뚫리는데도 안 걸린다. 실제로 그 증상이 확인돼
+        /// near-clip 가장자리 기준으로 되돌렸다 — 원본보다 일찍/자주 걸리지만 뚫림이 없다. 되돌리지 말 것.
+        /// </summary>
+        /// <param name="top">위쪽이 벽 안이면 true</param>
+        /// <param name="bottom">아래쪽이 벽 안이면 true</param>
+        /// <param name="left">왼쪽이 벽 안이면 true</param>
+        /// <param name="right">오른쪽이 벽 안이면 true</param>
+        public void CheckWallBlind(out bool top, out bool bottom, out bool left, out bool right)
+        {
+            top = false;
+            bottom = false;
+            left = false;
+            right = false;
+
+            Human player = MapLoader.Player;
+            if (Cam == null || player == null || !player.Alive)
+            {
+                return;
+            }
+
+            Transform t = Cam.transform;
+            Vector3 camRight = t.right;
+            Vector3 camUp = t.up;
+
+            float near = Cam.nearClipPlane;
+            float halfH = near * Mathf.Tan(Cam.fieldOfView * 0.5f * Mathf.Deg2Rad) + k_blindEdgeInflate;
+            float halfW = halfH * Cam.aspect;
+            Vector3 nearCenter = t.position + t.forward * near;
+
+            top = MapLoader.IsInsideBlock(nearCenter + camUp * halfH);
+            bottom = MapLoader.IsInsideBlock(nearCenter - camUp * halfH);
+            left = MapLoader.IsInsideBlock(nearCenter - camRight * halfW);
+            right = MapLoader.IsInsideBlock(nearCenter + camRight * halfW);
         }
 
         /// <summary>

@@ -5,7 +5,7 @@ namespace UnityXOPS.Modding
     public partial class UnityXOPSAPI
     {
         private CameraAPI m_camera;
-        public CameraAPI Camera => m_camera ??= new CameraAPI();
+        public CameraAPI Camera => m_camera ??= new CameraAPI(m_luaEnv);
     }
 
     /// <summary>
@@ -15,6 +15,36 @@ namespace UnityXOPS.Modding
     [LuaCallCSharp]
     public class CameraAPI
     {
+        private readonly LuaEnv m_luaEnv;
+
+        /// <summary>
+        /// 카메라 API 그룹을 생성한다.
+        /// </summary>
+        /// <param name="luaEnv">조회 결과 테이블 생성에 사용할 LuaEnv.</param>
+        public CameraAPI(LuaEnv luaEnv)
+        {
+            m_luaEnv = luaEnv;
+        }
+
+        /// <summary>
+        /// 카메라가 벽 안에 파묻혔는지 상/하/좌/우 네 방향으로 검사한다.
+        /// 시선축에서 시야각의 1/4 만큼 돌린 방향의 코앞 지점이 벽 속인지 보므로, 벽이 화면 가운데 쪽으로
+        /// 꽤 파고들어야 걸린다(가장자리만 살짝 닿는 정도로는 안 걸린다). 스코프로 시야각이 좁아지면 함께 좁아진다.
+        /// 걸린 방향의 화면 절반을 검게 덮으면 벽 너머가 비쳐 보이는 것을 가릴 수 있다.
+        /// </summary>
+        /// <returns>{ top, bottom, left, right } — 그 방향이 벽 속이면 true. 플레이어가 없거나 죽었으면 전부 false.</returns>
+        public LuaTable GetWallBlind()
+        {
+            CameraDirector.Instance.CheckWallBlind(out bool top, out bool bottom, out bool left, out bool right);
+
+            LuaTable t = m_luaEnv.NewTable();
+            t.Set("top", top);
+            t.Set("bottom", bottom);
+            t.Set("left", left);
+            t.Set("right", right);
+            return t;
+        }
+
         /// <summary>
         /// 카메라를 플레이어 위치로 즉시 이동시킨다.
         /// </summary>

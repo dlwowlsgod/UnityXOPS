@@ -165,12 +165,23 @@ namespace UnityXOPS
             return false;
         }
 
-        // CheckALLBlockInside 대응 — point가 두꺼운 블록 내부이면 true 반환
+        /// <summary>
+        /// 지정 좌표가 블록 하나라도의 내부에 있는지 검사한다 (원본 CheckALLBlockInside 대응).
+        /// 콜라이더가 없는 판형 블록은 Contains 가 걸러낸다(원본 BoardBlock 제외와 동일).
+        /// </summary>
+        /// <param name="point">검사할 월드 좌표.</param>
+        /// <returns>내부이면 true. 맵이 로드돼 있지 않으면 false.</returns>
         public static bool IsInsideBlock(Vector3 point)
         {
+            if (!Loaded) return false;
+
             var colliders = Instance.blockColliders;
+            if (colliders == null) return false;
+
             for (int i = 0; i < colliders.Count; i++)
             {
+                // AABB 로 먼저 걸러 6면 판정 비용을 줄인다 (원본 collision.cpp 의 범위 프리컷 대응).
+                if (!colliders[i].OverlapsAABB(point, point)) continue;
                 if (colliders[i].Contains(point)) return true;
             }
             return false;

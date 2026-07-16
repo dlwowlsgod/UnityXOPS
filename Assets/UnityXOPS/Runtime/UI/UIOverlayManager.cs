@@ -195,6 +195,21 @@ namespace UnityXOPS
         }
 
         /// <summary>
+        /// 지정 레이어가 콘텐츠를 배치하는 영역의 크기를 그 레이어의 좌표 단위로 반환한다.
+        /// scaling=true 레이어는 높이가 항상 480이고 폭이 화면비를 따라 늘어나므로, 화면비에 맞춰
+        /// 콘텐츠를 맞추려면(예: 스코프를 4:3으로 내접) 이 크기를 읽어 계산한다. 레이어가 없으면 생성한다.
+        /// </summary>
+        /// <param name="sortingOrder">대상 레이어 우선순위</param>
+        /// <param name="scaling">레이어 생성 시 scaling 값(이미 있으면 무시)</param>
+        /// <returns>레이어 영역 크기(레이어 좌표 단위). 레이아웃 전이면 0이 될 수 있다.</returns>
+        public Vector2 GetLayerSize(int sortingOrder, bool scaling)
+        {
+            GetOrCreateLayer(sortingOrder, scaling);
+            RectTransform root = m_layerRoots[sortingOrder];
+            return root != null ? root.rect.size : Vector2.zero;
+        }
+
+        /// <summary>
         /// 현재 게임 뷰포트(레터박스/필러박스 후 정규화 rect)를 반환한다. 레터박스 컨트롤러가 없으면 전체 화면.
         /// </summary>
         /// <returns>정규화 뷰포트 rect(0~1).</returns>
@@ -521,11 +536,53 @@ namespace UnityXOPS
         /// <returns>생성된 요소를 제어하는 핸들</returns>
         public UIElementHandle CreateImageUnder(Transform parent, UIPivot pivot, string texturePath, float x, float y, float width, float height, float r, float g, float b, float a)
         {
+            return CreateImageFromTexture(parent, pivot, LoadTexture(texturePath), x, y, width, height, r, g, b, a);
+        }
+
+        /// <summary>
+        /// 지정 레이어에 이미 만들어진 텍스처를 그대로 붙인 이미지 요소를 생성한다.
+        /// 파일에서 읽는 대신 런타임에 그려지는 텍스처(무기 뷰포트 등)를 화면에 띄울 때 쓴다.
+        /// </summary>
+        /// <param name="layer">레이어 우선순위(sortingOrder). 없으면 lazy 생성</param>
+        /// <param name="scaling">true면 640x480 기준 스케일 레이어에 배치한다(최초 생성 시 결정).</param>
+        /// <param name="pivot">앵커/피벗 기준 지점(9지점/스트레치)</param>
+        /// <param name="texture">표시할 텍스처. null이면 색만 있는 패널이 된다.</param>
+        /// <param name="x">기준 지점으로부터의 X 오프셋(오른쪽 +)</param>
+        /// <param name="y">기준 지점으로부터의 Y 오프셋(위쪽 +)</param>
+        /// <param name="width">너비</param>
+        /// <param name="height">높이</param>
+        /// <param name="r">빨강(0~1)</param>
+        /// <param name="g">초록(0~1)</param>
+        /// <param name="b">파랑(0~1)</param>
+        /// <param name="a">알파(0~1)</param>
+        /// <returns>생성된 요소를 제어하는 핸들</returns>
+        public UIElementHandle CreateImageWithTexture(int layer, bool scaling, UIPivot pivot, Texture texture, float x, float y, float width, float height, float r, float g, float b, float a)
+        {
+            return CreateImageFromTexture(GetOrCreateLayer(layer, scaling), pivot, texture, x, y, width, height, r, g, b, a);
+        }
+
+        /// <summary>
+        /// 지정한 부모 Transform 아래에 텍스처를 붙인 RawImage 요소를 생성한다. 경로 기반/텍스처 기반 생성의 공용 본체다.
+        /// </summary>
+        /// <param name="parent">부모 Transform(레이어 캔버스 또는 다른 요소).</param>
+        /// <param name="pivot">앵커/피벗 기준 지점(9지점/스트레치).</param>
+        /// <param name="texture">표시할 텍스처(null이면 패널).</param>
+        /// <param name="x">기준 지점으로부터의 X 오프셋(스트레치 축이면 sizeDelta 보정).</param>
+        /// <param name="y">기준 지점으로부터의 Y 오프셋(스트레치 축이면 sizeDelta 보정).</param>
+        /// <param name="width">너비(스트레치 축이면 부모 대비 증감량).</param>
+        /// <param name="height">높이(스트레치 축이면 부모 대비 증감량).</param>
+        /// <param name="r">빨강(0~1)</param>
+        /// <param name="g">초록(0~1)</param>
+        /// <param name="b">파랑(0~1)</param>
+        /// <param name="a">알파(0~1)</param>
+        /// <returns>생성된 요소를 제어하는 핸들</returns>
+        private UIElementHandle CreateImageFromTexture(Transform parent, UIPivot pivot, Texture texture, float x, float y, float width, float height, float r, float g, float b, float a)
+        {
             GameObject go = new GameObject("UIImage", typeof(RawImage));
             go.transform.SetParent(parent, false);
 
             RawImage image = go.GetComponent<RawImage>();
-            image.texture = LoadTexture(texturePath);
+            image.texture = texture;
             image.color = new Color(r, g, b, a);
             image.raycastTarget = false;
 

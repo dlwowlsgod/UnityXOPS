@@ -30,6 +30,57 @@ namespace UnityXOPS.Modding
         private GlobalData Global => DataManager.Loaded ? DataManager.Instance.GlobalData : null;
         private MissionData Missions => DataManager.Loaded ? DataManager.Instance.MissionData : null;
 
+        // 현재 로드된 미션(Scene:LoadMission이 세팅). MapLoader가 없으면 null.
+        private MapLoader Current => MapLoader.Loaded ? MapLoader.Instance : null;
+
+        /// <summary>현재 로드된 미션의 이름(목록 표시명)을 반환한다. 미션이 없으면 빈 문자열.</summary>
+        public string GetMissionName() => Current != null ? Current.MissionName : "";
+
+        /// <summary>현재 로드된 미션의 전체 이름(브리핑 표제)을 반환한다. 미션이 없으면 빈 문자열.</summary>
+        public string GetMissionFullname() => Current != null ? Current.MissionFullname : "";
+
+        /// <summary>현재 로드된 미션의 브리핑 본문(줄바꿈 포함)을 반환한다. 미션이 없으면 빈 문자열.</summary>
+        public string GetMissionBriefing() => Current != null ? Current.MissionBriefing : "";
+
+        /// <summary>
+        /// 현재 로드된 미션의 브리핑 이미지 경로를 반환한다. 반환값은 XOPS.UI:CreateImage에 그대로 넘길 수 있다.
+        /// 미션 이미지 경로는 미션 파일(.mif/.txt)마다 기준이 달라 MapLoader가 streamingAssets 절대경로로 정규화해 들고 있고,
+        /// CreateImage의 로더는 절대경로를 그대로 받아들이므로 변환 없이 넘긴다.
+        /// </summary>
+        /// <param name="slot">이미지 슬롯(0=첫 번째, 1=두 번째).</param>
+        /// <returns>이미지 경로. 해당 슬롯이 비었거나 미션이 없으면 빈 문자열.</returns>
+        public string GetMissionImage(int slot)
+        {
+            MapLoader mission = Current;
+            if (mission == null) return "";
+
+            switch (slot)
+            {
+                case 0: return mission.MissionImage0 ?? "";
+                case 1: return mission.MissionImage1 ?? "";
+                default: return "";
+            }
+        }
+
+        /// <summary>
+        /// 방금 플레이한 미션의 플레이어 통계를 Lua 테이블로 반환한다. Result 화면이 읽는다.
+        /// 통계는 맵이 유지되는 동안(Briefing→Maingame→Result) 살아있고, 표시용 서식(분/초 환산 등)은 Lua가 맡는다.
+        /// </summary>
+        /// <returns>{ playTime=초(float), fire=발사수, onTarget=명중수(정수), accuracy=명중률%(float), kill=킬수, headshot=헤드샷수 } 테이블.</returns>
+        public LuaTable GetMissionStats()
+        {
+            MissionStats s = MapLoader.Loaded ? MapLoader.Stats : null;
+
+            LuaTable t = m_luaEnv.NewTable();
+            t.Set("playTime", s != null ? s.PlayTime : 0f);
+            t.Set("fire", s != null ? s.Fire : 0);
+            t.Set("onTarget", s != null ? s.OnTargetInt : 0);
+            t.Set("accuracy", s != null ? s.AccuracyPercent : 0f);
+            t.Set("kill", s != null ? s.Kill : 0);
+            t.Set("headshot", s != null ? s.Headshot : 0);
+            return t;
+        }
+
         /// <summary>표시용 버전 문자열(major.minor.patch)을 반환한다.</summary>
         public string GetVersion() => Global != null ? Global.Version : "";
 

@@ -11,15 +11,17 @@ namespace UnityXOPS.Modding
     }
 
     /// <summary>
-    /// 모드에 씬 전환을 제공하는 API 그룹. Lua에서는 XOPS.Scene 으로 접근한다.
-    /// 씬별 정리(풀 해제/맵 언로드 등)는 각 씬의 C# 컨트롤러가 OnDestroy에서 처리하므로,
-    /// Lua는 전환 시점만 결정하면 된다.
+    /// 모드에 씬 전환과 미션 수명 제어를 제공하는 API 그룹. Lua에서는 XOPS.Scene 으로 접근한다.
+    /// 풀 회수와 카메라 끄기는 Load 가 알아서 하지만, 맵을 언제까지 유지할지(UnloadMap/UnloadMission)는
+    /// 호출하는 쪽이 정한다 — 브리핑→메인게임처럼 맵을 넘겨야 하는 전환이 있기 때문이다.
     /// </summary>
     [LuaCallCSharp]
     public class SceneAPI
     {
         // 브리핑 씬 빌드 인덱스(원본 MainmenuScene.Load와 동일).
         private const int k_briefingScene = 3;
+        // 메인게임 씬 빌드 인덱스.
+        private const int k_maingameScene = 4;
 
         /// <summary>
         /// 미션을 로드하고 브리핑 씬으로 전환한다. 원본 MainmenuScene.Load와 동일 흐름:
@@ -45,6 +47,105 @@ namespace UnityXOPS.Modding
             MapLoader.LoadSkyData(MapLoader.Instance.SkyIndex);
 
             Load(k_briefingScene);   // 풀 회수 + 카메라 off + 브리핑 로드
+        }
+
+        /// <summary>
+        /// 현재 미션을 처음부터 다시 시작한다. 캐릭터·무기·소품·이벤트·통계가 전부 초기 상태로 돌아간다.
+        /// 이미 메인게임 화면이면 화면을 유지한 채 맵만 되돌리고, 다른 화면(결과 등)에서 부르면 메인게임을 새로 연다 —
+        /// 어느 쪽으로 부르든 결과는 같으므로 호출하는 쪽은 신경 쓰지 않아도 된다.
+        /// 진행 중인 미션이 없으면(메뉴/오프닝 등) 아무 일도 하지 않는다.
+        /// </summary>
+        public void RestartMission()
+        {
+            // 맵이 떠 있어도 미션이 아닐 수 있다(메뉴의 배경 데모). 되돌릴 미션 경로가 있어야만 진행한다.
+            if (!MapLoader.Loaded || string.IsNullOrEmpty(MapLoader.Instance.MissionBD1Path))
+            {
+                return;
+            }
+
+            if (SceneManager.GetActiveScene().buildIndex == k_maingameScene)
+            {
+                RestartInPlace();
+                return;
+            }
+
+            ReloadMissionMap();
+            HumanController.TickEnabled = false;   // Maingame.Start가 다시 켜고 BeginMission 호출
+            Load(k_maingameScene);
+        }
+
+        /// <summary>
+        /// 메인게임 화면을 유지한 채 맵만 되돌린다. 씬이 살아 있으므로 카메라를 보호하고
+        /// AI/충돌 매니저 캐시를 명시적으로 비워야 한다(씬을 새로 열면 새 인스턴스라 필요 없는 일).
+        /// </summary>
+        private static void RestartInPlace()
+        {
+            // 카메라는 플레이어 CameraRoot 의 자식이라 포인트 언로드로 플레이어가 파괴되면 같이 파괴된다.
+            // 미리 떼어 보호하고, 재로드 후 PlayerController 가 새 플레이어에 다시 붙인다.
+            Camera main = Camera.main;
+            if (main != null && main.transform.parent != null) main.transform.SetParent(null, true);
+
+            ClearTransientPools();
+            ReloadMissionMap();
+
+            // 동기 재로드라 "Humans 빔" 자가정리 타이밍이 없어 직접 비운다(죽은 참조/AI 잔존 방지).
+            AIController ai = Object.FindFirstObjectByType<AIController>();
+            if (ai != null) ai.ResetState();
+            HumanCollision collision = Object.FindFirstObjectByType<HumanCollision>();
+            if (collision != null) collision.ResetState();
+
+            HumanController.TickEnabled = true;
+            EventManager.Instance.BeginMission();
+        }
+
+        /// <summary>
+        /// 같은 미션 맵을 처음 상태로 다시 읽는다. LoadPointData 가 통계 리셋 + 사람/무기/소품 재배치를 수행한다.
+        /// </summary>
+        private static void ReloadMissionMap()
+        {
+            MapLoader.UnloadBlockData();
+            MapLoader.UnloadPointData();
+            MapLoader.UnloadSkyData();
+            MapLoader.LoadBlockData(MapLoader.Instance.MissionBD1Path);
+            MapLoader.LoadPointData(MapLoader.Instance.MissionPD1Path);
+            MapLoader.LoadSkyData(MapLoader.Instance.SkyIndex);
+        }
+
+        /// <summary>
+        /// 맵(블록/포인트/스카이)만 해제하고 사람 동작을 멈춘다. 미션 데이터와 통계는 남으므로
+        /// 미션이 끝나고 Result로 넘어갈 때 쓴다(Result가 미션 이름·통계를 읽는다).
+        /// </summary>
+        public void UnloadMap()
+        {
+            HumanController.TickEnabled = false;
+
+            if (!MapLoader.Loaded)
+            {
+                return;
+            }
+
+            MapLoader.UnloadBlockData();
+            MapLoader.UnloadPointData();
+            MapLoader.UnloadSkyData();
+        }
+
+        /// <summary>
+        /// LoadMission이 로드한 미션(맵/포인트/스카이 + 미션 데이터)을 해제한다. 브리핑에서 미션을 포기할 때 호출한다.
+        /// 메인게임으로 진행할 때는 맵을 그대로 넘겨야 하므로 호출하지 않는다.
+        /// </summary>
+        public void UnloadMission()
+        {
+            HumanController.TickEnabled = false;
+
+            if (!MapLoader.Loaded)
+            {
+                return;
+            }
+
+            MapLoader.UnloadBlockData();
+            MapLoader.UnloadPointData();
+            MapLoader.UnloadMissionData();
+            MapLoader.UnloadSkyData();
         }
 
         /// <summary>
@@ -97,6 +198,8 @@ namespace UnityXOPS.Modding
         /// 씬을 바꾸기 직전에 현재 메인 카메라 렌더링을 끈다.
         /// 페이드가 투명해지거나 UI가 파괴되는 전환 틈에 무너지는 구 씬이 한 프레임 드러나는 것을 막는다.
         /// 다음 씬의 카메라는 별개라 기본 on 상태로 켜진다.
+        /// GameObject 가 아니라 컴포넌트를 끄는 것이 의도다 — 이래야 Camera.main 이 null 이 되어,
+        /// 카메라를 만지는 다른 LateUpdate 들이 전환 프레임에 자동으로 멈춘다(MaingameScene 참조).
         /// </summary>
         private static void DisableCurrentCamera()
         {

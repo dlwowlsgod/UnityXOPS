@@ -87,7 +87,7 @@ namespace UnityXOPS
             Instance.m_stats.Kill += 1;
         }
 
-        /// <summary>미션 경과 시간 누적(초). 원본 framecnt(gamemain.cpp:2705)의 실시간 대응 — 진행 중에만 호출(MaingameScene).</summary>
+        /// <summary>미션 경과 시간 누적(초). 원본 framecnt(gamemain.cpp:2705)의 실시간 대응 — 진행 중에만 호출(EventManager).</summary>
         public static void AddPlayTime(float deltaSeconds)
         {
             Instance.m_stats.PlayTime += deltaSeconds;
@@ -101,6 +101,11 @@ namespace UnityXOPS
         /// <param name="page">어드온 페이지(0-기반). 공식 미션(mif=false)이면 무시된다.</param>
         public static void LoadMissionData(int index, bool mif, int page)
         {
+            // 이미지/추가 사물은 "!"(없음)이면 대입 자체를 건너뛰므로, 먼저 비워 이전 미션 값이 남는 것을 막는다.
+            Instance.missionImage0 = string.Empty;
+            Instance.missionImage1 = string.Empty;
+            Instance.missionAddonObjectPath = string.Empty;
+
             if (mif)
             {
                 string addonMissionPath = DataManager.Instance.MissionData.addonMissions[page][index].mifPath;
