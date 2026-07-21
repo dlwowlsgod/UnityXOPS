@@ -80,6 +80,7 @@ namespace UnityXOPS
 
             LoadConfig();
             BuildLookup();
+            MergeDefaults();   // 이전 버전 config.json에 없는 신규 설정/액션 채우기(조회 사전 구축 뒤라야 한다)
             BuildDefaultBindingMap();
             SnapshotSaved();
             RefreshValueCaches();

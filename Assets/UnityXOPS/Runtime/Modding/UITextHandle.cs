@@ -80,6 +80,19 @@ namespace UnityXOPS.Modding
         }
 
         /// <summary>
+        /// 이 텍스트가 쓸 스프라이트 시트 페이지를 설정한다. 지정하지 않으면 0번(ASCII)을 쓴다.
+        /// 한 텍스트는 시트 한 장만 쓰므로, 다른 시트의 글자를 같이 넣고 싶으면 텍스트를 따로 만들어야 한다.
+        /// </summary>
+        /// <param name="page">페이지 번호. 등록돼 있지 않으면 0번 페이지로 그려진다.</param>
+        public void SetPage(int page)
+        {
+            if (m_text != null)
+            {
+                m_text.Page = page;
+            }
+        }
+
+        /// <summary>
         /// 색(rgba)을 설정한다.
         /// </summary>
         /// <param name="r">빨강(0~1)</param>

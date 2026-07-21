@@ -87,7 +87,22 @@ local STATE = {
     addonScroll    = "mm.addonscrollindex",
     isAddonTab     = "mm.isaddontab",
     addonPage      = "mm.addonpage",
+    bootValues     = "mm.bootvalues",   -- 게임을 켤 때의 값(재시작 필요 판정 기준). 씬을 오가도 유지된다.
 }
+
+-- ----- 재시작해야 반영되는 설정 -----
+-- 여기 적힌 값이 게임을 켤 때와 달라지면 OPTION 하단에 NEED RESTART가 뜬다.
+-- 엔진이 부팅 때 한 번만 읽는 값(예: 글꼴 언어)을 넣는다.
+local NEED_RESTART_KEYS = {
+    { section = "General", name = "language" },
+}
+local NEED_RESTART_TEXT = "NEED RESTART"
+local NEED_RESTART_COLOR = { r = 1, g = 0, b = 0, a = 1 }
+local needRestartBgHandle = nil
+local needRestartSlot = nil
+-- 표시 갱신 함수. 실제 구현은 화면 상태(screen)가 정의된 아래쪽에서 채운다.
+-- 값을 바꾸는 쪽(General.update)이 여기보다 먼저 나오기 때문에 이름만 미리 잡아 둔다.
+local refreshNeedRestart = nil
 
 -- ----- 미션 리스트 컨테이너 (스크롤바 왼쪽, 미션 항목이 담기는 영역) -----
 local MISSION_RECT = { x = -20, y = 39, w = 340, h = 300, r = 0, g = 0, b = 0, a = 0.5 }
@@ -609,8 +624,11 @@ end
 
 -- ===== General 탭 섹션 =====
 -- 모더 참고: 이 테이블 하나가 General 탭 전체(상수/상태/생성/갱신/입력)를 담는다.
--- ShowFPS 체크박스 + UIScale 라디오 + Aim(파라미터/색상) + PlayerName 입력.
+-- ShowFPS 체크박스 + UIScale 라디오 + Aim(파라미터/색상) + Language 선택 + PlayerName 입력.
 local General = {
+    -- 글꼴 선택용 언어. config에는 0부터의 번호로 저장된다(Auto면 OS 언어를 따름).
+    -- 바꾼 뒤 게임을 다시 켜야 글꼴에 반영된다(NEED_RESTART_KEYS 참고).
+    LANGUAGES = { "Auto", "Korean", "Japanese", "English" },
     -- Aim 파라미터 행 구성(Length 단독, 나머지 2개씩). label=표시, key=config 이름.
     AIM_ROWS = {
         { { label = "Length", key = "aimLength" } },
@@ -634,6 +652,7 @@ local General = {
     aimUnits = {},                     -- { key, min, max, step, isFloat, prevSlot, valueSlot, nextSlot }
     staticCheck = nil,                 -- Static(정적 조준) 체크박스 — Length 오른쪽
     colorPrev = nil, colorValue = nil, colorNext = nil,
+    langBg = nil, langPrev = nil, langValue = nil, langNext = nil,
     playerNameBg = nil, playerNameBox = nil, playerNameText = nil,
     playerNameFocused = false,
 }
@@ -647,6 +666,8 @@ function General.create()
     local AIM_UNIT_GAP = 10
     local COLOR_LABEL = "Color"
     local COLOR_VALUE_CHARS = 7
+    local LANGUAGE_LABEL = "Language"
+    local LANGUAGE_VALUE_CHARS = 8            -- 가장 긴 값("japanese") 기준
     local PLAYERNAME_LABEL = "PlayerName"
     local PLAYERNAME_BOX = { r = 0.5, g = 0.5, b = 0.5, a = 0.5 }
 
@@ -714,10 +735,15 @@ function General.create()
         makeSelector(TITLE.x, aimRowY, COLOR_LABEL, COLOR_VALUE_CHARS * SWITCH_FONT_W)
     General.aimPanels[#General.aimPanels + 1] = colorBg
 
+    -- Language 행: "Language << [값] >>". 값은 config에 그대로 들어가는 문자열.
+    aimRowY = aimRowY - OPTION_ROW_PITCH   -- Aim Color 바로 아래
+    General.langBg, General.langPrev, General.langValue, General.langNext =
+        makeSelector(TITLE.x, aimRowY, LANGUAGE_LABEL, LANGUAGE_VALUE_CHARS * SWITCH_FONT_W)
+
     -- PlayerName 행: 라벨 + 회색 입력 박스(16글자). Lua가 타이핑을 받아 편집.
     local pnLabelW = #PLAYERNAME_LABEL * SWITCH_FONT_W
     local pnBoxW = General.PLAYERNAME_MAX * SWITCH_FONT_W
-    aimRowY = aimRowY - 2 * OPTION_ROW_PITCH   -- Aim 다음, 한 칸 띄우고
+    aimRowY = aimRowY - OPTION_ROW_PITCH   -- Language 바로 아래
     General.playerNameBg = XOPS.UI:CreateImage(MENU_LAYER, SCALING, "TopLeft", "",
         TITLE.x, aimRowY, pnLabelW + OPTION_LABEL_GAP + pnBoxW, MENU_ROW_H, 0, 0, 0, 0.5)
     makeTextPair(General.playerNameBg, 0, PLAYERNAME_LABEL, BTN_NORMAL,
@@ -778,6 +804,22 @@ function General.refreshColor()
         XOPS.Config:GetFloat("General", "aimColorB"), 1)
 end
 
+-- 현재 language 설정에 해당하는 LANGUAGES 인덱스(config는 0부터, 목록은 1부터). 범위 밖이면 1(Auto).
+function General.langIndex()
+    local i = XOPS.Config:GetInt("General", "language") + 1
+    if i < 1 or i > #General.LANGUAGES then
+        return 1
+    end
+    return i
+end
+
+-- Language 선택기 표시 갱신.
+function General.refreshLanguage()
+    local name = General.LANGUAGES[General.langIndex()]
+    General.langValue.shadow:SetText(name)
+    General.langValue.main:SetText(name)
+end
+
 -- PlayerName 입력 박스 표시 갱신(포커스 중이고 꽉 차지 않았으면 끝에 커서 _).
 function General.refreshPlayerName()
     local txt = XOPS.Config:GetString("General", "playerName")
@@ -794,6 +836,7 @@ function General.refreshAll()
     General.refreshUIScale()
     General.refreshAim()
     General.refreshColor()
+    General.refreshLanguage()
     General.refreshPlayerName()
     setCheckText(General.staticCheck, XOPS.Config:GetBool("General", "StaticAim"))
 end
@@ -804,6 +847,7 @@ function General.setVisible(visible)
     General.showFpsBg:SetActive(visible)
     General.uiScaleStepper.bg:SetActive(visible)
     for i = 1, #General.aimPanels do General.aimPanels[i]:SetActive(visible) end
+    General.langBg:SetActive(visible)
     General.playerNameBg:SetActive(visible)
     if visible then
         General.refreshAll()
@@ -812,7 +856,7 @@ function General.setVisible(visible)
     end
 end
 
--- 상호작용(ShowFPS/Static 토글 / UIScale 스테퍼 / Aim ± / Color 순환 / PlayerName 타이핑). 저장/적용은 SAVE에서.
+-- 상호작용(ShowFPS/Static 토글 / UIScale 스테퍼 / Aim ± / Color·Language 순환 / PlayerName 타이핑). 저장/적용은 SAVE에서.
 -- (숨겨진 요소도 IsHovered는 기하학적으로 true가 될 수 있어, 표시 조건과 동일하게 호출을 막아야 오작동이 없다.)
 -- dt: 프레임 델타초 / pressed: 이번 프레임 눌림 / held: 좌클릭 유지 / clicked: 이번 프레임 클릭(뗌)
 function General.update(dt, pressed, held, clicked)
@@ -852,6 +896,15 @@ function General.update(dt, pressed, held, clicked)
         XOPS.Config:SetFloat("General", "aimColorB", p.b)
         XOPS.Config:SetFloat("General", "aimColorA", 1)
         General.refreshColor()
+    end
+
+    -- Language: << 이전 / >> 다음 (양 끝 비활성). 글꼴은 다음 실행부터 바뀐다.
+    local li = General.langIndex()
+    local ld = arrowDir(General.langPrev, General.langNext, li > 1, li < #General.LANGUAGES, pressed, clicked, held)
+    if ld ~= 0 then
+        XOPS.Config:SetInt("General", "language", li + ld - 1)   -- 목록은 1부터, config는 0부터
+        General.refreshLanguage()
+        refreshNeedRestart()   -- 재시작 안내 표시 갱신
     end
 
     -- PlayerName 입력 박스: 클릭으로 포커스(박스 밖 클릭=해제), 포커스 중 타이핑 편집(16자, ASCII 32~126).
@@ -1243,6 +1296,41 @@ end
 -- 화면 전환. s = "main" / "option" / "credit".
 -- main: 미션 컨테이너/스크롤바/탭 스위치 + 하단 메뉴 ON, BACK/서브패널 OFF.
 -- 서브: 위 전부 OFF, BACK ON + 해당 서브 패널만 ON (credit만 구현, option은 아직 빈 화면).
+-- 감시 대상 하나가 부팅 값을 저장해 둘 키 이름.
+-- 값은 숫자 하나씩 따로 담는다(테이블째 담으면 씬을 넘길 때 원래 형태로 돌아오지 않는다).
+local function bootValueKey(i)
+    return STATE.bootValues .. "." .. NEED_RESTART_KEYS[i].section .. "." .. NEED_RESTART_KEYS[i].name
+end
+
+-- 게임을 켠 뒤 처음 한 번만, 재시작 감시 대상 값을 기록해 둔다(이후 씬을 오가도 유지).
+-- 엔진은 이 시점 값으로 이미 초기화를 끝냈으므로, 이후 값이 달라지면 재시작이 필요하다는 뜻이 된다.
+local function captureBootValues()
+    for i = 1, #NEED_RESTART_KEYS do
+        local key = bootValueKey(i)
+        if XOPS.State:Get(key, nil) == nil then
+            local k = NEED_RESTART_KEYS[i]
+            XOPS.State:Set(key, XOPS.Config:GetInt(k.section, k.name))
+        end
+    end
+end
+
+-- 재시작 감시 대상 중 하나라도 게임을 켤 때와 달라졌는지 여부.
+local function needsRestartNow()
+    for i = 1, #NEED_RESTART_KEYS do
+        local k = NEED_RESTART_KEYS[i]
+        local boot = XOPS.State:Get(bootValueKey(i), nil)
+        if boot ~= nil and XOPS.Config:GetInt(k.section, k.name) ~= boot then
+            return true
+        end
+    end
+    return false
+end
+
+-- 위에서 이름만 잡아 둔 표시 갱신 함수의 실제 구현.
+refreshNeedRestart = function()
+    needRestartBgHandle:SetActive(screen == "option" and needsRestartNow())
+end
+
 local function setScreen(s)
     screen = s
     local main = (s == "main")
@@ -1259,6 +1347,7 @@ local function setScreen(s)
     Input.setVisible(s == "option" and selectedSection == "Input")       -- Input 옵션은 Input 탭에서만
     Graphic.setVisible(s == "option" and selectedSection == "Graphic")   -- Graphic 옵션은 Graphic 탭에서만
     Sound.setVisible(s == "option" and selectedSection == "Sound")       -- Sound 옵션은 Sound 탭에서만
+    needRestartBgHandle:SetActive(s == "option" and needsRestartNow())  -- 재시작 필요할 때만(RESET/BACK 후 갱신 포함)
     if s == "option" then
         refreshSectionBar()
     end
@@ -1276,6 +1365,8 @@ local function backToMain()
 end
 
 function M.start()
+    captureBootValues()   -- 재시작 필요 판정 기준(게임을 켤 때의 값)을 처음 한 번만 기록
+
     -- 씬 넘어 유지된 메뉴 상태 복원(없으면 기본값 official/page0/top).
     isAddon     = XOPS.State:Get(STATE.isAddonTab, false)
     addonExists = addonBrowsable()
@@ -1445,6 +1536,14 @@ function M.start()
     saveSlot = makeTextPair(saveResetBgHandle, 0, SAVE_ITEM, BTN_NORMAL,
         SWITCH_FONT_W, SWITCH_FONT_H, saveW, MENU_ROW_H, "BottomRight", "MiddleRight", -resetW)
     saveResetBgHandle:SetActive(false)
+
+    -- NEED RESTART 안내: < BACK >과 < SAVE > 사이(하단 중앙). 재시작해야 반영되는 설정을 바꿨을 때만 표시.
+    local nrW = #NEED_RESTART_TEXT * SWITCH_FONT_W * 0.8
+    needRestartBgHandle = XOPS.UI:CreateImage(MENU_LAYER, SCALING, "BottomLeft", "",
+        BACK_BG.w + 10, BACK_BG.y, nrW, MENU_ROW_H, BACK_BG.r, BACK_BG.g, BACK_BG.b, BACK_BG.a)
+    needRestartSlot = makeTextPair(needRestartBgHandle, 0, NEED_RESTART_TEXT, NEED_RESTART_COLOR,
+        SWITCH_FONT_W * 0.8, SWITCH_FONT_H, nrW, MENU_ROW_H, "BottomLeft", "MiddleCenter")
+    needRestartBgHandle:SetActive(false)
 
     -- 마우스 십자 커서 두 줄. 가로선=풀폭 1px, 세로선=풀높이 1px (스트레치 축은 size 0 = 풀, 반대 축이 두께).
     local c = POINTER_COLOR
@@ -1740,7 +1839,8 @@ function M.update(t, dt)
                     Input.refreshAll()
                     Graphic.refresh()
                     Sound.refresh()
-                    applyUIScale()   -- UIScale도 초기값으로 적용
+                    applyUIScale()         -- UIScale도 초기값으로 적용
+                    refreshNeedRestart()   -- 언어가 초기값으로 돌아갔을 수 있음
                 end
             end
         end

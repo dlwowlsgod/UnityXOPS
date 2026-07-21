@@ -29,38 +29,7 @@ namespace UnityXOPS.Modding
         }
 
         /// <summary>
-        /// 지정 레이어의 화면 페이드를 지정 시간 동안 페이드 인(검은 화면 → 투명)한다. 씬 등장 연출용.
-        /// </summary>
-        /// <param name="layer">페이드 레이어 우선순위(높을수록 위)</param>
-        /// <param name="duration">페이드 시간(초). 0이면 즉시</param>
-        public void FadeIn(int layer, float duration)
-        {
-            UIOverlayManager.Instance.FadeIn(layer, duration);
-        }
-
-        /// <summary>
-        /// 지정 레이어의 화면 페이드를 지정 시간 동안 페이드 아웃(투명 → 검은 화면)한다. 씬 퇴장 연출용.
-        /// </summary>
-        /// <param name="layer">페이드 레이어 우선순위(높을수록 위)</param>
-        /// <param name="duration">페이드 시간(초). 0이면 즉시</param>
-        public void FadeOut(int layer, float duration)
-        {
-            UIOverlayManager.Instance.FadeOut(layer, duration);
-        }
-
-        /// <summary>
-        /// 지정 레이어의 페이드 알파를 즉시 지정한다. 씬 시작 시 초기 상태를 명시(0=투명, 1=암전)하거나 페이드를 스킵할 때 쓴다.
-        /// 예: Briefing/Result처럼 페이드 없이 시작하려면 SetFade(layer, 0).
-        /// </summary>
-        /// <param name="layer">페이드 레이어 우선순위(높을수록 위)</param>
-        /// <param name="alpha">페이드 알파(0 투명 ~ 1 암전)</param>
-        public void SetFade(int layer, float alpha)
-        {
-            UIOverlayManager.Instance.SetFade(layer, alpha);
-        }
-
-        /// <summary>
-        /// 레터박스를 끄고 페이드를 즉시 투명으로 되돌린다. 오버레이를 한 번에 초기화하는 편의 메서드.
+        /// 레터박스를 끈다. 오버레이를 한 번에 초기화하는 편의 메서드.
         /// </summary>
         public void ClearOverlay()
         {

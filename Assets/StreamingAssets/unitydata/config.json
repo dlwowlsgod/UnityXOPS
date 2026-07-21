@@ -15,7 +15,7 @@
                     "type": "float",
                     "value": "1",
                     "min": 1.0,
-                    "max": 1.100000023841858
+                    "max": 1.0
                 },
                 {
                     "name": "aimLength",
@@ -79,6 +79,13 @@
                     "value": "xopsPlayer",
                     "min": 0.0,
                     "max": 0.0
+                },
+                {
+                    "name": "language",
+                    "type": "int",
+                    "value": "0",
+                    "min": 0.0,
+                    "max": 3.0
                 }
             ]
         },
@@ -128,7 +135,7 @@
                 {
                     "name": "resolution",
                     "type": "int",
-                    "value": "10",
+                    "value": "0",
                     "min": 0.0,
                     "max": 15.0
                 },
@@ -149,7 +156,7 @@
                 {
                     "name": "frameLimit",
                     "type": "int",
-                    "value": "240",
+                    "value": "245",
                     "min": 60.0,
                     "max": 480.0
                 },

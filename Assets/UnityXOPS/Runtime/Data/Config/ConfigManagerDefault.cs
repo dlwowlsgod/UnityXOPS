@@ -28,6 +28,7 @@ namespace UnityXOPS
         public const string KeyGamma = "gamma";
         public const string KeyMasterVolume = "MasterVolume";
         public const string KeyUIScale = "UIScale";
+        public const string KeyLanguage = "language";
 
         /// <summary>
         /// config.json이 없을 때 기록할 기본 설정을 코드로 구성한다. 코어 섹션 3종과 기본 입력 바인딩을 담는다.
@@ -40,6 +41,57 @@ namespace UnityXOPS
                 sections = BuildDefaultSections(),
                 bindings = BuildDefaultBindings(),
             };
+        }
+
+        /// <summary>
+        /// 코드 기본값에는 있는데 로드된 config.json에는 없는 항목을 채워 넣는다.
+        /// 버전이 올라가며 설정/액션이 새로 생겨도, 이전 버전에서 만들어진 config.json을 쓰는 유저가
+        /// 그 항목을 통째로 잃지 않게 하려는 것이다(값이 없으면 옵션 화면에서 조작해도 반영되지 않는다).
+        /// 유저가 이미 가진 값은 절대 건드리지 않고, 스키마(타입/범위)만 코드 정의로 맞춘다.
+        /// 조회 사전이 있어야 기존 항목을 알아보므로 반드시 BuildLookup 뒤에 호출한다.
+        /// </summary>
+        private void MergeDefaults()
+        {
+            foreach (ConfigSection section in BuildDefaultSections())
+            {
+                foreach (ConfigSetting setting in section.settings)
+                {
+                    RegisterSetting(section.name, setting.name, setting.type, setting.value, setting.min, setting.max);
+                }
+            }
+
+            MergeDefaultBindings();
+        }
+
+        /// <summary>
+        /// 코드 기본 바인딩 중 config.json에 없는 액션만 뒤에 덧붙인다.
+        /// 이미 있는 액션은 유저가 바꾼 키를 그대로 둔다.
+        /// </summary>
+        private void MergeDefaultBindings()
+        {
+            List<InputActionDefinition> merged = config.bindings != null
+                ? new List<InputActionDefinition>(config.bindings)
+                : new List<InputActionDefinition>();
+
+            foreach (InputActionDefinition def in BuildDefaultBindings())
+            {
+                bool exists = false;
+                foreach (InputActionDefinition existing in merged)
+                {
+                    if (existing != null && existing.name == def.name)
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (!exists)
+                {
+                    merged.Add(def);
+                }
+            }
+
+            config.bindings = merged.ToArray();
         }
 
         /// <summary>
@@ -69,6 +121,8 @@ namespace UnityXOPS
                         new ConfigSetting { name = "aimColorB", type = TypeFloat, value = "0", min = 0f, max = 1f },
                         new ConfigSetting { name = "aimColorA", type = TypeFloat, value = "1", min = 0f, max = 1f },
                         new ConfigSetting { name = "playerName", type = TypeString, value = "xopsPlayer", min = 0f, max = 0f },
+                        // 폰트 선택용 언어. 0=자동(Application.systemLanguage를 따름) / 1=한국어 / 2=일본어 / 3=영어.
+                        new ConfigSetting { name = KeyLanguage, type = TypeInt, value = "0", min = 0f, max = 3f },
                     },
                 },
                 new ConfigSection

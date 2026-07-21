@@ -33,7 +33,8 @@ local ROT_ANIM = { accelStart = 2.6, accelEnd = 3.6, constantEnd = 5.0,
 
 -- ----- 크레딧 텍스트 목록 -----
 -- 한 줄 = 한 텍스트. text: 문자열 / pivot: 화면 기준점(TopLeft·Center·BottomCenter 등) / x,y: 기준점에서의 오프셋(+x 오른쪽, +y 위) /
---   w,h: 글자 크기 / r,g,b: 색(0~1) / inS,inE: 나타나는 구간(초, 페이드 인 시작·끝) / outS,outE: 사라지는 구간(페이드 아웃 시작·끝).
+--   w,h: 글자 크기 / r,g,b: 색(0~1) / inS,inE: 나타나는 구간(초, 페이드 인 시작·끝) / outS,outE: 사라지는 구간(페이드 아웃 시작·끝) /
+--   page: 쓸 스프라이트 시트 번호(생략하면 0번). 시트는 font.lua에서 등록한다.
 local TEXTS = {
     { text = "Project UnityXOPS", pivot = "BottomCenter", x = 0,    y = 120,  w = 22, h = 22, r = 1, g = 1, b = 1,
       inS = 0.5,  inE = 1.5,  outS = 3.0,  outE = 4.0 },

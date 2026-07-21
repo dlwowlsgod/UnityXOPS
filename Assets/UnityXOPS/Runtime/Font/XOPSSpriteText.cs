@@ -4,13 +4,19 @@ using UnityEngine.UI;
 namespace UnityXOPS
 {
     /// <summary>
-    /// char.dds 스프라이트 폰트 텍스처를 사용해 UI 텍스트를 렌더링하는 커스텀 그래픽 컴포넌트.
+    /// 스프라이트 시트 폰트를 사용해 UI 텍스트를 렌더링하는 커스텀 그래픽 컴포넌트.
+    /// 시트 한 장(페이지)만 쓰며, 글자 코드가 곧 그 시트 안의 칸 번호(0~255)가 된다.
+    /// 지정한 페이지가 등록돼 있지 않으면 0번 페이지로 떨어진다.
     /// </summary>
     [RequireComponent(typeof(CanvasRenderer))]
     public class XOPSSpriteText : MaskableGraphic
     {
+        // 시트 한 장 = 16열x16행 = 칸 256개
+        private const int k_cellsPerRow = 16;
+        private const int k_cellsPerPage = k_cellsPerRow * k_cellsPerRow;
+
         [SerializeField]
-        private Texture2D charTexture;
+        private int page = 0;
         [SerializeField]
         private string text = "";
         [SerializeField]
@@ -22,14 +28,13 @@ namespace UnityXOPS
         [SerializeField]
         private TextAnchor alignment = TextAnchor.LowerLeft;
 
-        public override Texture mainTexture => charTexture != null ? charTexture : base.mainTexture;
+        public override Texture mainTexture => PageTexture() ?? base.mainTexture;
 
-        public Texture2D CharTexture
+        public int Page
         {
-            get => (Texture2D)mainTexture;
-            set { charTexture = value; }
+            get => page;
+            set { page = value; SetMaterialDirty(); SetVerticesDirty(); }
         }
-
         public string Text
         {
             get => text;
@@ -66,15 +71,26 @@ namespace UnityXOPS
         protected override void OnValidate()
         {
             base.OnValidate();
+            SetMaterialDirty();
             SetVerticesDirty();
         }
 #endif //UNITY_EDITOR
+
+        /// <summary>
+        /// 이 컴포넌트가 그릴 시트 텍스처를 가져온다. 지정 페이지가 없으면 0번 페이지로 대체한다.
+        /// </summary>
+        /// <returns>시트 텍스처. 0번 페이지마저 등록돼 있지 않으면 null.</returns>
+        private Texture2D PageTexture()
+        {
+            return FontManager.GetSpritePage(page) ?? FontManager.GetSpritePage(0);
+        }
 
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
 
-            if (charTexture == null || string.IsNullOrEmpty(text))
+            Texture2D pageTexture = PageTexture();
+            if (pageTexture == null || string.IsNullOrEmpty(text))
                 return;
 
             // 전체 텍스트 폭: 마지막 글자 뒤 간격 제외
@@ -99,15 +115,17 @@ namespace UnityXOPS
 
             for (int i = 0; i < text.Length; i++)
             {
+                // 시트 한 장이 칸 256개라 그 밖의 글자는 표현할 수 없다. 빈 칸으로 약속된 0번 칸으로 그린다.
                 int charCode = text[i];
-                int col = charCode % 16;
-                int row = charCode / 16;
+                int cell = charCode < k_cellsPerPage ? charCode : 0;
+                int col = cell % k_cellsPerRow;
+                int row = cell / k_cellsPerRow;
 
-                // char.dds: 16열×16행, 셀 1개 = 1/16 UV
-                float u0 = col / 16f;
-                float v0 = 1f - (row + 1) / 16f;
-                float u1 = u0 + 1f / 16f;
-                float v1 = v0 + 1f / 16f;
+                // 셀 1개 = 1/16 UV. DirectX와 달리 Unity는 V=0이 아래라 행을 뒤집는다.
+                float u0 = col / (float)k_cellsPerRow;
+                float v0 = 1f - (row + 1) / (float)k_cellsPerRow;
+                float u1 = u0 + 1f / k_cellsPerRow;
+                float v1 = v0 + 1f / k_cellsPerRow;
 
                 float x0 = ox + i * (charWidth + spacing);
                 float x1 = x0 + charWidth;

@@ -27,9 +27,6 @@ namespace UnityXOPS
         private RectTransform m_topBar;
         private RectTransform m_bottomBar;
 
-        private Canvas m_fadeCanvas;
-        private FadeRawImage m_fade;
-
         private const float k_referenceWidth = 640f;
         private const float k_referenceHeight = 480f;
 
@@ -48,8 +45,8 @@ namespace UnityXOPS
 
         /// <summary>
         /// 씬이 언로드될 때 호출된다. 모드가 만든 동적 레이어(고아 GameObject)만 정리한다.
-        /// 페이드/레터박스 상태는 의도적으로 건드리지 않는다 — 이전 씬 FadeOut(검정) → 로드 → 새 씬 FadeIn
-        /// 같은 전환 연속성을 위해서다. 각 씬은 start()에서 자신의 오버레이 상태를 명시적으로 선언한다.
+        /// 레터박스 상태는 의도적으로 건드리지 않는다 — 씬을 넘어 유지돼야 하는 화면비 설정이기 때문이다.
+        /// 각 씬은 start()에서 자신의 오버레이 상태를 명시적으로 선언한다.
         /// 신 씬의 LuaSceneController.Start() 보다 먼저 실행되므로 새 UI를 지우지 않는다.
         /// </summary>
         /// <param name="scene">언로드된 씬</param>
@@ -60,7 +57,7 @@ namespace UnityXOPS
 
         /// <summary>
         /// 모드/씬이 만든 동적 레이어(CreateImage/CreateText)를 모두 파괴한다.
-        /// 페이드/레터박스는 별도 전용 캔버스라 영향받지 않는다.
+        /// 레터박스는 별도 전용 캔버스라 영향받지 않는다.
         /// </summary>
         public void ClearDynamicLayers()
         {
@@ -103,27 +100,6 @@ namespace UnityXOPS
             m_topBar = CreateBar(m_letterboxCanvas.transform, "LetterboxTop");
             m_bottomBar = CreateBar(m_letterboxCanvas.transform, "LetterboxBottom");
             ApplyLetterbox(false, 0f);
-        }
-
-        /// <summary>
-        /// 풀스크린 페이드 이미지와 전용 캔버스를 아직 없으면 생성한다(lazy).
-        /// </summary>
-        private void EnsureFade()
-        {
-            if (m_fade != null)
-            {
-                return;
-            }
-
-            m_fadeCanvas = CreateOverlayCanvas("FadeOverlay");
-            GameObject fadeGO = new GameObject("Fade", typeof(RawImage), typeof(FadeRawImage));
-            fadeGO.transform.SetParent(m_fadeCanvas.transform, false);
-            RawImage fadeImage = fadeGO.GetComponent<RawImage>();
-            fadeImage.texture = Texture2D.whiteTexture;
-            fadeImage.raycastTarget = false;
-            Stretch(fadeImage.rectTransform);
-            m_fade = fadeGO.GetComponent<FadeRawImage>();
-            m_fade.SetAlphaZero();
         }
 
         /// <summary>
@@ -442,44 +418,7 @@ namespace UnityXOPS
         }
 
         /// <summary>
-        /// 지정 레이어(order)의 화면 페이드를 지정 시간 동안 페이드 인(어둠 → 화면)한다.
-        /// </summary>
-        /// <param name="order">페이드 캔버스 sortingOrder(높을수록 위)</param>
-        /// <param name="duration">페이드 시간(초)</param>
-        public void FadeIn(int order, float duration)
-        {
-            EnsureFade();
-            m_fadeCanvas.sortingOrder = order;
-            m_fade.FadeIn(duration);
-        }
-
-        /// <summary>
-        /// 지정 레이어(order)의 화면 페이드를 지정 시간 동안 페이드 아웃(화면 → 어둠)한다.
-        /// </summary>
-        /// <param name="order">페이드 캔버스 sortingOrder(높을수록 위)</param>
-        /// <param name="duration">페이드 시간(초)</param>
-        public void FadeOut(int order, float duration)
-        {
-            EnsureFade();
-            m_fadeCanvas.sortingOrder = order;
-            m_fade.FadeOut(duration);
-        }
-
-        /// <summary>
-        /// 지정 레이어(order)의 페이드 알파를 즉시 설정한다(진행 중 페이드 중단).
-        /// 씬 시작 시 초기 상태를 명시(0=투명, 1=완전 암전)하거나 페이드를 스킵할 때 쓴다.
-        /// </summary>
-        /// <param name="order">페이드 캔버스 sortingOrder(높을수록 위)</param>
-        /// <param name="alpha">페이드 알파(0 투명 ~ 1 암전)</param>
-        public void SetFade(int order, float alpha)
-        {
-            EnsureFade();
-            m_fadeCanvas.sortingOrder = order;
-            m_fade.SetAlpha(alpha);
-        }
-
-        /// <summary>
-        /// 레터박스를 끄고 페이드를 즉시 투명으로 되돌린다. 오버레이를 한 번에 초기화하는 편의 메서드.
+        /// 레터박스를 끈다. 오버레이를 한 번에 초기화하는 편의 메서드.
         /// 아직 생성되지 않은 오버레이는 건드리지 않는다(레이어는 유지).
         /// </summary>
         public void ClearOverlay()
@@ -487,10 +426,6 @@ namespace UnityXOPS
             if (m_topBar != null)
             {
                 ApplyLetterbox(false, 0f);
-            }
-            if (m_fade != null)
-            {
-                m_fade.SetAlpha(0f);
             }
         }
 
@@ -726,18 +661,6 @@ namespace UnityXOPS
 
             string fullPath = SafePath.Combine(Application.streamingAssetsPath, relativePath);
             return ImageLoader.LoadTexture(fullPath);
-        }
-
-        /// <summary>
-        /// RectTransform을 부모 영역 전체로 늘린다.
-        /// </summary>
-        /// <param name="rect">대상 RectTransform</param>
-        private static void Stretch(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
         }
 
         /// <summary>
