@@ -31,6 +31,23 @@ namespace UnityXOPS
         public Weapon GetWeapon(int slot) => m_weapons[Mathf.Clamp(slot, 0, 1)];
 
         /// <summary>
+        /// 이번 틱 무기 액션 플래그를 소비해 실제 무기 메서드를 호출한다. 플레이어 입력(PlayerController)이 채운 의도를 실행.
+        /// 각 액션의 가드(IsChanging/Alive/매거진 등)는 개별 메서드가 담당하므로 여기선 플래그 순서대로 위임만 한다.
+        /// </summary>
+        /// <param name="input">이번 틱 입력. weapon 필드의 플래그만 사용.</param>
+        public void ApplyWeaponInput(in HumanInput input)
+        {
+            HumanWeaponAction w = input.weapon;
+            if ((w & HumanWeaponAction.SelectFirst) != 0) SetSelectWeapon(0);
+            if ((w & HumanWeaponAction.SelectSecond) != 0) SetSelectWeapon(1);
+            if ((w & HumanWeaponAction.Drop) != 0) DropCurrentWeapon();
+            if ((w & HumanWeaponAction.SwitchPrevious) != 0) SwitchWeaponPrevious();
+            if ((w & HumanWeaponAction.SwitchNext) != 0) SwitchWeaponNext();
+            if ((w & HumanWeaponAction.Reload) != 0) ReloadCurrentWeapon();
+            if ((w & HumanWeaponAction.Fire) != 0) CurrentWeapon?.Shoot(this);
+        }
+
+        /// <summary>
         /// 슬롯 0/1 사이에서 활성 무기를 전환한다. 비활성 슬롯의 weapon GameObject 는 SetActive(false).
         /// 전환 중(IsChanging) 이거나 같은 슬롯이면 무시. 전환 완료 후 slotChangeTime 동안 IsChanging 락 + dynamicArm reaction 복원.
         /// 원본 OpenXOPS human::ChangeHaveWeapon (object.cpp:454-504) 대응.

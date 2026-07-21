@@ -23,11 +23,9 @@ namespace UnityXOPS
     /// 미션 성공/실패/메시지는 "실행(상태 set)"까지만 — 화면 표시/씬 전환 등 UI 연동은 폴링하는 쪽이 처리(1차 보류).
     /// SingletonBehavior 라 DontDestroyOnLoad 로 유지되며, Maingame 진입 시 BeginMission 으로만 가동된다(Mainmenu 데모는 미가동).
     /// </summary>
-    public class EventManager : SingletonBehavior<EventManager>
+    public class EventManager : SingletonBehavior<EventManager>, ISimTickable
     {
-        private const float k_gameFps = 33.3333f; // 원본 GAMEFPS
-        private const float k_frameTime = 1f / k_gameFps;
-        private const int k_maxCatchup = 4;
+        private const float k_gameFps = SimClock.FrameRate; // 원본 GAMEFPS — SimClock 단일 소스 참조. fps 카운트 변환(메시지/대기 프레임수)에 쓰임(dt 아님).
         private const int k_maxFrameStep = 6; // 원본 TOTAL_EVENTFRAMESTEP (액션 무한연쇄 방지 상한)
         private const float k_showMsgSec = 5.0f; // 원본 TOTAL_EVENTENT_SHOWMESSEC
         private const float k_msgFadeSec = 0.2f; // 메시지 페이드 인/아웃 시간 (원본 gamemain.cpp:3141-3144, 0.2초)
@@ -43,7 +41,6 @@ namespace UnityXOPS
         private int m_messageId = -1; // 현재 표시 메시지 ID (-1 = 없음)
         private int m_messageCnt; // 메시지 표시 경과 프레임
         private bool m_running;
-        private float m_accum;
         // BeginMission 누적 호출 수. 진입/재시작을 구분 없이 "처음부터 다시 시작됨" 하나로 알리는 신호 —
         // 폴링하는 쪽(HUD 연출)이 값 변화만 보고 상태를 리셋하면 되므로 재시작 경로를 알 필요가 없다.
         private int m_startCount;
@@ -90,7 +87,6 @@ namespace UnityXOPS
             m_result     = MissionResult.InProgress;
             m_messageId  = -1;
             m_messageCnt = 0;
-            m_accum      = 0f;
             m_running    = true;
             m_startCount++;
         }
@@ -107,19 +103,16 @@ namespace UnityXOPS
             }
         }
 
-        private void FixedUpdate()
-        {
-            if (!m_running || !HumanController.TickEnabled) return;
+        private void OnEnable() => SimClock.Register(this);
+        private void OnDisable() => SimClock.Unregister(this);
 
-            // 결정은 33.333fps 프레임 락 (원본 정수 카운트/확률 모델). 누산기로 30ms 마다 1프레임.
-            m_accum += Time.fixedDeltaTime;
-            int guard = 0;
-            while (m_accum >= k_frameTime && guard++ < k_maxCatchup)
-            {
-                m_accum -= k_frameTime;
-                StepFrame();
-            }
-            if (m_accum > k_frameTime) m_accum = 0f;
+        // 원본 미션판정/이벤트(P4/P5) — AI판단(P3) 뒤. 케이던스/게이트/누산은 SimClock 이 소유.
+        public int SimOrder => 300;
+
+        public void SimTick()
+        {
+            if (!m_running) return; // TickEnabled 게이트는 SimClock 이 담당
+            StepFrame();
         }
 
         private void StepFrame()

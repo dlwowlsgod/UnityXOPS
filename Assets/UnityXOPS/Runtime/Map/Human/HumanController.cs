@@ -17,6 +17,36 @@ namespace UnityXOPS
     }
 
     /// <summary>
+    /// 이번 틱 무기 액션 의도. 직접 호출 대신 플래그로 표현해 Human 이 한 곳에서 소비한다.
+    /// 소비 순서는 원본 입력 처리 순서(슬롯선택 → 버림 → 무기ID전환 → 재장전 → 발사)를 따른다.
+    /// </summary>
+    [Flags]
+    public enum HumanWeaponAction
+    {
+        None = 0,
+        SelectFirst = 1 << 0, // 슬롯 0(보조) 선택
+        SelectSecond = 1 << 1, // 슬롯 1(주) 선택
+        Drop = 1 << 2, // 현재 무기 버리기
+        SwitchPrevious = 1 << 3, // 슬롯 내 이전 무기 ID 로 전환
+        SwitchNext = 1 << 4, // 슬롯 내 다음 무기 ID 로 전환
+        Reload = 1 << 5, // 재장전
+        Fire = 1 << 6, // 발사
+    }
+
+    /// <summary>
+    /// 한 틱 분량의 캐릭터 입력. PlayerController(사람)·AIBrain(AI)이 채우고, 이동/조준은 HumanController 가,
+    /// 무기 액션은 Human 이 소비하는 단일 입력 표면. 조준은 절대각(yaw/pitch, deg), 이동은 방향 플래그.
+    /// 직렬화·리플레이 가능한 대상으로 만들기 위해 값 타입.
+    /// </summary>
+    public struct HumanInput
+    {
+        public HumanMoveFlag moveFlag;
+        public float yaw;
+        public float pitch;
+        public HumanWeaponAction weapon;
+    }
+
+    /// <summary>
     /// OpenXOPS human::CollisionMap 포팅. 원본 알고리즘을 그대로 Unity 좌표로 재구현한다.
     /// Player는 PlayerController, AI는 AIController가 이 컨트롤러의 API로 입력을 주입.
     /// </summary>
@@ -110,19 +140,25 @@ namespace UnityXOPS
             m_armRotationY = -DataManager.Instance.HumanParameterData.humanGeneralData.armAngleInitial;
         }
 
-        public void SetMoveFlag(HumanMoveFlag flag) { m_moveFlag |= flag; }
+        /// <summary>
+        /// 이번 틱 입력을 주입한다. 조준각(yaw/pitch)은 덮어쓰고, 이동 플래그는 FixedUpdate 소비 전까지 OR 누적한다.
+        /// 사람은 렌더 프레임마다, AI는 조준(33fps)과 이동(50fps) 케이던스가 달라 각자 호출 지점에서 채운다.
+        /// 값을 클램프/정규화하지 않고 그대로 저장한다(그 책임은 호출측) — AIBrain.ApplyMovement 가 현재 조준값을
+        /// 되싣어 이동만 추가하는 no-op 재읽기가 이 무변형 전제에 의존하므로 여기서 값을 변형하면 안 된다.
+        /// </summary>
+        /// <param name="input">이번 틱 조준·이동 입력.</param>
+        public void SetInput(in HumanInput input)
+        {
+            m_rotationX = input.yaw;
+            m_armRotationY = input.pitch;
+            m_moveFlag |= input.moveFlag;
+        }
 
         /// <summary>
         /// 치트(F5+Enter 홀드) 강제 상승 여부를 설정한다. true 면 다음 Tick 에서 수직 관통 상승한다.
         /// </summary>
         /// <param name="active">이번 프레임 상승 여부 (홀드 상태 그대로).</param>
         public void SetCheatRise(bool active) => m_cheatRise = active;
-
-        public void SetYawPitch(float yaw, float pitch)
-        {
-            m_rotationX = yaw;
-            m_armRotationY = pitch;
-        }
 
         public void AddYawPitch(float deltaYaw, float deltaPitch)
         {

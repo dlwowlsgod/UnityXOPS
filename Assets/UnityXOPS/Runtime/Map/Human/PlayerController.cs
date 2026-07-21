@@ -153,7 +153,6 @@ namespace UnityXOPS
             m_yaw += look.x * sensitivity;
             m_pitch -= look.y * sensitivity * invertY;
             m_pitch = Mathf.Clamp(m_pitch, -pitchLimit, pitchLimit);
-            m_controller.SetYawPitch(m_yaw, m_pitch);
 
             // 3인칭 카메라 시선 오프셋 — 넘버패드로 상하좌우 궤도 조정 (원본 gamemain.cpp:2307-2320, 홀드 시 프레임당 2°).
             if (viewMode == ViewMode.ThirdPerson)
@@ -169,22 +168,22 @@ namespace UnityXOPS
             }
 
             Vector2 move = input.Move.ReadValue<Vector2>();
-            if (move.y > 0f) m_controller.SetMoveFlag(HumanMoveFlag.Forward);
-            if (move.y < 0f) m_controller.SetMoveFlag(HumanMoveFlag.Back);
-            if (move.x < 0f) m_controller.SetMoveFlag(HumanMoveFlag.Left);
-            if (move.x > 0f) m_controller.SetMoveFlag(HumanMoveFlag.Right);
+            HumanMoveFlag moveFlag = HumanMoveFlag.None;
+            if (move.y > 0f) moveFlag |= HumanMoveFlag.Forward;
+            if (move.y < 0f) moveFlag |= HumanMoveFlag.Back;
+            if (move.x < 0f) moveFlag |= HumanMoveFlag.Left;
+            if (move.x > 0f) moveFlag |= HumanMoveFlag.Right;
+            if (input.Walk.IsPressed()) moveFlag |= HumanMoveFlag.Walk;
+            if (input.Jump.WasPressedThisFrame()) moveFlag |= HumanMoveFlag.Jump;
 
-            if (input.Walk.IsPressed()) m_controller.SetMoveFlag(HumanMoveFlag.Walk);
-            if (input.Jump.WasPressedThisFrame()) m_controller.SetMoveFlag(HumanMoveFlag.Jump);
-
-            // 무기 슬롯 직접 선택: First → 보조(0), Second → 주(1)
-            if (input.First.WasPressedThisFrame()) m_player.SetSelectWeapon(0);
-            if (input.Second.WasPressedThisFrame()) m_player.SetSelectWeapon(1);
-
-            if (input.Drop.WasPressedThisFrame()) m_player.DropCurrentWeapon();
-            if (input.Previous.WasPressedThisFrame()) m_player.SwitchWeaponPrevious();
-            if (input.Next.WasPressedThisFrame()) m_player.SwitchWeaponNext();
-            if (input.Reload.WasPressedThisFrame()) m_player.ReloadCurrentWeapon();
+            // 무기 액션 의도 — 직접 호출 대신 플래그로 모아 Human 이 소비. 슬롯선택 First→보조(0)/Second→주(1).
+            HumanWeaponAction weapon = HumanWeaponAction.None;
+            if (input.First.WasPressedThisFrame()) weapon |= HumanWeaponAction.SelectFirst;
+            if (input.Second.WasPressedThisFrame()) weapon |= HumanWeaponAction.SelectSecond;
+            if (input.Drop.WasPressedThisFrame()) weapon |= HumanWeaponAction.Drop;
+            if (input.Previous.WasPressedThisFrame()) weapon |= HumanWeaponAction.SwitchPrevious;
+            if (input.Next.WasPressedThisFrame()) weapon |= HumanWeaponAction.SwitchNext;
+            if (input.Reload.WasPressedThisFrame()) weapon |= HumanWeaponAction.Reload;
 
             // 발사 — burstMode 에 따라 입력 폴링 방식 분기. FullAuto = 누르고 있으면 연사, 그 외 = 1회 입력당 1발.
             // Weapon.Shoot 자체가 fireRate 쿨다운으로 연사 속도 제한.
@@ -197,11 +196,16 @@ namespace UnityXOPS
                 bool fire = currentWeapon.WeaponData.burstMode == WeaponBurstMode.FullAuto
                           ? input.Fire.IsPressed()
                           : input.Fire.WasPressedThisFrame();
-                if (fire)
-                {
-                    currentWeapon.Shoot(m_player);
-                }
+                if (fire) weapon |= HumanWeaponAction.Fire;
             }
+
+            // 한 틱 입력을 단일 구조체로 구성 — 이동/조준은 컨트롤러가, 무기 액션은 Human 이 소비.
+            // 발사가 컨트롤러 조준을 읽으므로 조준 주입(SetInput)이 무기 소비(ApplyWeaponInput)보다 먼저다.
+            // currentWeapon 은 전환 적용(ApplyWeaponInput) 이전 값이라 pre-switch burstMode 로 판정하지만,
+            // 같은 프레임 전환은 IsChanging 으로 발사가 막히고 noneWeapon 은 fireRate<=0 no-op 이라 관측 무해.
+            var frameInput = new HumanInput { moveFlag = moveFlag, yaw = m_yaw, pitch = m_pitch, weapon = weapon };
+            m_controller.SetInput(in frameInput);
+            m_player.ApplyWeaponInput(in frameInput);
 
             // 발사 시 무기가 컨트롤러 시점각에 누적한 에임 킥을 마우스 누적값으로 되읽어 영구 반영.
             // 원본 OpenXOPS gamemain.cpp:2240-2245 — ShotWeapon 후 GetRxRy 역동기화. 킥이 없으면 무변화(no-op).
@@ -371,7 +375,7 @@ namespace UnityXOPS
                 m_viewYawOffset = 0f;
                 m_viewPitchOffset = 0f;
                 m_fireReady = false; // 조작권 획득 시 비무장 — Fire 를 한 번 떼야 발사 (씬 전환 클릭 누수 차단)
-                m_controller.SetYawPitch(m_yaw, m_pitch);
+                m_controller.SetInput(new HumanInput { moveFlag = HumanMoveFlag.None, yaw = m_yaw, pitch = m_pitch });
 
                 ApplyViewpoint();
             }

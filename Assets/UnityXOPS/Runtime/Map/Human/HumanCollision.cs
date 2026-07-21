@@ -8,47 +8,34 @@ namespace UnityXOPS
     /// 원본 OpenXOPS ObjectManager::CollideHuman(objectmanager.cpp:641-669) + 매 프레임 호출 루프(objectmanager.cpp:2926-2937) 포팅.
     /// 플레이어/AI 구분 없이 모든 Human 이 대상이라 PlayerController/AIController 와 별개로 존재한다.
     ///
-    /// 원본 거동: 이동 처리 후 별도 패스에서 두 원기둥(반경 HUMAN_HUMANCOLLISION_R)의 침투깊이 절반씩을
-    /// 양쪽 move(속도)에 정반대로 가산 → 다음 프레임 반영. 수평(XZ)만, 시체(HP≤0)는 제외.
-    /// move 에 가산하므로(즉시 위치 이동 X) 다음 Tick 에서 벽 충돌이 정상적으로 재해소된다.
+    /// 원본 거동: 두 원기둥(반경 HUMAN_HUMANCOLLISION_R)의 침투깊이 절반씩을 양쪽 move(속도)에 정반대로 가산. 수평(XZ)만, 시체(HP≤0)는 제외.
+    /// SimClock 순서상 인간간충돌(O10)이 HumanController 이동/Tick보다 먼저라, 가산된 속도는 같은 틱의 Tick 에서 소비돼 벽 충돌과 함께 해소된다.
     /// </summary>
-    public class HumanCollision : MonoBehaviour
+    public class HumanCollision : MonoBehaviour, ISimTickable
     {
-        // 원본 GAMEFPS = 33.333. 분리 패스도 AI 와 동일하게 프레임 락(속도 가산 케이던스 일치).
-        private const float k_frameTime = 1f / 33.3333f;
-        private const int k_maxCatchupFrames = 4;
-
         private readonly Dictionary<Human, HumanController> m_controllers = new Dictionary<Human, HumanController>();
-        private float m_accum;
 
-        /// <summary>미션 재시작(맵 재로드) 시 컨트롤러 캐시/누산 초기화 — 파괴된 Human 키의 stale 참조 제거.</summary>
+        // 원본 인간간충돌(O10) — AI판단(P3)보다 먼저. 케이던스/게이트/누산은 SimClock 이 소유.
+        public int SimOrder => 100;
+
+        private void OnEnable() => SimClock.Register(this);
+        private void OnDisable() => SimClock.Unregister(this);
+
+        /// <summary>미션 재시작(맵 재로드) 시 컨트롤러 캐시 초기화 — 파괴된 Human 키의 stale 참조 제거.</summary>
         public void ResetState()
         {
             m_controllers.Clear();
-            m_accum = 0f;
         }
 
-        private void FixedUpdate()
+        public void SimTick()
         {
-            // Maingame/데모 공통 게이트 (HumanController 와 동일). Briefing 등에서는 정지.
-            if (!HumanController.TickEnabled) return;
-
             IReadOnlyList<Human> humans = MapLoader.Humans;
             if (humans == null || humans.Count == 0)
             {
                 if (m_controllers.Count > 0) m_controllers.Clear();
-                m_accum = 0f;
                 return;
             }
-
-            m_accum += Time.fixedDeltaTime;
-            int guard = 0;
-            while (m_accum >= k_frameTime && guard++ < k_maxCatchupFrames)
-            {
-                m_accum -= k_frameTime;
-                StepAll(humans);
-            }
-            if (m_accum > k_frameTime) m_accum = 0f;
+            StepAll(humans);
         }
 
         /// <summary>모든 살아있는 Human 쌍(i&lt;j)을 1회씩 검사해 겹친 만큼 양쪽을 밀어낸다.</summary>
@@ -90,8 +77,8 @@ namespace UnityXOPS
                         ? new Vector3(dx / dist, 0f, dz / dist)
                         : Vector3.right;
 
-                    // 각자 침투깊이의 절반만큼 정반대로 밀림(원본 length/2). 한 프레임(1/33.333s)에 그만큼 변위하도록 속도 환산.
-                    float push = penetration * 0.5f / k_frameTime;
+                    // 각자 침투깊이의 절반만큼 정반대로 밀림(원본 length/2). 한 틱(SimClock.FrameTime)에 그만큼 변위하도록 속도 환산.
+                    float push = penetration * 0.5f / SimClock.FrameTime;
 
                     HumanController ca = GetController(a);
                     HumanController cb = GetController(b);

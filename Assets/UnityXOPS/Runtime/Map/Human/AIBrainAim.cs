@@ -87,7 +87,8 @@ namespace UnityXOPS
             if (Mathf.Abs(m_addYaw) < dz) m_addYaw = 0f;
             if (Mathf.Abs(m_addPitch) < dz) m_addPitch = 0f;
 
-            m_controller.SetYawPitch(m_yaw, m_pitch);
+            // 조준만 주입 (이동 플래그는 ApplyMovement 가 50fps 로 별도 적용).
+            m_controller.SetInput(new HumanInput { moveFlag = HumanMoveFlag.None, yaw = m_yaw, pitch = m_pitch });
         }
 
         // === 타겟 탐색 (원본 SearchEnemy ai.cpp:1297) =============================

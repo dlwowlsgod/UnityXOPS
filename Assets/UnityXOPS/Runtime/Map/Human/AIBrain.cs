@@ -157,7 +157,7 @@ namespace UnityXOPS
 
         /// <summary>
         /// 매 FixedUpdate(50fps) 호출 — 33fps AIFrame 에서 결정한 이동 의사를 물리 스텝마다 적용. AIController 가 호출.
-        /// 회전(yaw/pitch)은 SetYawPitch 절대값이라 프레임 간 유지되지만, 이동 플래그는 HumanController 가 매 스텝 소비/클리어하므로 재적용 필요.
+        /// 회전(yaw/pitch)은 절대값이라 프레임 간 유지되지만, 이동 플래그는 HumanController 가 매 스텝 소비/클리어하므로 재적용 필요.
         /// </summary>
         public void ApplyMovement()
         {
@@ -165,13 +165,15 @@ namespace UnityXOPS
 
             // 경로 이동(per-frame)과 전투 회피(persistent)는 상태 배타적이라 OR 로 합쳐 적용.
             HumanMoveFlag move = m_moveIntent | m_combatMove;
-            if (move != HumanMoveFlag.None) m_controller.SetMoveFlag(move);
-
             if (m_jumpRequested)
             {
-                m_controller.SetMoveFlag(HumanMoveFlag.Jump);
+                move |= HumanMoveFlag.Jump;
                 m_jumpRequested = false;
             }
+            if (move == HumanMoveFlag.None) return;
+
+            // 조준은 33fps Tick(ApplyTurn)이 소유 — 여기선 현재 컨트롤러 조준값(발사 반동 포함)을 그대로 실어 이동만 OR 추가한다.
+            m_controller.SetInput(new HumanInput { moveFlag = move, yaw = m_controller.Yaw, pitch = m_controller.Pitch });
         }
 
         // === 상태별 메인 =========================================================

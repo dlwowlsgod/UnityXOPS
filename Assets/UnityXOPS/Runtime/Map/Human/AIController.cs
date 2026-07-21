@@ -13,19 +13,20 @@ namespace UnityXOPS
     /// Unity 가변 스텝에 dt 를 곱하면 동작이 깨지므로, 누산기로 30ms 마다 전체 brain 을 정확히 한 번씩 Tick 한다.
     /// 각 Human 의 AI 상태는 AIBrain 인스턴스가 보유 (Human 1명 = brain 1개).
     /// </summary>
-    public class AIController : MonoBehaviour
+    public class AIController : MonoBehaviour, ISimTickable
     {
-        private const float k_frameTime = 1f / 33.3333f;
-        private const int k_maxCatchupFrames = 4; // 프레임 폭주 방지 (긴 프레임에 누산이 몰려도 최대 4프레임만 따라잡음)
-
         private readonly Dictionary<Human, AIBrain> m_brains = new Dictionary<Human, AIBrain>();
-        private float m_accum;
 
-        /// <summary>미션 재시작(맵 재로드) 시 brain/누산 캐시 초기화 — 파괴된 Human 키의 stale brain 제거.</summary>
+        // 원본 AI판단(P3) — 인간간충돌(O10) 뒤, 이벤트(P5) 앞. 케이던스/게이트/누산은 SimClock 이 소유.
+        public int SimOrder => 200;
+
+        private void OnEnable() => SimClock.Register(this);
+        private void OnDisable() => SimClock.Unregister(this);
+
+        /// <summary>미션 재시작(맵 재로드) 시 brain 캐시 초기화 — 파괴된 Human 키의 stale brain 제거.</summary>
         public void ResetState()
         {
             m_brains.Clear();
-            m_accum = 0f;
         }
 
         // 수동 조작 주체(PlayerController). 씬에 존재하면 MapLoader.Player 를 AI 에서 제외하고, 없으면(Mainmenu/Opening 데모)
@@ -33,32 +34,27 @@ namespace UnityXOPS
         private PlayerController m_playerController;
         private bool m_playerControllerResolved;
 
-        private void FixedUpdate()
+        // SimClock 33.333fps 틱 — AI 판단(원본 P3). 결정한 이동 의사는 FixedUpdate 의 ApplyMovementAll 이 50fps 로 재적용/소비.
+        public void SimTick()
         {
-            // Maingame 에서만 동작 (Briefing/Mainmenu 데모 정지). HumanController 와 동일 게이트.
-            if (!HumanController.TickEnabled) return;
-
             IReadOnlyList<Human> humans = MapLoader.Humans;
             if (humans == null || humans.Count == 0)
             {
                 // 맵 언로드/리로드로 Human 이 사라지면 stale brain 정리 (파괴된 Human 키 누적 방지).
                 if (m_brains.Count > 0) m_brains.Clear();
-                m_accum = 0f;
                 return;
             }
+            StepAll(humans);
+        }
 
-            m_accum += Time.fixedDeltaTime;
-            int guard = 0;
-            while (m_accum >= k_frameTime && guard++ < k_maxCatchupFrames)
-            {
-                m_accum -= k_frameTime;
-                StepAll(humans);
-            }
-            // 누산이 과도하면 잘라 폭주 방지 (탭 전환 등으로 dt 가 클 때).
-            if (m_accum > k_frameTime) m_accum = 0f;
-
-            // 이동 플래그는 매 FixedUpdate 적용 — 결정(33fps)과 물리(50fps) 케이던스가 달라, AIFrame 이 안 도는 스텝에도
-            // 직전 결정의 이동 의사를 유지해야 속도/부드러움이 맞는다 (HumanController 가 매 스텝 플래그를 소비/클리어하므로).
+        // 50Hz 브릿지 — HumanController 가 이동 플래그를 매 FixedUpdate(50fps) 소비/클리어하므로, 33.333fps 로 결정한 이동
+        // 의사를 물리 스텝마다 재적용한다. AIFrame 이 안 도는 스텝에도 직전 결정의 이동 의사를 유지해야 속도/부드러움이 맞는다.
+        // (Phase 1-B step 4 에서 이동이 SimClock 으로 합쳐지면 이 브릿지는 SimTick 으로 흡수돼 사라진다.)
+        private void FixedUpdate()
+        {
+            if (!HumanController.TickEnabled) return;
+            IReadOnlyList<Human> humans = MapLoader.Humans;
+            if (humans == null || humans.Count == 0) return;
             ApplyMovementAll(humans);
         }
 
