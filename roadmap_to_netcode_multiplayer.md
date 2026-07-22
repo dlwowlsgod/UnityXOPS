@@ -1,9 +1,9 @@
 # 멀티플레이(Netcode) 로드맵
 
-> UnityXOPS에 PVE / PVP 멀티플레이를 도입하기 위한 설계 문서.
-> **아직 아무것도 구현하지 않았다.** 이 문서는 "무엇을, 왜, 어떤 순서로" 를 정해두는 합의문이다.
+> UnityXOPS에 PVE / PVP 멀티플레이를 도입하기 위한 설계 문서 + 진행 기록.
+> "무엇을, 왜, 어떤 순서로" 를 정해두는 합의문이며, **Phase 1이 진행 중이다** (→ §0-1 진행 상황).
 >
-> 작성: 2026-07-21
+> 작성: 2026-07-21 · 갱신: 2026-07-22
 
 ---
 
@@ -15,6 +15,41 @@
   붙어 있으면 멀티, 없으면 싱글. **시뮬레이션 코드는 자기가 네트워크 위에 있는지 모른다.**
 - 멀티플레이 구현은 **맨 마지막**. 그 앞의 준비 작업들은 전부 싱글플레이 품질을 그 자체로 올리는 작업이다.
 - **PVE와 PVP는 싱글 미션 선택창에 끼워넣지 않고 별도 씬/모드로 분리한다.**
+
+---
+
+## 0-1. 진행 상황 (2026-07-22 기준)
+
+작업 브랜치: **`QoL-road-to-multiplay(0.4)`** (main 기반, 리뷰 후 병합 예정).
+원칙: **Phase 1은 동작 보존(behavior-preserving)** — 눈에 띄는 변화가 없어야 정상. 케이던스/게임 결과가 바뀌면 회귀 신호.
+
+### ✅ 완료
+
+**Phase 1-A — 입력 커맨드 구조체 추출** (코드리뷰 통과, 플레이테스트 미검증)
+- `HumanInput` 구조체 신설(`HumanController.cs`) — 직렬화·리플레이 가능한 단일 입력 표면.
+- **step 1 (이동/조준)**: `SetMoveFlag`+`SetYawPitch` 제거 → `HumanController.SetInput(in HumanInput)` 통합. PlayerController·AIBrain 둘 다 이 구조체를 채운다.
+- **step 2 (무기 액션)**: `HumanWeaponAction` [Flags](발사/장전/전환/선택/드롭) + `Human.ApplyWeaponInput`. 플레이어 무기 직접 호출을 intent 플래그로.
+- **AI 무기 호출은 직접 유지(의도적)**: `HaveWeapon`/`ControlWeapon`/`ThrowGrenade` 등은 한 틱 안에서 읽고-결정-행동을 동기적으로 하고 반환값을 결정에 쓴다(지연 intent 불가). 또 AI는 서버 권위라 입력 직렬화 대상이 아니다.
+- **소비자 분리**: 이동/조준=`HumanController`, 무기=`Human`. 동기 실행이라 발사→반동→되읽기 결합을 그대로 보존.
+
+**Phase 1-B step 1 — 틱 소스 통합** (코드리뷰 통과, 플레이테스트 미검증)
+- 신규 `SimClock`(`Map/SimClock.cs`): DDOL 싱글턴, `[DefaultExecutionOrder(-200)]`, 단일 33.333Hz 누산기 + `ISimTickable` 등록. `SimClock.FrameRate`/`FrameTime` = 33.333 단일 소스.
+- 중복 누산기 3개(`AIController`/`HumanCollision`/`EventManager`)를 SimClock으로 통합. `SimOrder`로 원본 프레임 순서 재현. 3개가 이미 락스텝이라 동작 보존, 실행순서만 명시화(개선).
+- `AIController`는 이중 케이던스라 `SimTick`=판단(33Hz) / `FixedUpdate`=`ApplyMovement`(50Hz 브릿지)로 분리 — 브릿지는 step 4에서 흡수.
+- **버그픽스**: 종료(quit) 시 간헐 NullReferenceException — `Register`/`Unregister`가 종료 중 null을 반환하는 `Instance`를 참조하던 것을, 등록 목록을 static으로 바꿔 인스턴스 의존을 제거. (`Loaded`=true인데 `Instance`=null인 종료 경합 창 때문)
+
+### 📐 원본 프레임 순서 (openxops-analyzer 확인 — 남은 1-B 단계의 기준)
+
+`objectmanager.cpp:2710` / `gamemain.cpp:2514` 기준 프레임당 순서:
+`이동/맵충돌(O2) → 무기(O3) → SmallObject(O4) → 총알(O5) → 이펙트(O7) → 수류탄(O8) → 무기줍기(O9) → 인간간충돌(O10) → AI판단(P3) → 미션판정(P4) → 이벤트(P5) → 월드사운드`
+- **AI 판단은 이동보다 뒤, 1프레임 지연**: AI가 세운 커맨드는 다음 프레임 이동이 소비. 우리 `HumanInput` 구조와 일치.
+- 통합 완료된 3개의 상대 순서: 인간간충돌 → AI → 이벤트.
+
+### ⏳ 미검증
+에디터 컴파일 + Maingame 플레이테스트 미실시. 핵심 확인: 탄도 방향 · 에임 킥 반동(발사→반동→되읽기) · AI 전투/이동 무변경 · 인간간충돌 · 이벤트/미션 · 씬 전환 반복(SimClock 재등록). 상세 체크리스트는 로컬 `TODO.md`.
+
+### ▶ 다음 작업
+**1-B step 2 (Bullet을 틱으로)** — 가장 심각한 렌더레이트 탄도 문제. 상세는 §2 Phase 1-B.
 
 ---
 
@@ -59,7 +94,7 @@ HumanNetSync : NetworkBehaviour  ← 신규. 있으면 멀티, 없으면 싱글
 ```
 
 - **서버**: `Human` 상태를 읽어 `NetworkVariable`로 브로드캐스트
-- **클라이언트**: 받은 상태를 기존 setter(`SetMoveFlag` / `SetYawPitch`)에 주입
+- **클라이언트**: 받은 상태를 입력 표면(`HumanController.SetInput(HumanInput)` / `Human.ApplyWeaponInput`)에 주입 — Phase 1-A에서 이 단일 입구가 이미 만들어짐
 - **싱글플레이**: `NetworkManager` 자체가 없고, 프리팹에 이 컴포넌트가 없다
 
 PVE는 이 구조에서 거의 공짜다 — `AIController`가 씬 레벨 싱글 컴포넌트라 **서버에서만 활성화**하면 끝난다.
@@ -72,9 +107,9 @@ PVE는 이 구조에서 거의 공짜다 — `AIController`가 씬 레벨 싱글
 
 아래 세 항목은 **지금 싱글플레이에도 실제 결함**이다. 멀티를 안 하더라도 고칠 가치가 있다.
 
-#### 1-A. 입력 커맨드 구조체 추출
+#### 1-A. 입력 커맨드 구조체 추출  ✅ 완료 (§0-1)
 
-현재 문제:
+당시 문제:
 
 | 위치 | 문제 |
 |---|---|
@@ -91,7 +126,7 @@ PVE는 이 구조에서 거의 공짜다 — `AIController`가 씬 레벨 싱글
 
 부수 이득: AI와 플레이어가 같은 입구를 쓰게 되어 데모 리플레이·봇 테스트가 가능해진다.
 
-#### 1-B. 시계를 하나로 수렴
+#### 1-B. 시계를 하나로 수렴  🔄 step 1 완료 · step 2~5 남음
 
 현재 **시계가 4개**다:
 
@@ -108,9 +143,17 @@ PVE는 이 구조에서 거의 공짜다 — `AIController`가 씬 레벨 싱글
 할 일: 게임플레이에 영향 있는 것은 **33.333Hz 단일 틱**으로 모은다.
 (연출/보간만 렌더레이트에 남긴다.)
 
-> 33.333fps 상수는 이미 세 군데에 각각 하드코딩되어 있다 —
-> `AIController.cs:18`, `HumanCollision.cs:18`, `EventManager.cs:28`.
-> 이것부터 하나의 틱 소스로 합친다.
+> 33.333fps 상수는 세 군데에 각각 하드코딩돼 있었다 — `AIController`/`HumanCollision`/`EventManager`.
+> **이것부터 하나의 틱 소스(`SimClock`)로 합쳤다 → step 1 완료 (§0-1).**
+
+**단일 틱 = 33.333Hz로 강제됨**: `AIController`/`EventManager`가 정수 프레임 카운트 확률 모델(cautioncnt=160, `(int)GAMEFPS*sec`)이라 이 레이트를 못 벗어난다. 따라서 `HumanController` 이동이 50Hz→33.33Hz로 내려와야 한다(step 4, 이동 재검증 필요). 원본도 이동이 33.333fps라 더 충실.
+
+단계 (각 단계 독립 테스트 가능, §0-1 원본 프레임 순서 기준):
+- [x] **step 1 — 틱 소스 통합**: `SimClock` 단일 드라이버로 3개 누산기 통합 (§0-1).
+- [ ] **step 2 — Bullet을 틱으로** (가장 심각): `BulletManager` 탄도/충돌을 `SimClock`으로. 총알 visual 보간만 렌더레이트에.
+- [ ] **step 3 — Weapon/Human 타이머를 틱으로**: fireRate·장전·전환·반동회복. 팔 애니메이션 등 연출은 렌더레이트.
+- [ ] **step 4 — HumanController 이동 + Collision + AI를 틱으로** (리스크 핵심): 50Hz→33.33Hz, 이동 재검증 집중. `AIController` ApplyMovement 브릿지 흡수. 원본 순서(이동→충돌→AI→이벤트) 완전 정렬.
+- [ ] **step 5 — SmallObject**: 게임플레이(피격 파괴)는 틱, 파편은 연출.
 
 #### 1-C. RNG 스트림 분리
 

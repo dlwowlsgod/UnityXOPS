@@ -19,36 +19,40 @@ namespace UnityXOPS
 
         private const int k_maxCatchup = 4; // 프레임 폭주 방지 (긴 프레임에 누산이 몰려도 최대 4틱만 따라잡음)
 
-        private readonly List<ISimTickable> m_tickables = new List<ISimTickable>();
+        // 등록 목록은 static — 종료(quit) 시 드라이버 인스턴스보다 tickable 이 늦게 파괴돼도 Register/Unregister 가 인스턴스에 접근하지 않게 한다.
+        // SingletonBehavior.Instance 는 종료 중 null 을 반환하지만 Loaded(=m_instance!=null)는 아직 true 라, 인스턴스 필드를 참조하면 NRE 가 난다(종료 시 간헐 발생).
+        private static readonly List<ISimTickable> s_tickables = new List<ISimTickable>();
         private float m_accum;
+
+        // 도메인 리로드 off(에디터 Enter Play Mode 옵션) 시 static 목록이 이전 세션의 파괴된 엔트리를 물고 있지 않도록 플레이 시작마다 비운다.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => s_tickables.Clear();
 
         /// <summary>
         /// 시뮬레이션 틱 대상을 등록한다 (보통 OnEnable). SimOrder 오름차순 정렬 삽입 — 낮은 값이 먼저 호출된다.
-        /// 드라이버 인스턴스가 없으면 접근 시 자동 생성된다. 중복 등록은 무시.
+        /// 목록은 static 이라 인스턴스 없이 안전하며, 드라이버가 없으면 여기서 생성한다(종료 중이면 Instance 가 null 반환→생성 안 함). 중복 등록은 무시.
         /// </summary>
         /// <param name="tickable">등록할 대상.</param>
         public static void Register(ISimTickable tickable)
         {
-            if (tickable == null) return;
-            SimClock clock = Instance;
-            if (clock == null) return;
-
-            List<ISimTickable> list = clock.m_tickables;
-            if (list.Contains(tickable)) return;
+            if (tickable == null || s_tickables.Contains(tickable)) return;
 
             int i = 0;
-            while (i < list.Count && list[i].SimOrder <= tickable.SimOrder) i++;
-            list.Insert(i, tickable);
+            while (i < s_tickables.Count && s_tickables[i].SimOrder <= tickable.SimOrder) i++;
+            s_tickables.Insert(i, tickable);
+
+            // 드라이버 인스턴스 보장. Instance getter 는 종료 중이면 null 을 반환(생성 안 함)하므로 접근만 하고 역참조하지 않는다.
+            if (!Loaded) { _ = Instance; }
         }
 
         /// <summary>
-        /// 시뮬레이션 틱 대상을 해제한다 (보통 OnDisable). 드라이버가 이미 파괴됐으면 무시.
+        /// 시뮬레이션 틱 대상을 해제한다 (보통 OnDisable). static 목록만 건드리므로 종료(quit) 중 인스턴스 파괴 경합과 무관하게 안전.
         /// </summary>
         /// <param name="tickable">해제할 대상.</param>
         public static void Unregister(ISimTickable tickable)
         {
-            if (tickable == null || !Loaded) return;
-            Instance.m_tickables.Remove(tickable);
+            if (tickable == null) return;
+            s_tickables.Remove(tickable);
         }
 
         private void FixedUpdate()
@@ -69,8 +73,13 @@ namespace UnityXOPS
         /// <summary>한 시뮬레이션 틱 — 등록된 모든 대상을 SimOrder 순으로 1회씩 진행.</summary>
         private void Step()
         {
-            for (int i = 0; i < m_tickables.Count; i++)
-                m_tickables[i].SimTick();
+            for (int i = 0; i < s_tickables.Count; i++)
+            {
+                ISimTickable t = s_tickables[i];
+                // 도메인 리로드 off 등으로 파괴된 오브젝트가 목록에 남았으면 방어적으로 건너뜀(Unity fake-null).
+                if (t is UnityEngine.Object o && o == null) continue;
+                t.SimTick();
+            }
         }
     }
 
